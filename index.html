@@ -684,6 +684,7 @@
     <button data-view="admin" id="nav-admin">🔑 Admin</button>
     <button data-view="history">📅 History</button>
     <button data-view="stats">📊 Stats</button>
+    <button data-view="dashboard">📈 Dashboard</button>
   </nav>
 </header>
 
@@ -924,9 +925,29 @@
     </div>
   </section>
 
+  <!-- DASHBOARD VIEW -->
+  <section id="view-dashboard" class="view">
+    <div class="card">
+      <h2>At a Glance</h2>
+      <div class="stats-grid" id="dashboard-kpis"></div>
+    </div>
+    <div class="card">
+      <h2>Money Collected</h2>
+      <div id="dashboard-collection"></div>
+    </div>
+    <div class="card">
+      <h2 id="dashboard-branches-title">By Branch</h2>
+      <table>
+        <thead><tr><th>Branch</th><th>Players</th><th>Campers</th><th>Attendance</th><th>Collected</th><th>Outstanding</th></tr></thead>
+        <tbody id="dashboard-branches-table"></tbody>
+      </table>
+      <div id="dashboard-branches-empty" class="empty" style="display:none;">No branches yet.</div>
+    </div>
+  </section>
+
 </main>
 
-<footer>Data is stored locally in your browser (no server / no account needed).</footer>
+<footer>Data syncs live across all devices on this link.</footer>
 
 </div>
 
@@ -1971,6 +1992,95 @@
     downloadCsv(rows, "bfa_camp_payments.csv");
   });
 
+  // ---------- Dashboard ----------
+  function attendanceRateFor(idSet, attendanceMap) {
+    let present = 0, marks = 0;
+    Object.values(attendanceMap).forEach(day => {
+      Object.entries(day).forEach(([id, v]) => {
+        if (!idSet.has(id)) return;
+        marks++;
+        if (v === "present") present++;
+      });
+    });
+    return { present, marks, rate: marks ? Math.round((present / marks) * 100) : null };
+  }
+
+  function renderDashboard() {
+    const players = scopedPlayers();
+    const campers = scopedCampers();
+    const pIds = new Set(players.map(p => p.id));
+    const cIds = new Set(campers.map(c => c.id));
+
+    const reg = attendanceRateFor(pIds, state.attendance);
+    const camp = attendanceRateFor(cIds, state.camp.attendance);
+
+    const regFees = players.reduce((s, p) => s + (p.amount || 0), 0);
+    const regCollected = players.reduce((s, p) => s + (p.paid ? (p.amount || 0) : 0), 0);
+    const campFees = campers.reduce((s, c) => s + (c.amount || 0), 0);
+    const campCollected = campers.reduce((s, c) => s + (c.paid ? (c.amount || 0) : 0), 0);
+    const totalFees = regFees + campFees;
+    const totalCollected = regCollected + campCollected;
+    const outstanding = totalFees - totalCollected;
+    const unpaid = players.filter(p => !p.paid).length + campers.filter(c => !c.paid).length;
+
+    // ----- Top KPIs -----
+    document.getElementById("dashboard-kpis").innerHTML = `
+      <div class="stat"><div class="num">${players.length}</div><div class="lbl">Players</div></div>
+      <div class="stat"><div class="num">${campers.length}</div><div class="lbl">Campers</div></div>
+      <div class="stat"><div class="num">${reg.rate === null ? "—" : reg.rate + "%"}</div><div class="lbl">Attendance rate</div></div>
+      <div class="stat stat-red"><div class="num">${fmtMoney(outstanding)}</div><div class="lbl">Outstanding</div></div>
+      <div class="stat stat-red"><div class="num">${unpaid}</div><div class="lbl">Unpaid</div></div>
+    `;
+
+    // ----- Money collected -----
+    const pct = totalFees ? Math.round((totalCollected / totalFees) * 100) : 0;
+    document.getElementById("dashboard-collection").innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+        <span style="font-family:var(--font-display); font-size:1.6rem; color:var(--brand-navy);">${fmtMoney(totalCollected)}</span>
+        <span style="color:var(--ink-muted); font-size:0.85rem;">of ${fmtMoney(totalFees)} collected · ${pct}%</span>
+      </div>
+      <div class="rate-bar-bg" style="height:16px;"><div class="rate-bar-fill" style="width:${pct}%;"></div></div>
+      <div style="display:flex; gap:16px; margin-top:12px; flex-wrap:wrap; font-size:0.8rem; color:var(--ink-muted);">
+        <span>Season: <strong style="color:var(--ink);">${fmtMoney(regCollected)}</strong> / ${fmtMoney(regFees)}</span>
+        <span>Camp: <strong style="color:var(--ink);">${fmtMoney(campCollected)}</strong> / ${fmtMoney(campFees)}</span>
+      </div>
+    `;
+
+    // ----- By Branch -----
+    const branches = isAdmin() ? state.branches : state.branches.filter(b => b.id === scopeBranchId());
+    document.getElementById("dashboard-branches-title").textContent = isAdmin() ? "By Branch" : "Your Branch";
+    const tbody = document.getElementById("dashboard-branches-table");
+    const empty = document.getElementById("dashboard-branches-empty");
+    if (!branches.length) {
+      tbody.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    tbody.innerHTML = branches.map(b => {
+      const bPlayers = state.players.filter(p => p.branchId === b.id);
+      const bCampers = state.camp.campers.filter(c => c.branchId === b.id);
+      const bIds = new Set(bPlayers.map(p => p.id));
+      const bRate = attendanceRateFor(bIds, state.attendance).rate;
+      const rateLabel = bRate === null ? "—" : bRate + "%";
+      const rateWidth = bRate === null ? 0 : bRate;
+      const fees = bPlayers.reduce((s, p) => s + (p.amount || 0), 0) + bCampers.reduce((s, c) => s + (c.amount || 0), 0);
+      const collected = bPlayers.reduce((s, p) => s + (p.paid ? (p.amount || 0) : 0), 0) + bCampers.reduce((s, c) => s + (c.paid ? (c.amount || 0) : 0), 0);
+      const outstandingB = fees - collected;
+      return `<tr>
+        <td><span class="badge badge-navy">${escapeHtml(b.name)}</span></td>
+        <td>${bPlayers.length}</td>
+        <td>${bCampers.length}</td>
+        <td style="min-width:110px;">
+          <div class="rate-bar-bg"><div class="rate-bar-fill" style="width:${rateWidth}%;"></div></div>
+          <div style="font-size:0.75rem;color:var(--ink-muted);margin-top:2px;">${rateLabel}</div>
+        </td>
+        <td>${fmtMoney(collected)}</td>
+        <td style="color:${outstandingB > 0 ? "var(--brand-red)" : "var(--ink-muted)"};">${fmtMoney(outstandingB)}</td>
+      </tr>`;
+    }).join("");
+  }
+
   function renderAll() {
     renderPlayerBranchSelect();
     renderCheckinBranchFilter();
@@ -1988,6 +2098,7 @@
     renderCampCheckin();
     renderCampHistoryTable();
     renderCampStats();
+    renderDashboard();
   }
 
   window.bfaApp = {
