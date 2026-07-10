@@ -574,7 +574,9 @@
 </head>
 <body>
 
-
+<div id="gate-loading" style="display:flex; align-items:center; justify-content:center; min-height:100vh; font-family:var(--font-heading); color:var(--ink-muted); font-size:0.9rem; letter-spacing:0.04em; text-transform:uppercase;">
+  Connecting…
+</div>
 
 <!-- ============ SETUP SCREEN (first run only) ============ -->
 <div id="gate-setup" class="gate-screen" style="display:none;">
@@ -928,43 +930,86 @@
 
 </div>
 
-<script>
-(function () {
-  const STORAGE_KEY = "bfaAttendanceData_v2";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBGOrBYpLtl4fqb-JFJNHWZheQVkO9VpYA",
+    authDomain: "bfa-sc-tracker.firebaseapp.com",
+    databaseURL: "https://bfa-sc-tracker-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "bfa-sc-tracker",
+    storageBucket: "bfa-sc-tracker.firebasestorage.app",
+    messagingSenderId: "337221107402",
+    appId: "1:337221107402:web:90be943b8cfec13db03e33"
+  };
+  const firebaseApp = initializeApp(firebaseConfig);
+  const db = getDatabase(firebaseApp);
+  const stateRef = ref(db, "bfaState");
+
   const SESSION_KEY = "bfaSession_v1";
 
-  function load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
+  function defaultState() {
     return { players: [], branches: [], attendance: {}, camp: { weeks: [], campers: [], attendance: {} }, auth: { setupDone: false, adminPin: "", branchPins: {} } };
     // attendance: { "YYYY-MM-DD": { playerId: "present"|"absent" } }
     // camp.attendance: { "YYYY-MM-DD": { camperId: "present"|"absent" } }
   }
-  function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+  function toArray(x) {
+    if (Array.isArray(x)) return x;
+    if (x && typeof x === "object") return Object.values(x);
+    return [];
   }
 
-  let state = load();
-  if (!state.branches) state.branches = [];
-  if (!state.players) state.players = [];
-  if (!state.attendance) state.attendance = {};
-  if (!state.auth) state.auth = { setupDone: false, adminPin: "", branchPins: {} };
-  if (!state.camp) state.camp = { weeks: [], campers: [], attendance: {} };
-  if (!state.camp.weeks) state.camp.weeks = [];
-  if (!state.camp.campers) state.camp.campers = [];
-  if (!state.camp.attendance) state.camp.attendance = {};
-  state.players.forEach(p => {
-    if (typeof p.paid !== "boolean") p.paid = false;
-    if (typeof p.invoiced !== "boolean") p.invoiced = false;
-    if (typeof p.amount !== "number") p.amount = 0;
-  });
-  state.camp.campers.forEach(c => {
-    if (typeof c.paid !== "boolean") c.paid = false;
-    if (typeof c.invoiced !== "boolean") c.invoiced = false;
-    if (typeof c.amount !== "number") c.amount = 0;
-    if (!Array.isArray(c.weekIds)) c.weekIds = [];
+  function normalize(s) {
+    s.branches = toArray(s.branches);
+    s.players = toArray(s.players);
+    if (!s.attendance) s.attendance = {};
+    if (!s.auth) s.auth = { setupDone: false, adminPin: "", branchPins: {} };
+    if (!s.camp) s.camp = { weeks: [], campers: [], attendance: {} };
+    s.camp.weeks = toArray(s.camp.weeks);
+    s.camp.campers = toArray(s.camp.campers);
+    if (!s.camp.attendance) s.camp.attendance = {};
+    s.players.forEach(p => {
+      if (typeof p.paid !== "boolean") p.paid = false;
+      if (typeof p.invoiced !== "boolean") p.invoiced = false;
+      if (typeof p.amount !== "number") p.amount = 0;
+    });
+    s.camp.campers.forEach(c => {
+      if (typeof c.paid !== "boolean") c.paid = false;
+      if (typeof c.invoiced !== "boolean") c.invoiced = false;
+      if (typeof c.amount !== "number") c.amount = 0;
+      c.weekIds = toArray(c.weekIds);
+    });
+    return s;
+  }
+
+  let state = defaultState();
+  let booted = false;
+
+  function save() {
+    set(stateRef, state).catch(err => console.error("Firebase save failed:", err));
+  }
+
+  function onLiveUpdate() {
+    if (session) {
+      renderAll();
+    } else if (state.auth.setupDone && document.getElementById("gate-login").style.display !== "none") {
+      showLogin();
+    }
+  }
+
+  onValue(stateRef, snapshot => {
+    state = normalize(snapshot.val() || defaultState());
+    if (!booted) {
+      booted = true;
+      boot();
+    } else {
+      onLiveUpdate();
+    }
+  }, err => {
+    console.error("Firebase read failed:", err);
+    document.getElementById("gate-loading").textContent = "Could not connect. Check your internet connection and reload.";
   });
 
   let session = null; // { role: 'admin' } | { role: 'branch', branchId }
@@ -1033,6 +1078,7 @@
 
   // ================= Gate screens =================
   function hideAllGates() {
+    document.getElementById("gate-loading").style.display = "none";
     document.getElementById("gate-setup").style.display = "none";
     document.getElementById("gate-login").style.display = "none";
     document.getElementById("app-root").style.display = "none";
@@ -1950,9 +1996,6 @@
     removeCampWeek, removeCamper, setCampAttendance, goToCampDate,
     toggleCamperPaid, toggleCamperInvoiced, setCamperAmount
   };
-
-  boot();
-})();
 </script>
 
 
