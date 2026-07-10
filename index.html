@@ -494,6 +494,23 @@
   .pill-toggle.paid-on { background: var(--present); border-color: var(--present); color: white; }
   .pill-toggle.invoiced-on { background: var(--brand-navy); border-color: var(--brand-navy); color: white; }
 
+  .week-check-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 13px;
+    font-family: var(--font-heading);
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--ink-muted);
+    cursor: pointer;
+  }
+  .week-check-label input { margin: 0; }
+
   .amount-input {
     width: 90px;
     padding: 6px 8px;
@@ -570,11 +587,11 @@
       <div>
         <div>
           <label for="setup-admin-pin">Admin PIN (4–8 digits)</label>
-          <input type="text" id="setup-admin-pin" inputmode="numeric" maxlength="8" placeholder="e.g. 4821" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
+          <input type="text" id="setup-admin-pin" inputmode="numeric" maxlength="8" placeholder="e.g. 4821" value="0000" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
         </div>
         <div>
           <label for="setup-admin-pin2">Confirm Admin PIN</label>
-          <input type="text" id="setup-admin-pin2" inputmode="numeric" maxlength="8" placeholder="repeat PIN" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
+          <input type="text" id="setup-admin-pin2" inputmode="numeric" maxlength="8" placeholder="repeat PIN" value="0000" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
         </div>
       </div>
     </div>
@@ -584,11 +601,11 @@
       <div>
         <div>
           <label for="setup-branch1-name">Branch name</label>
-          <input type="text" id="setup-branch1-name" placeholder="e.g. Achrafieh">
+          <input type="text" id="setup-branch1-name" placeholder="e.g. Achrafieh" value="Furn el Chebbek">
         </div>
         <div>
           <label for="setup-branch1-pin">PIN</label>
-          <input type="text" id="setup-branch1-pin" inputmode="numeric" maxlength="8" placeholder="e.g. 1111" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
+          <input type="text" id="setup-branch1-pin" inputmode="numeric" maxlength="8" placeholder="e.g. 1111" value="1111" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
         </div>
       </div>
     </div>
@@ -598,11 +615,11 @@
       <div>
         <div>
           <label for="setup-branch2-name">Branch name</label>
-          <input type="text" id="setup-branch2-name" placeholder="e.g. Hamra">
+          <input type="text" id="setup-branch2-name" placeholder="e.g. Hamra" value="Hazmieh">
         </div>
         <div>
           <label for="setup-branch2-pin">PIN</label>
-          <input type="text" id="setup-branch2-pin" inputmode="numeric" maxlength="8" placeholder="e.g. 2222" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
+          <input type="text" id="setup-branch2-pin" inputmode="numeric" maxlength="8" placeholder="e.g. 2222" value="2222" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
         </div>
       </div>
     </div>
@@ -612,11 +629,11 @@
       <div>
         <div>
           <label for="setup-branch3-name">Branch name</label>
-          <input type="text" id="setup-branch3-name" placeholder="e.g. Jounieh">
+          <input type="text" id="setup-branch3-name" placeholder="e.g. Jounieh" value="Mansourieh">
         </div>
         <div>
           <label for="setup-branch3-pin">PIN</label>
-          <input type="text" id="setup-branch3-pin" inputmode="numeric" maxlength="8" placeholder="e.g. 3333" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
+          <input type="text" id="setup-branch3-pin" inputmode="numeric" maxlength="8" placeholder="e.g. 3333" value="3333" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
         </div>
       </div>
     </div>
@@ -661,6 +678,7 @@
   <nav class="tabs">
     <button data-view="checkin" class="active">✅ Daily Check-In</button>
     <button data-view="players">🧑‍🤝‍🧑 Players</button>
+    <button data-view="camp">🏕️ Summer Camp</button>
     <button data-view="admin" id="nav-admin">🔑 Admin</button>
     <button data-view="history">📅 History</button>
     <button data-view="stats">📊 Stats</button>
@@ -707,10 +725,6 @@
           <label for="player-branch">Branch</label>
           <select id="player-branch"></select>
         </div>
-        <div>
-          <label for="player-amount">Fee ($)</label>
-          <input type="number" id="player-amount" min="0" step="1" placeholder="0">
-        </div>
         <div style="flex: 0 0 auto; align-self: flex-end;">
           <button class="btn btn-primary" id="add-player-btn">+ Add Player</button>
         </div>
@@ -730,6 +744,120 @@
         <tbody id="players-table"></tbody>
       </table>
       <div id="players-empty" class="empty" style="display:none;">No players yet. Add your first player above.</div>
+    </div>
+  </section>
+
+  <!-- SUMMER CAMP VIEW -->
+  <section id="view-camp" class="view">
+    <div class="card" id="camp-weeks-card">
+      <div class="toolbar">
+        <h2 style="margin:0;">Camp Weeks</h2>
+      </div>
+      <div class="row">
+        <div>
+          <label for="camp-week-name">Week name</label>
+          <input type="text" id="camp-week-name" placeholder="e.g. Week 1">
+        </div>
+        <div>
+          <label for="camp-week-start">Start date</label>
+          <input type="date" id="camp-week-start">
+        </div>
+        <div>
+          <label for="camp-week-end">End date</label>
+          <input type="date" id="camp-week-end">
+        </div>
+        <div style="flex:0 0 auto; align-self:flex-end;">
+          <button class="btn btn-primary" id="add-camp-week-btn">+ Add Week</button>
+        </div>
+      </div>
+      <div id="camp-weeks-list" style="margin-top:14px;"></div>
+      <div id="camp-weeks-empty" class="empty" style="display:none;">No camp weeks yet. Add one above.</div>
+    </div>
+
+    <div class="card">
+      <h2>Register a Camper</h2>
+      <div class="row">
+        <div>
+          <label for="camper-name">Name</label>
+          <input type="text" id="camper-name" placeholder="e.g. Karim Haddad">
+        </div>
+        <div id="camper-branch-wrap">
+          <label for="camper-branch">Branch / Location</label>
+          <select id="camper-branch"></select>
+        </div>
+        <div>
+          <label for="camper-amount">Fee ($)</label>
+          <input type="number" id="camper-amount" min="0" step="1" placeholder="0">
+        </div>
+        <div style="flex: 0 0 auto; align-self: flex-end;">
+          <button class="btn btn-primary" id="add-camper-btn">+ Add Camper</button>
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <label>Weeks attending</label>
+        <div id="camper-weeks-check" class="pill-list"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <h2 style="margin:0;">Campers <span id="camper-count" class="badge badge-red"></span></h2>
+        <div class="row" style="flex:0 0 auto; gap: 8px;">
+          <input type="text" id="camper-search" placeholder="Search campers…" style="flex:0 0 200px;">
+          <button class="btn btn-outline btn-sm" id="export-camp-payments-csv-btn">⬇ Export Payments CSV</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Name</th><th>Branch</th><th>Weeks</th><th>Attendance</th><th>Fee ($)</th><th>Paid</th><th>Invoiced</th><th></th></tr></thead>
+        <tbody id="campers-table"></tbody>
+      </table>
+      <div id="campers-empty" class="empty" style="display:none;">No campers yet. Register your first camper above.</div>
+    </div>
+
+    <div class="card">
+      <h2>Camp Daily Check-In</h2>
+      <div class="toolbar">
+        <div>
+          <label for="camp-checkin-date">Date</label>
+          <input type="date" id="camp-checkin-date">
+        </div>
+        <div class="row" style="flex:0 0 auto;">
+          <button class="btn btn-outline btn-sm" id="camp-mark-all-present">Mark all present</button>
+          <button class="btn btn-outline btn-sm" id="camp-mark-all-absent">Mark all absent</button>
+        </div>
+      </div>
+      <div class="row">
+        <div id="camp-checkin-branch-filter-wrap">
+          <label for="camp-checkin-branch-filter">Filter by branch</label>
+          <select id="camp-checkin-branch-filter"><option value="">All branches</option></select>
+        </div>
+        <div>
+          <label for="camp-checkin-week-filter">Filter by week</label>
+          <select id="camp-checkin-week-filter"><option value="">All weeks</option></select>
+        </div>
+      </div>
+      <div id="camp-checkin-list" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <h2 style="margin:0;">Camp Attendance History</h2>
+        <button class="btn btn-outline btn-sm" id="export-camp-csv-btn">⬇ Export CSV</button>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Present</th><th>Absent</th><th>Rate</th><th></th></tr></thead>
+        <tbody id="camp-history-table"></tbody>
+      </table>
+      <div id="camp-history-empty" class="empty" style="display:none;">No camp attendance recorded yet.</div>
+    </div>
+
+    <div class="card">
+      <h2>Camp Overview</h2>
+      <div class="stats-grid" id="camp-overview-stats"></div>
+    </div>
+    <div class="card">
+      <h2>Camp Payments Overview</h2>
+      <div class="stats-grid" id="camp-payment-stats"></div>
     </div>
   </section>
 
@@ -810,8 +938,9 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) return JSON.parse(raw);
     } catch (e) {}
-    return { players: [], branches: [], attendance: {}, auth: { setupDone: false, adminPin: "", branchPins: {} } };
+    return { players: [], branches: [], attendance: {}, camp: { weeks: [], campers: [], attendance: {} }, auth: { setupDone: false, adminPin: "", branchPins: {} } };
     // attendance: { "YYYY-MM-DD": { playerId: "present"|"absent" } }
+    // camp.attendance: { "YYYY-MM-DD": { camperId: "present"|"absent" } }
   }
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -822,10 +951,20 @@
   if (!state.players) state.players = [];
   if (!state.attendance) state.attendance = {};
   if (!state.auth) state.auth = { setupDone: false, adminPin: "", branchPins: {} };
+  if (!state.camp) state.camp = { weeks: [], campers: [], attendance: {} };
+  if (!state.camp.weeks) state.camp.weeks = [];
+  if (!state.camp.campers) state.camp.campers = [];
+  if (!state.camp.attendance) state.camp.attendance = {};
   state.players.forEach(p => {
     if (typeof p.paid !== "boolean") p.paid = false;
     if (typeof p.invoiced !== "boolean") p.invoiced = false;
     if (typeof p.amount !== "number") p.amount = 0;
+  });
+  state.camp.campers.forEach(c => {
+    if (typeof c.paid !== "boolean") c.paid = false;
+    if (typeof c.invoiced !== "boolean") c.invoiced = false;
+    if (typeof c.amount !== "number") c.amount = 0;
+    if (!Array.isArray(c.weekIds)) c.weekIds = [];
   });
 
   let session = null; // { role: 'admin' } | { role: 'branch', branchId }
@@ -868,6 +1007,15 @@
     if (isAdmin()) return state.players;
     const bid = scopeBranchId();
     return state.players.filter(p => p.branchId === bid);
+  }
+  function scopedCampers() {
+    if (isAdmin()) return state.camp.campers;
+    const bid = scopeBranchId();
+    return state.camp.campers.filter(c => c.branchId === bid);
+  }
+  function weekName(id) {
+    const w = state.camp.weeks.find(w => w.id === id);
+    return w ? w.name : "—";
   }
 
   // ================= Auth: session storage =================
@@ -1071,14 +1219,11 @@
   function addPlayer() {
     const nameInput = document.getElementById("player-name");
     const branchSel = document.getElementById("player-branch");
-    const amountInput = document.getElementById("player-amount");
     const name = nameInput.value.trim();
     if (!name) return;
-    const amount = parseFloat(amountInput.value) || 0;
     const branchId = isAdmin() ? (branchSel.value || state.branches[0].id) : scopeBranchId();
-    state.players.push({ id: uid(), name, branchId, paid: false, invoiced: false, amount });
+    state.players.push({ id: uid(), name, branchId, paid: false, invoiced: false, amount: 0 });
     nameInput.value = "";
-    amountInput.value = "";
     save();
     renderAll();
   }
@@ -1400,6 +1545,386 @@
     URL.revokeObjectURL(url);
   }
 
+  // ---------- Summer Camp: weeks ----------
+  document.getElementById("add-camp-week-btn").addEventListener("click", addCampWeek);
+
+  function addCampWeek() {
+    const nameInput = document.getElementById("camp-week-name");
+    const startInput = document.getElementById("camp-week-start");
+    const endInput = document.getElementById("camp-week-end");
+    const name = nameInput.value.trim();
+    if (!name) return;
+    state.camp.weeks.push({ id: uid(), name, start: startInput.value, end: endInput.value });
+    nameInput.value = "";
+    startInput.value = "";
+    endInput.value = "";
+    save();
+    renderAll();
+  }
+
+  function removeCampWeek(id) {
+    if (!confirm("Remove this camp week? Campers keep their other weeks.")) return;
+    state.camp.weeks = state.camp.weeks.filter(w => w.id !== id);
+    state.camp.campers.forEach(c => { c.weekIds = c.weekIds.filter(wid => wid !== id); });
+    save();
+    renderAll();
+  }
+
+  function renderCampWeeksList() {
+    document.getElementById("camp-weeks-card").style.display = isAdmin() ? "" : "none";
+    const wrap = document.getElementById("camp-weeks-list");
+    const empty = document.getElementById("camp-weeks-empty");
+    if (!state.camp.weeks.length) {
+      wrap.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    wrap.innerHTML = state.camp.weeks.map(w => {
+      const count = state.camp.campers.filter(c => c.weekIds.includes(w.id)).length;
+      const dates = w.start && w.end ? `${fmtDate(w.start)} – ${fmtDate(w.end)}` : "No dates set";
+      return `<div class="admin-branch-row">
+        <div><label>Week</label><div style="font-weight:600;">${escapeHtml(w.name)}</div></div>
+        <div><label>Dates</label><div>${dates}</div></div>
+        <div style="align-self:center; display:flex; align-items:center; gap:10px;">
+          <span class="badge badge-navy">${count} campers</span>
+          <button class="icon-btn" onclick="bfaApp.removeCampWeek('${w.id}')">✕ remove</button>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  // ---------- Summer Camp: campers ----------
+  document.getElementById("add-camper-btn").addEventListener("click", addCamper);
+  document.getElementById("camper-name").addEventListener("keydown", e => { if (e.key === "Enter") addCamper(); });
+
+  function addCamper() {
+    const nameInput = document.getElementById("camper-name");
+    const branchSel = document.getElementById("camper-branch");
+    const amountInput = document.getElementById("camper-amount");
+    const name = nameInput.value.trim();
+    if (!name) return;
+    const amount = parseFloat(amountInput.value) || 0;
+    const branchId = isAdmin() ? (branchSel.value || state.branches[0].id) : scopeBranchId();
+    const weekIds = Array.from(document.querySelectorAll("#camper-weeks-check input:checked")).map(cb => cb.value);
+    state.camp.campers.push({ id: uid(), name, branchId, weekIds, paid: false, invoiced: false, amount });
+    nameInput.value = "";
+    amountInput.value = "";
+    save();
+    renderAll();
+  }
+
+  function removeCamper(id) {
+    if (!confirm("Remove this camper and their attendance/payment history?")) return;
+    state.camp.campers = state.camp.campers.filter(c => c.id !== id);
+    Object.values(state.camp.attendance).forEach(day => { delete day[id]; });
+    save();
+    renderAll();
+  }
+
+  function toggleCamperPaid(id) {
+    const c = state.camp.campers.find(c => c.id === id);
+    if (!c) return;
+    c.paid = !c.paid;
+    save();
+    renderCampersTable();
+    renderCampStats();
+  }
+
+  function toggleCamperInvoiced(id) {
+    const c = state.camp.campers.find(c => c.id === id);
+    if (!c) return;
+    c.invoiced = !c.invoiced;
+    save();
+    renderCampersTable();
+    renderCampStats();
+  }
+
+  function setCamperAmount(id, value) {
+    const c = state.camp.campers.find(c => c.id === id);
+    if (!c) return;
+    c.amount = parseFloat(value) || 0;
+    save();
+    renderCampStats();
+  }
+
+  function camperRate(id) {
+    let present = 0, total = 0;
+    Object.values(state.camp.attendance).forEach(day => {
+      if (day[id]) {
+        total++;
+        if (day[id] === "present") present++;
+      }
+    });
+    return { present, total, rate: total ? Math.round((present / total) * 100) : null };
+  }
+
+  function renderCamperBranchSelect() {
+    const sel = document.getElementById("camper-branch");
+    sel.innerHTML = state.branches.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join("");
+    const wrap = document.getElementById("camper-branch-wrap");
+    if (isAdmin()) {
+      wrap.style.display = "";
+    } else {
+      wrap.style.display = "none";
+      sel.value = scopeBranchId();
+    }
+  }
+
+  function renderCamperWeeksCheck() {
+    const wrap = document.getElementById("camper-weeks-check");
+    if (!state.camp.weeks.length) {
+      wrap.innerHTML = `<span style="color:var(--ink-muted); font-size:0.85rem;">${isAdmin() ? "Add a camp week above first." : "No camp weeks set up yet."}</span>`;
+      return;
+    }
+    wrap.innerHTML = state.camp.weeks.map(w =>
+      `<label class="week-check-label"><input type="checkbox" value="${w.id}"> ${escapeHtml(w.name)}</label>`
+    ).join("");
+  }
+
+  function renderCampersTable() {
+    const tbody = document.getElementById("campers-table");
+    const empty = document.getElementById("campers-empty");
+    const search = (document.getElementById("camper-search").value || "").toLowerCase();
+    const base = scopedCampers();
+    const list = base.filter(c => c.name.toLowerCase().includes(search));
+    document.getElementById("camper-count").textContent = base.length;
+
+    if (!list.length) {
+      tbody.innerHTML = "";
+      empty.style.display = "block";
+      empty.textContent = base.length ? "No campers match your search." : "No campers yet. Register your first camper above.";
+      return;
+    }
+    empty.style.display = "none";
+    tbody.innerHTML = list.map(c => {
+      const r = camperRate(c.id);
+      const rateLabel = r.rate === null ? "—" : r.rate + "%";
+      const weeksLabel = c.weekIds.length ? c.weekIds.map(wid => escapeHtml(weekName(wid))).join(", ") : "—";
+      return `<tr>
+        <td>${escapeHtml(c.name)}</td>
+        <td><span class="badge badge-navy">${escapeHtml(branchName(c.branchId))}</span></td>
+        <td>${weeksLabel}</td>
+        <td>${rateLabel}</td>
+        <td><input type="number" class="amount-input" min="0" step="1" value="${c.amount}" onchange="bfaApp.setCamperAmount('${c.id}', this.value)"></td>
+        <td><button class="pill-toggle ${c.paid ? "paid-on" : ""}" onclick="bfaApp.toggleCamperPaid('${c.id}')">${c.paid ? "Paid" : "Unpaid"}</button></td>
+        <td><button class="pill-toggle ${c.invoiced ? "invoiced-on" : ""}" onclick="bfaApp.toggleCamperInvoiced('${c.id}')">${c.invoiced ? "Invoiced" : "Not invoiced"}</button></td>
+        <td><button class="icon-btn" onclick="bfaApp.removeCamper('${c.id}')">✕ remove</button></td>
+      </tr>`;
+    }).join("");
+  }
+
+  document.getElementById("camper-search").addEventListener("input", renderCampersTable);
+
+  // ---------- Summer Camp: daily check-in ----------
+  const campDateInput = document.getElementById("camp-checkin-date");
+  campDateInput.value = todayStr();
+  campDateInput.addEventListener("change", renderCampCheckin);
+  document.getElementById("camp-checkin-branch-filter").addEventListener("change", renderCampCheckin);
+  document.getElementById("camp-checkin-week-filter").addEventListener("change", renderCampCheckin);
+
+  document.getElementById("camp-mark-all-present").addEventListener("click", () => bulkMarkCamp("present"));
+  document.getElementById("camp-mark-all-absent").addEventListener("click", () => bulkMarkCamp("absent"));
+
+  function renderCampCheckinBranchFilter() {
+    const filterSel = document.getElementById("camp-checkin-branch-filter");
+    const prev = filterSel.value;
+    filterSel.innerHTML = '<option value="">All branches</option>' +
+      state.branches.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join("");
+    filterSel.value = prev;
+    document.getElementById("camp-checkin-branch-filter-wrap").style.display = isAdmin() ? "" : "none";
+  }
+
+  function renderCampCheckinWeekFilter() {
+    const filterSel = document.getElementById("camp-checkin-week-filter");
+    const prev = filterSel.value;
+    filterSel.innerHTML = '<option value="">All weeks</option>' +
+      state.camp.weeks.map(w => `<option value="${w.id}">${escapeHtml(w.name)}</option>`).join("");
+    filterSel.value = prev;
+  }
+
+  function campCheckinTargets() {
+    let list;
+    if (isAdmin()) {
+      const branchFilter = document.getElementById("camp-checkin-branch-filter").value;
+      list = state.camp.campers.filter(c => !branchFilter || c.branchId === branchFilter);
+    } else {
+      list = scopedCampers();
+    }
+    const weekFilter = document.getElementById("camp-checkin-week-filter").value;
+    if (weekFilter) list = list.filter(c => c.weekIds.includes(weekFilter));
+    return list;
+  }
+
+  function bulkMarkCamp(status) {
+    const date = campDateInput.value || todayStr();
+    if (!state.camp.attendance[date]) state.camp.attendance[date] = {};
+    campCheckinTargets().forEach(c => { state.camp.attendance[date][c.id] = status; });
+    save();
+    renderCampCheckin();
+    renderCampHistoryTable();
+  }
+
+  function setCampAttendance(date, camperId, status) {
+    if (!state.camp.attendance[date]) state.camp.attendance[date] = {};
+    if (state.camp.attendance[date][camperId] === status) {
+      delete state.camp.attendance[date][camperId];
+    } else {
+      state.camp.attendance[date][camperId] = status;
+    }
+    save();
+    renderCampCheckin();
+    renderCampHistoryTable();
+  }
+
+  function renderCampCheckin() {
+    const date = campDateInput.value || todayStr();
+    const list = document.getElementById("camp-checkin-list");
+    const campers = campCheckinTargets();
+    const totalScoped = scopedCampers().length;
+
+    if (!totalScoped) {
+      list.innerHTML = `<div class="empty">Register some campers first, then come back here to take attendance.</div>`;
+      return;
+    }
+    if (!campers.length) {
+      list.innerHTML = `<div class="empty">No campers match the current filters.</div>`;
+      return;
+    }
+
+    const dayRecord = state.camp.attendance[date] || {};
+    list.innerHTML = campers.map(c => {
+      const status = dayRecord[c.id];
+      return `<div class="attend-row">
+        <div>
+          <div class="attend-name">${escapeHtml(c.name)}</div>
+          <div class="attend-branch">${escapeHtml(branchName(c.branchId))}</div>
+        </div>
+        <div class="toggle">
+          <button class="present ${status === "present" ? "on" : ""}" onclick="bfaApp.setCampAttendance('${date}','${c.id}','present')">Present</button>
+          <button class="absent ${status === "absent" ? "on" : ""}" onclick="bfaApp.setCampAttendance('${date}','${c.id}','absent')">Absent</button>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  // ---------- Summer Camp: history ----------
+  function renderCampHistoryTable() {
+    const tbody = document.getElementById("camp-history-table");
+    const empty = document.getElementById("camp-history-empty");
+    const ids = new Set(scopedCampers().map(c => c.id));
+
+    const rows = Object.keys(state.camp.attendance)
+      .map(date => {
+        const entries = Object.entries(state.camp.attendance[date]).filter(([cid]) => ids.has(cid));
+        return { date, entries };
+      })
+      .filter(r => r.entries.length > 0)
+      .sort((a, b) => (a.date < b.date ? 1 : -1));
+
+    if (!rows.length) {
+      tbody.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    tbody.innerHTML = rows.map(({ date, entries }) => {
+      const present = entries.filter(([, v]) => v === "present").length;
+      const absent = entries.filter(([, v]) => v === "absent").length;
+      const total = present + absent;
+      const rate = total ? Math.round((present / total) * 100) : 0;
+      return `<tr>
+        <td>${fmtDate(date)}</td>
+        <td>${present}</td>
+        <td>${absent}</td>
+        <td style="min-width:120px;">
+          <div class="rate-bar-bg"><div class="rate-bar-fill" style="width:${rate}%;"></div></div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">${rate}%</div>
+        </td>
+        <td><button class="icon-btn" onclick="bfaApp.goToCampDate('${date}')">✎ edit</button></td>
+      </tr>`;
+    }).join("");
+  }
+
+  function goToCampDate(date) {
+    campDateInput.value = date;
+    tabButtons.forEach(b => b.classList.remove("active"));
+    document.querySelector('nav.tabs button[data-view="camp"]').classList.add("active");
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-camp").classList.add("active");
+    renderCampCheckin();
+  }
+
+  // ---------- Summer Camp: stats ----------
+  function renderCampStats() {
+    const campers = scopedCampers();
+    const ids = new Set(campers.map(c => c.id));
+    const dates = Object.keys(state.camp.attendance).filter(d =>
+      Object.keys(state.camp.attendance[d]).some(cid => ids.has(cid))
+    );
+    let totalPresent = 0, totalMarks = 0;
+    dates.forEach(d => {
+      Object.entries(state.camp.attendance[d]).forEach(([cid, v]) => {
+        if (!ids.has(cid)) return;
+        totalMarks++;
+        if (v === "present") totalPresent++;
+      });
+    });
+    const overallRate = totalMarks ? Math.round((totalPresent / totalMarks) * 100) : 0;
+
+    document.getElementById("camp-overview-stats").innerHTML = `
+      <div class="stat"><div class="num">${campers.length}</div><div class="lbl">Campers</div></div>
+      <div class="stat"><div class="num">${state.camp.weeks.length}</div><div class="lbl">Camp weeks</div></div>
+      <div class="stat"><div class="num">${dates.length}</div><div class="lbl">Days recorded</div></div>
+      <div class="stat"><div class="num">${overallRate}%</div><div class="lbl">Overall attendance</div></div>
+    `;
+
+    const totalFees = campers.reduce((sum, c) => sum + (c.amount || 0), 0);
+    const collected = campers.reduce((sum, c) => sum + (c.paid ? (c.amount || 0) : 0), 0);
+    const outstanding = totalFees - collected;
+    const unpaidCount = campers.filter(c => !c.paid).length;
+    const invoicedCount = campers.filter(c => c.invoiced).length;
+
+    document.getElementById("camp-payment-stats").innerHTML = `
+      <div class="stat"><div class="num">${fmtMoney(totalFees)}</div><div class="lbl">Total fees</div></div>
+      <div class="stat"><div class="num">${fmtMoney(collected)}</div><div class="lbl">Collected</div></div>
+      <div class="stat stat-red"><div class="num">${fmtMoney(outstanding)}</div><div class="lbl">Outstanding</div></div>
+      <div class="stat"><div class="num">${invoicedCount}/${campers.length}</div><div class="lbl">Invoiced</div></div>
+      <div class="stat stat-red"><div class="num">${unpaidCount}</div><div class="lbl">Unpaid campers</div></div>
+    `;
+  }
+
+  // ---------- Summer Camp: CSV exports ----------
+  document.getElementById("export-camp-csv-btn").addEventListener("click", () => {
+    const campers = scopedCampers();
+    const dates = Object.keys(state.camp.attendance).filter(d => Object.keys(state.camp.attendance[d]).length > 0).sort();
+    if (!dates.length || !campers.length) {
+      alert("No camp attendance data to export yet.");
+      return;
+    }
+    const rows = [["Camper", "Branch", ...dates]];
+    campers.forEach(c => {
+      const row = [c.name, branchName(c.branchId)];
+      dates.forEach(d => row.push(state.camp.attendance[d][c.id] || ""));
+      rows.push(row);
+    });
+    downloadCsv(rows, "bfa_camp_attendance.csv");
+  });
+
+  document.getElementById("export-camp-payments-csv-btn").addEventListener("click", () => {
+    const campers = scopedCampers();
+    if (!campers.length) {
+      alert("No campers to export yet.");
+      return;
+    }
+    const rows = [["Camper", "Branch", "Weeks", "Fee", "Paid", "Invoiced"]];
+    campers.forEach(c => {
+      const weeksLabel = c.weekIds.map(wid => weekName(wid)).join("; ");
+      rows.push([c.name, branchName(c.branchId), weeksLabel, c.amount || 0, c.paid ? "Yes" : "No", c.invoiced ? "Yes" : "No"]);
+    });
+    downloadCsv(rows, "bfa_camp_payments.csv");
+  });
+
   function renderAll() {
     renderPlayerBranchSelect();
     renderCheckinBranchFilter();
@@ -1408,11 +1933,22 @@
     renderCheckin();
     renderHistoryTable();
     renderStats();
+    renderCamperBranchSelect();
+    renderCampWeeksList();
+    renderCamperWeeksCheck();
+    renderCampCheckinBranchFilter();
+    renderCampCheckinWeekFilter();
+    renderCampersTable();
+    renderCampCheckin();
+    renderCampHistoryTable();
+    renderCampStats();
   }
 
   window.bfaApp = {
     removePlayer, setAttendance, goToDate, togglePaid, toggleInvoiced, setAmount,
-    selectRole, updateBranchName, updateBranchPin
+    selectRole, updateBranchName, updateBranchPin,
+    removeCampWeek, removeCamper, setCampAttendance, goToCampDate,
+    toggleCamperPaid, toggleCamperInvoiced, setCamperAmount
   };
 
   boot();
