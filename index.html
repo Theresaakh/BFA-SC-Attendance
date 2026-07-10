@@ -743,7 +743,7 @@
         </div>
       </div>
       <table>
-        <thead><tr><th>Name</th><th>Branch</th><th>Attendance</th><th>Fee ($)</th><th>Paid</th><th>Invoiced</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Branch</th><th>Days Present</th><th>Attendance</th><th>Fee ($)</th><th>Paid</th><th>Invoiced</th><th></th></tr></thead>
         <tbody id="players-table"></tbody>
       </table>
       <div id="players-empty" class="empty" style="display:none;">No players yet. Add your first player above.</div>
@@ -1382,6 +1382,7 @@
       return `<tr>
         <td>${escapeHtml(p.name)}</td>
         <td><span class="badge badge-navy">${escapeHtml(branchName(p.branchId))}</span></td>
+        <td>${r.present} / ${r.total}</td>
         <td>${rateLabel}</td>
         <td><input type="number" class="amount-input" min="0" step="1" value="${p.amount}" onchange="bfaApp.setAmount('${p.id}', this.value)"></td>
         <td><button class="pill-toggle ${p.paid ? "paid-on" : ""}" onclick="bfaApp.togglePaid('${p.id}')">${p.paid ? "Paid" : "Unpaid"}</button></td>
