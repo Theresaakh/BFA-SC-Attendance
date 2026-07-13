@@ -205,6 +205,28 @@
   .empty { color: var(--ink-muted); font-size: 0.9rem; padding: 12px 0; font-style: italic; }
   a.link { color: var(--brand-red); cursor: pointer; text-decoration: none; font-weight: 600; }
   a.link:hover { text-decoration: underline; }
+
+  /* Calendar */
+  .cal-nav { display:flex; align-items:center; gap:10px; margin:6px 0 14px; }
+  .cal-title { font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:0.03em; font-size:1rem; color:var(--brand-navy); flex:1; text-align:center; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cal-head { margin-bottom:6px; }
+  .cal-dow { font-family:var(--font-heading); text-transform:uppercase; font-size:0.68rem; letter-spacing:0.03em; color:var(--ink-muted); text-align:center; padding:4px 0; }
+  .cal-cell { min-height:76px; border:1px solid var(--border); border-radius:8px; background:var(--surface-alt); padding:6px; cursor:pointer; display:flex; flex-direction:column; gap:4px; }
+  .cal-cell:hover { background:var(--surface-hover); }
+  .cal-cell.empty-cell { background:transparent; border:none; cursor:default; }
+  .cal-cell.today { border-color:var(--brand-red); box-shadow:0 0 0 1px var(--brand-red) inset; }
+  .cal-daynum { font-family:var(--font-display); font-size:1rem; color:var(--ink); line-height:1; }
+  .cal-badge { font-size:0.6rem; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:0.02em; padding:2px 5px; border-radius:6px; line-height:1.3; }
+  .cal-badge.sess { background:var(--surface-hover); color:var(--brand-navy); }
+  .cal-badge.att { background:rgba(31,138,76,0.15); color:var(--present); }
+
+  /* Accounting pills */
+  .pill { padding:6px 14px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-family:var(--font-heading); font-weight:600; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.02em; color:var(--ink-muted); white-space:nowrap; }
+  .pill.paid.on { background:var(--present); color:#fff; border-color:var(--present); }
+  .pill.inv.on { background:var(--brand-navy); color:#fff; border-color:var(--brand-navy); }
+  .fee-input { width:92px; padding:7px 9px; }
+  @media (max-width:640px){ .cal-cell{ min-height:58px; padding:4px; } .cal-daynum{ font-size:0.85rem; } .cal-badge{ font-size:0.52rem; } }
 </style>
 </head>
 <body>
@@ -278,20 +300,24 @@
   </header>
   <nav class="tabs">
     <button data-view="dashboard" class="active">Dashboard</button>
+    <button data-view="calendar">Calendar</button>
     <button data-view="schedule">Schedule</button>
     <button data-view="teams">Teams</button>
     <button data-view="checkin">Check-in</button>
     <button data-view="history">History</button>
     <button data-view="stats">Stats</button>
+    <button data-view="accounting" id="nav-accounting">Accounting</button>
     <button data-view="admin" id="nav-admin">Admin</button>
   </nav>
   <main>
     <div class="view active" id="view-dashboard"></div>
+    <div class="view" id="view-calendar"></div>
     <div class="view" id="view-schedule"></div>
     <div class="view" id="view-teams"></div>
     <div class="view" id="view-checkin"></div>
     <div class="view" id="view-history"></div>
     <div class="view" id="view-stats"></div>
+    <div class="view" id="view-accounting"></div>
     <div class="view" id="view-admin"></div>
   </main>
 </div>
@@ -343,7 +369,12 @@
     if (!s.attendance) s.attendance = {};
     if (!s.auth) s.auth = { setupDone: false, adminPin: "", branchPins: {} };
     if (!s.auth.branchPins) s.auth.branchPins = {};
-    s.players.forEach(p => { if (!("teamId" in p)) p.teamId = null; });
+    s.players.forEach(p => {
+      if (!("teamId" in p)) p.teamId = null;
+      if (typeof p.fee !== "number") p.fee = 0;
+      if (typeof p.paid !== "boolean") p.paid = false;
+      if (typeof p.invoiced !== "boolean") p.invoiced = false;
+    });
     return s;
   }
 
@@ -377,6 +408,7 @@
     const [y,m,d] = iso.split("-").map(Number);
     return new Date(y, m-1, d).toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric", year:"numeric" });
   }
+  function fmtMoney(n) { return "$" + (Math.round((Number(n)||0) * 100) / 100).toLocaleString(); }
   function dayIdxOf(iso) { const [y,m,d]=iso.split("-").map(Number); return (new Date(y,m-1,d).getDay()+6)%7; } // 0=Mon
   function escapeHtml(s) { return String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
   function isAdmin() { return !!session && session.role === "admin"; }
@@ -440,6 +472,7 @@
   function showApp() {
     hideAllGates(); document.getElementById("app-root").style.display = "block";
     document.getElementById("nav-admin").style.display = isAdmin() ? "" : "none";
+    document.getElementById("nav-accounting").style.display = isAdmin() ? "" : "none";
     document.getElementById("session-label").textContent = isAdmin() ? "Admin — all branches" : "Branch — " + branchName(scopeBranchId());
     if (!isAdmin()) checkinTeamId = "";
     document.querySelectorAll("nav.tabs button").forEach(b => b.classList.remove("active"));
@@ -508,7 +541,7 @@
   // ===== Tabs =====
   const tabButtons = document.querySelectorAll("nav.tabs button");
   tabButtons.forEach(btn => btn.addEventListener("click", () => {
-    if (btn.dataset.view === "admin" && !isAdmin()) return;
+    if ((btn.dataset.view === "admin" || btn.dataset.view === "accounting") && !isAdmin()) return;
     tabButtons.forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
@@ -574,11 +607,13 @@
     if (!active) return;
     const v = active.id.replace("view-","");
     if (v === "dashboard") renderDashboard();
+    else if (v === "calendar") renderCalendar();
     else if (v === "schedule") renderSchedule();
     else if (v === "teams") renderTeams();
     else if (v === "checkin") renderCheckin();
     else if (v === "history") renderHistory();
     else if (v === "stats") renderStats();
+    else if (v === "accounting") renderAccounting();
     else if (v === "admin") renderAdmin();
   }
 
@@ -986,11 +1021,124 @@
   }
 
   // ===== Expose for inline handlers =====
+  // ---- Calendar ----
+  let calYear = null, calMonth = null;
+  function ensureCal() { if (calYear == null) { const d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth(); } }
+  function renderCalendar() {
+    ensureCal();
+    const el = document.getElementById("view-calendar");
+    const first = new Date(calYear, calMonth, 1);
+    const monthName = first.toLocaleDateString(undefined, { month:"long", year:"numeric" });
+    const startDow = (first.getDay() + 6) % 7;       // 0 = Monday
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const pidSet = new Set(scopedPlayers().map(p => p.id));
+    const sched = scopedSchedule();
+    const todayS = todayStr();
+
+    let html = `<div class="card"><h2>Monthly calendar ${isAdmin()?`<span class="sub">${adminBranchFilter==="all"?"all branches":escapeHtml(branchName(adminBranchFilter))}</span>`:""}</h2>`;
+    html += branchFilterControl();
+    html += `<div class="cal-nav">
+      <button class="btn btn-sm" onclick="app.calPrev()">‹ Prev</button>
+      <div class="cal-title">${escapeHtml(monthName)}</div>
+      <button class="btn btn-sm btn-ghost" onclick="app.calToday()">Today</button>
+      <button class="btn btn-sm" onclick="app.calNext()">Next ›</button>
+    </div>`;
+    html += `<div class="cal-grid cal-head">` + ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>`<div class="cal-dow">${d}</div>`).join("") + `</div>`;
+    html += `<div class="cal-grid">`;
+    for (let i = 0; i < startDow; i++) html += `<div class="cal-cell empty-cell"></div>`;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const iso = `${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+      const dow = (new Date(calYear, calMonth, day).getDay() + 6) % 7;
+      const nSess = sched.filter(s => s.day === dow).length;
+      let present = 0, marked = 0;
+      const att = state.attendance[iso];
+      if (att) for (const pid in att) { if (pidSet.has(pid)) { marked++; if (att[pid] === "present") present++; } }
+      html += `<div class="cal-cell ${iso===todayS?"today":""}" onclick="app.openDay('${iso}')">
+        <div class="cal-daynum">${day}</div>
+        ${nSess?`<div class="cal-badge sess">${nSess} ${nSess>1?"sessions":"session"}</div>`:""}
+        ${marked?`<div class="cal-badge att">${present}/${marked} present</div>`:""}
+      </div>`;
+    }
+    html += `</div></div>`;
+    html += `<div class="card"><p class="muted">Tap any day to take attendance for that date. Days with a scheduled session are flagged; once players are checked in, the present count appears on the day.</p></div>`;
+    el.innerHTML = html;
+  }
+  function calPrev() { ensureCal(); calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
+  function calNext() { ensureCal(); calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
+  function calToday() { const d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth(); renderCalendar(); }
+  function openDay(iso) { checkinDate = iso; goTab("checkin"); }
+
+  // ---- Accounting (admin only) ----
+  function renderAccounting() {
+    if (!isAdmin()) return;
+    const el = document.getElementById("view-accounting");
+    const players = scopedPlayers();
+    let collected = 0, outstanding = 0, paidCount = 0, invoicedCount = 0;
+    players.forEach(p => {
+      const fee = Number(p.fee) || 0;
+      if (p.paid) { collected += fee; paidCount++; } else { outstanding += fee; }
+      if (p.invoiced) invoicedCount++;
+    });
+
+    let html = `<div class="card"><h2>Accounting <span class="sub">admin only · ${adminBranchFilter==="all"?"all branches":escapeHtml(branchName(adminBranchFilter))}</span></h2>`;
+    html += branchFilterControl();
+    html += `<div class="kpis">
+      <div class="kpi"><div class="k-val">${fmtMoney(collected)}</div><div class="k-lbl">Collected (paid)</div></div>
+      <div class="kpi"><div class="k-val">${fmtMoney(outstanding)}</div><div class="k-lbl">Outstanding</div></div>
+      <div class="kpi"><div class="k-val">${paidCount}/${players.length}</div><div class="k-lbl">Players paid</div></div>
+      <div class="kpi"><div class="k-val">${invoicedCount}/${players.length}</div><div class="k-lbl">Invoiced</div></div>
+    </div></div>`;
+
+    html += `<div class="card"><h2>Players &amp; fees <span class="sub"><a class="link" onclick="app.exportAccounting()">Export CSV</a></span></h2>`;
+    if (!players.length) html += `<div class="empty">No players.</div>`;
+    else {
+      html += `<div class="tbl-wrap"><table><thead><tr><th>Player</th><th>Team</th><th>Branch</th><th class="num">Days present</th><th class="num">Attendance</th><th>Fee ($)</th><th>Paid</th><th>Invoiced</th></tr></thead><tbody>`;
+      players.forEach(p => {
+        const s = playerAttStats(p.id);
+        html += `<tr>
+          <td>${escapeHtml(p.name)}</td>
+          <td>${escapeHtml(teamName(p.teamId))}</td>
+          <td>${escapeHtml(branchName(p.branchId))}</td>
+          <td class="num">${s.present} / ${s.total}</td>
+          <td class="num">${s.rate==null?"—":s.rate+"%"}</td>
+          <td><input type="text" inputmode="decimal" class="fee-input" value="${Number(p.fee)||0}" onchange="app.setFee('${p.id}',this.value)"></td>
+          <td><button class="pill paid ${p.paid?"on":""}" onclick="app.togglePaid('${p.id}')">${p.paid?"Paid":"Unpaid"}</button></td>
+          <td><button class="pill inv ${p.invoiced?"on":""}" onclick="app.toggleInvoiced('${p.id}')">${p.invoiced?"Invoiced":"Not invoiced"}</button></td>
+        </tr>`;
+      });
+      html += `</tbody></table></div>`;
+    }
+    html += `</div>`;
+    el.innerHTML = html;
+  }
+  function setFee(id, val) {
+    const p = state.players.find(p => p.id === id); if (!p) return;
+    p.fee = parseFloat(String(val).replace(/[^0-9.]/g, "")) || 0;
+    save(); renderAccounting();
+  }
+  function togglePaid(id) { const p = state.players.find(p => p.id === id); if (!p) return; p.paid = !p.paid; save(); renderAccounting(); }
+  function toggleInvoiced(id) { const p = state.players.find(p => p.id === id); if (!p) return; p.invoiced = !p.invoiced; save(); renderAccounting(); }
+  function exportAccounting() {
+    const players = scopedPlayers();
+    const header = ["Player","Team","Branch","Days present","Sessions","Attendance%","Fee","Paid","Invoiced"];
+    const lines = [header.join(",")];
+    players.forEach(p => {
+      const s = playerAttStats(p.id);
+      lines.push([p.name, teamName(p.teamId), branchName(p.branchId), s.present, s.total, s.rate==null?"":s.rate, Number(p.fee)||0, p.paid?"Paid":"Unpaid", p.invoiced?"Invoiced":"Not invoiced"]
+        .map(v => `"${String(v).replace(/"/g,'""')}"`).join(","));
+    });
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "bfa-accounting.csv"; a.click(); URL.revokeObjectURL(a.href);
+  }
+
   window.app = {
     selectRole, setBranchFilter, addSession, removeSession,
     addTeam, removeTeam, updateTeamField, addPlayer, removePlayer,
     setCheckinDate, setCheckinTeam, checkinFor, mark, bulkMark,
     setHistoryTeam, openDate, exportStats,
+    calPrev, calNext, calToday, openDay,
+    setFee, togglePaid, toggleInvoiced, exportAccounting,
     updateBranchName, updateBranchPin, saveAdminPin
   };
 </script>
