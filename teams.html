@@ -236,6 +236,21 @@
   .repl-row { display:flex; align-items:center; gap:10px; margin:-2px 0 8px; padding:2px 12px 0; }
   .repl-row label { margin:0; white-space:nowrap; color:var(--brand-red); }
   .repl-row input { max-width:280px; }
+
+  /* Validate bar + toast */
+  .ci-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px; padding-top:14px; border-top:1px solid var(--border); flex-wrap:wrap; }
+  .ci-status { font-family:var(--font-heading); text-transform:uppercase; letter-spacing:0.03em; font-size:0.75rem; }
+  .ci-status.dirty { color:var(--brand-red); }
+  .ci-status.clean { color:var(--present); }
+  .ci-actions .btn-primary { padding:11px 24px; }
+  #bfa-toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px); background:var(--brand-navy); color:#fff; padding:12px 22px; border-radius:999px; font-family:var(--font-heading); font-weight:600; letter-spacing:0.02em; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:9999; }
+  #bfa-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* Weekday repeat picker */
+  .weekday-picker { display:flex; flex-wrap:wrap; gap:6px; }
+  .weekday-picker label { display:inline-flex; align-items:center; gap:5px; text-transform:none; letter-spacing:0; font-family:var(--font-body); font-weight:500; font-size:0.85rem; color:var(--ink); background:var(--surface-alt); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; margin:0; }
+  .weekday-picker input { width:auto; }
+  .sched-range { font-size:0.72rem; color:var(--ink-muted); }
   @media (max-width:640px){ .cal-cell{ min-height:58px; padding:4px; } .cal-daynum{ font-size:0.85rem; } .cal-badge{ font-size:0.52rem; } }
 </style>
 </head>
@@ -377,6 +392,11 @@
     s.teams = toArray(s.teams);
     s.players = toArray(s.players);
     s.schedule = toArray(s.schedule);
+    s.schedule.forEach(x => {
+      if (!Array.isArray(x.days)) x.days = (typeof x.day === "number") ? [x.day] : [];
+      if (typeof x.startDate !== "string") x.startDate = "";
+      if (typeof x.endDate !== "string") x.endDate = "";
+    });
     if (!s.attendance) s.attendance = {};
     if (!s.staffAttendance) s.staffAttendance = {};
     if (!s.auth) s.auth = { setupDone: false, adminPin: "", branchPins: {} };
@@ -422,6 +442,20 @@
   }
   function fmtMoney(n) { return "$" + (Math.round((Number(n)||0) * 100) / 100).toLocaleString(); }
   function fmtShort(iso) { const [y,m,d] = iso.split("-").map(Number); return new Date(y, m-1, d).toLocaleDateString(undefined, { month:"short", day:"numeric" }); }
+  function fmtMed(iso) { const [y,m,d] = iso.split("-").map(Number); return new Date(y, m-1, d).toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" }); }
+  function sessionOccursOn(s, iso) {
+    const days = s.days || (typeof s.day === "number" ? [s.day] : []);
+    if (!days.includes(dayIdxOf(iso))) return false;
+    if (s.startDate && iso < s.startDate) return false;
+    if (s.endDate && iso > s.endDate) return false;
+    return true;
+  }
+  function scheduleRangeText(s) {
+    if (s.startDate && s.endDate) return `${fmtMed(s.startDate)} – ${fmtMed(s.endDate)}`;
+    if (s.startDate) return `from ${fmtMed(s.startDate)}`;
+    if (s.endDate) return `until ${fmtMed(s.endDate)}`;
+    return "ongoing (no end date)";
+  }
   function staffStatus(date, teamId, role) {
     const d = state.staffAttendance[date]; if (!d) return null;
     const t = d[teamId]; if (!t) return null;
@@ -656,7 +690,7 @@
     const overall = rateForPlayers(ids);
     const sessions = sessionDates(ids).length;
     const todayIdx = dayIdxOf(todayStr());
-    const todaySessions = scopedSchedule().filter(s => s.day === todayIdx).sort((a,b)=> (a.start||"").localeCompare(b.start||""));
+    const todaySessions = scopedSchedule().filter(s => sessionOccursOn(s, todayStr())).sort((a,b)=> (a.start||"").localeCompare(b.start||""));
 
     let html = `<div class="card"><h2>Overview ${isAdmin()?`<span class="sub">${adminBranchFilter==="all"?"all branches":escapeHtml(branchName(adminBranchFilter))}</span>`:""}</h2>`;
     html += branchFilterControl();
@@ -715,11 +749,17 @@
     html += `<div class="row">
       ${isAdmin()?branchFilterControl():""}
       <div class="field grow"><label>Team</label><select id="sch-team">${teamSelectOptions("", true)}<option value="__none">General / all teams</option></select></div>
-      <div class="field"><label>Day</label><select id="sch-day">${DAYS.map((d,i)=>`<option value="${i}">${d}</option>`).join("")}</select></div>
-      <div class="field"><label>Start</label><input type="time" id="sch-start" value="17:00"></div>
-      <div class="field"><label>End</label><input type="time" id="sch-end" value="18:30"></div>
+      <div class="field"><label>Start time</label><input type="time" id="sch-start" value="17:00"></div>
+      <div class="field"><label>End time</label><input type="time" id="sch-end" value="18:30"></div>
       <div class="field grow"><label>Location / notes</label><input type="text" id="sch-loc" placeholder="e.g. Main pitch"></div>
-      <div class="field"><button class="btn btn-primary" onclick="app.addSession()">Add</button></div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <div class="field grow"><label>Repeat on (pick one or more days)</label><div class="weekday-picker">${DAYS.map((d,i)=>`<label><input type="checkbox" class="sch-dow" value="${i}"> ${d.slice(0,3)}</label>`).join("")}</div></div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <div class="field"><label>Repeat from</label><input type="date" id="sch-start-date" value="${todayStr()}"></div>
+      <div class="field"><label>Repeat until</label><input type="date" id="sch-end-date"></div>
+      <div class="field"><button class="btn btn-primary" onclick="app.addSession()">Add session</button></div>
     </div></div>`;
 
     html += `<div class="card"><h2>Weekly schedule</h2>`;
@@ -727,14 +767,15 @@
     if (!sched.length) html += `<div class="empty">No sessions scheduled yet.</div>`;
     else {
       DAYS.forEach((d, i) => {
-        const items = sched.filter(s => s.day === i).sort((a,b)=>(a.start||"").localeCompare(b.start||""));
+        const items = sched.filter(s => (s.days||[]).includes(i)).sort((a,b)=>(a.start||"").localeCompare(b.start||""));
         if (!items.length) return;
         html += `<div class="sched-day"><h3>${d}</h3>`;
         items.forEach(s => {
           html += `<div class="sched-item">
             <div class="sched-time">${escapeHtml(s.start||"")}${s.end?"–"+escapeHtml(s.end):""}</div>
             <div class="sched-body"><div class="t">${escapeHtml(s.teamId?teamName(s.teamId):"General / all teams")}</div>
-            <div class="muted">${escapeHtml(s.location||"")}${isAdmin()?" · "+escapeHtml(branchName(s.branchId)):""}</div></div>
+            <div class="muted">${escapeHtml(s.location||"")}${isAdmin()?" · "+escapeHtml(branchName(s.branchId)):""}</div>
+            <div class="sched-range">🗓 ${escapeHtml(scheduleRangeText(s))}${(s.days&&s.days.length>1)?" · "+s.days.map(x=>DAYS[x].slice(0,3)).join("/"):""}</div></div>
             <button class="btn btn-sm btn-ghost" onclick="app.removeSession('${s.id}')">✕</button>
           </div>`;
         });
@@ -756,12 +797,16 @@
     } else {
       const t = teamById(teamId); if (!t) return; branchId = t.branchId;
     }
-    const day = parseInt(document.getElementById("sch-day").value, 10);
+    const days = [...document.querySelectorAll(".sch-dow:checked")].map(c => parseInt(c.value, 10));
     const start = document.getElementById("sch-start").value;
     const end = document.getElementById("sch-end").value;
+    const startDate = document.getElementById("sch-start-date").value;
+    const endDate = document.getElementById("sch-end-date").value;
     const location = document.getElementById("sch-loc").value.trim();
+    if (!days.length) { alert("Pick at least one day to repeat on."); return; }
     if (!start) { alert("Start time required."); return; }
-    state.schedule.push({ id: uid(), branchId, teamId, day, start, end, location });
+    if (startDate && endDate && endDate < startDate) { alert("The end date can't be before the start date."); return; }
+    state.schedule.push({ id: uid(), branchId, teamId, days, start, end, startDate, endDate, location });
     save(); renderSchedule();
   }
   function removeSession(id) {
@@ -851,7 +896,22 @@
     if (active === "view-teams") renderTeams(); else renderAll();
   }
 
-  // ---- Check-in ----
+  // ---- Check-in (draft model: mark freely, then Validate to save) ----
+  let ciDraft = null; // { date, teamId, players:{pid:status}, staff:{coach,assistant}, dirty }
+  function draftMatches() { return ciDraft && ciDraft.date === checkinDate && ciDraft.teamId === checkinTeamId; }
+  function loadDraft() {
+    const players = {};
+    const savedP = state.attendance[checkinDate] || {};
+    state.players.filter(p => p.teamId === checkinTeamId).forEach(p => { if (savedP[p.id]) players[p.id] = savedP[p.id]; });
+    const savedS = (state.staffAttendance[checkinDate] && state.staffAttendance[checkinDate][checkinTeamId]) || {};
+    const staff = {
+      coach:     { status: savedS.coach ? savedS.coach.status : null,         replacement: savedS.coach ? (savedS.coach.replacement||"") : "" },
+      assistant: { status: savedS.assistant ? savedS.assistant.status : null, replacement: savedS.assistant ? (savedS.assistant.replacement||"") : "" }
+    };
+    ciDraft = { date: checkinDate, teamId: checkinTeamId, players, staff, dirty: false };
+  }
+  function ensureDraft() { if (!draftMatches()) loadDraft(); }
+
   function renderCheckin() {
     const el = document.getElementById("view-checkin");
     const teams = scopedTeams();
@@ -865,6 +925,7 @@
     </div>`;
 
     if (!teams.length) { html += `<div class="empty">No teams to check in. Add a team first.</div></div>`; el.innerHTML = html; return; }
+    ensureDraft();
     const players = state.players.filter(p => p.teamId === checkinTeamId);
     html += `<div class="muted" style="margin:8px 0 12px;">${escapeHtml(fmtDate(checkinDate))} · ${escapeHtml(teamName(checkinTeamId))}</div>`;
     if (!players.length) { html += `<div class="empty">This team has no players yet.</div></div>`; el.innerHTML = html; return; }
@@ -875,7 +936,7 @@
     </div>`;
     html += `<div class="att-list">`;
     players.forEach(p => {
-      const st = attStatus(checkinDate, p.id);
+      const st = ciDraft.players[p.id] || null;
       html += `<div class="att-row">
         <span class="name">${escapeHtml(p.name)}</span>
         <div class="toggle-btns">
@@ -892,9 +953,8 @@
     ["coach","assistant"].forEach(role => {
       const label = role === "coach" ? "Coach" : "Assistant";
       const person = team ? (team[role] || "") : "";
-      const st = staffStatus(checkinDate, checkinTeamId, role);
-      const status = st ? st.status : null;
-      const repl = st ? (st.replacement || "") : "";
+      const status = ciDraft.staff[role].status;
+      const repl = ciDraft.staff[role].replacement || "";
       html += `<div class="att-row staff">
         <span class="name"><span class="role-tag">${label}</span>${person ? escapeHtml(person) : '<span class="muted">not set — add in Teams</span>'}</span>
         <div class="toggle-btns">
@@ -908,41 +968,76 @@
     });
     html += `</div>`;
 
+    // ----- Validate / save -----
+    html += `<div class="ci-actions">
+      <span class="ci-status ${ciDraft.dirty?"dirty":"clean"}">${ciDraft.dirty?"● Unsaved changes":"✓ All changes saved"}</span>
+      <button class="btn btn-primary" onclick="app.validateAttendance()">Validate &amp; save</button>
+    </div>`;
+
     html += `</div>`; // close card
     el.innerHTML = html;
   }
-  function markStaff(role, status) {
-    const d = checkinDate, t = checkinTeamId; if (!t) return;
-    if (!state.staffAttendance[d]) state.staffAttendance[d] = {};
-    if (!state.staffAttendance[d][t]) state.staffAttendance[d][t] = {};
-    const cur = state.staffAttendance[d][t][role];
-    if (cur && cur.status === status) delete state.staffAttendance[d][t][role];
-    else state.staffAttendance[d][t][role] = { status, replacement: (cur && cur.replacement) || "" };
-    if (Object.keys(state.staffAttendance[d][t]).length === 0) delete state.staffAttendance[d][t];
-    if (Object.keys(state.staffAttendance[d]).length === 0) delete state.staffAttendance[d];
-    save(); renderCheckin();
-  }
-  function setStaffReplacement(role, name) {
-    const d = checkinDate, t = checkinTeamId; if (!t) return;
-    if (!state.staffAttendance[d] || !state.staffAttendance[d][t] || !state.staffAttendance[d][t][role]) return;
-    state.staffAttendance[d][t][role].replacement = name.trim();
-    save();
-  }
-  function setCheckinDate(v) { checkinDate = v || todayStr(); renderCheckin(); }
-  function setCheckinTeam(v) { checkinTeamId = v; renderCheckin(); }
-  function checkinFor(teamId) { checkinDate = todayStr(); if (teamId) checkinTeamId = teamId; goTab("checkin"); }
+
   function mark(playerId, status) {
-    if (!state.attendance[checkinDate]) state.attendance[checkinDate] = {};
-    if (state.attendance[checkinDate][playerId] === status) delete state.attendance[checkinDate][playerId];
-    else state.attendance[checkinDate][playerId] = status;
-    if (Object.keys(state.attendance[checkinDate]).length === 0) delete state.attendance[checkinDate];
-    save(); renderCheckin();
+    ensureDraft();
+    if (ciDraft.players[playerId] === status) delete ciDraft.players[playerId];
+    else ciDraft.players[playerId] = status;
+    ciDraft.dirty = true; renderCheckin();
   }
   function bulkMark(status) {
-    const players = state.players.filter(p => p.teamId === checkinTeamId);
-    if (!state.attendance[checkinDate]) state.attendance[checkinDate] = {};
-    players.forEach(p => state.attendance[checkinDate][p.id] = status);
-    save(); renderCheckin();
+    ensureDraft();
+    state.players.filter(p => p.teamId === checkinTeamId).forEach(p => ciDraft.players[p.id] = status);
+    ciDraft.dirty = true; renderCheckin();
+  }
+  function markStaff(role, status) {
+    ensureDraft();
+    const cur = ciDraft.staff[role];
+    cur.status = (cur.status === status) ? null : status;
+    ciDraft.dirty = true; renderCheckin();
+  }
+  function setStaffReplacement(role, name) {
+    ensureDraft();
+    ciDraft.staff[role].replacement = name.trim();
+    ciDraft.dirty = true; // no re-render so the field keeps focus
+  }
+  function validateAttendance() {
+    ensureDraft();
+    const d = checkinDate, t = checkinTeamId;
+    // Players: replace this team's marks for the date with the draft
+    if (!state.attendance[d]) state.attendance[d] = {};
+    state.players.filter(p => p.teamId === t).forEach(p => { delete state.attendance[d][p.id]; });
+    Object.entries(ciDraft.players).forEach(([pid, st]) => { state.attendance[d][pid] = st; });
+    if (Object.keys(state.attendance[d]).length === 0) delete state.attendance[d];
+    // Staff
+    if (!state.staffAttendance[d]) state.staffAttendance[d] = {};
+    const st = {};
+    ["coach","assistant"].forEach(role => {
+      const e = ciDraft.staff[role];
+      if (e.status) st[role] = { status: e.status, replacement: e.status === "absent" ? (e.replacement || "") : "" };
+    });
+    if (Object.keys(st).length) state.staffAttendance[d][t] = st; else delete state.staffAttendance[d][t];
+    if (Object.keys(state.staffAttendance[d]).length === 0) delete state.staffAttendance[d];
+    save();
+    ciDraft.dirty = false;
+    renderCheckin();
+    showToast("Attendance saved ✓");
+  }
+
+  function setCheckinDate(v) {
+    if (ciDraft && ciDraft.dirty && !confirm("You have unsaved attendance. Discard those changes?")) { renderCheckin(); return; }
+    checkinDate = v || todayStr(); ciDraft = null; renderCheckin();
+  }
+  function setCheckinTeam(v) {
+    if (ciDraft && ciDraft.dirty && !confirm("You have unsaved attendance. Discard those changes?")) { renderCheckin(); return; }
+    checkinTeamId = v; ciDraft = null; renderCheckin();
+  }
+  function checkinFor(teamId) { checkinDate = todayStr(); if (teamId) checkinTeamId = teamId; ciDraft = null; goTab("checkin"); }
+
+  function showToast(msg) {
+    let t = document.getElementById("bfa-toast");
+    if (!t) { t = document.createElement("div"); t.id = "bfa-toast"; document.body.appendChild(t); }
+    t.textContent = msg; t.className = "show";
+    clearTimeout(showToast._t); showToast._t = setTimeout(() => { t.className = ""; }, 2200);
   }
 
   // ---- History ----
@@ -1140,7 +1235,7 @@
     for (let day = 1; day <= daysInMonth; day++) {
       const iso = `${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
       const dow = (new Date(calYear, calMonth, day).getDay() + 6) % 7;
-      const nSess = sched.filter(s => s.day === dow).length;
+      const nSess = sched.filter(s => sessionOccursOn(s, iso)).length;
       let present = 0, marked = 0;
       const att = state.attendance[iso];
       if (att) for (const pid in att) { if (pidSet.has(pid)) { marked++; if (att[pid] === "present") present++; } }
@@ -1227,7 +1322,7 @@
     selectRole, setBranchFilter, addSession, removeSession,
     addTeam, removeTeam, updateTeamField, addPlayer, removePlayer,
     setCheckinDate, setCheckinTeam, checkinFor, mark, bulkMark,
-    markStaff, setStaffReplacement,
+    markStaff, setStaffReplacement, validateAttendance,
     setHistoryTeam, openDate, exportStats,
     calPrev, calNext, calToday, openDay,
     setFee, togglePaid, toggleInvoiced, exportAccounting,
