@@ -247,13 +247,6 @@
   #bfa-toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px); background:var(--brand-navy); color:#fff; padding:12px 22px; border-radius:999px; font-family:var(--font-heading); font-weight:600; letter-spacing:0.02em; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:9999; }
   #bfa-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-  /* Check-in modal */
-  .modal-overlay { position:fixed; inset:0; background:rgba(8,12,28,0.6); display:none; align-items:flex-start; justify-content:center; padding:24px 14px; z-index:1000; overflow-y:auto; }
-  .modal { position:relative; width:100%; max-width:560px; margin:auto; }
-  .modal .card { margin-bottom:0; }
-  .modal-close { position:absolute; top:12px; right:12px; z-index:2; width:34px; height:34px; border-radius:50%; border:1px solid var(--border); background:var(--surface-alt); color:var(--ink); cursor:pointer; font-size:0.95rem; line-height:1; }
-  .modal-close:hover { background:var(--surface-hover); }
-
   /* Weekday repeat picker */
   .weekday-picker { display:flex; flex-wrap:wrap; gap:6px; }
   .weekday-picker label { display:inline-flex; align-items:center; gap:5px; text-transform:none; letter-spacing:0; font-family:var(--font-body); font-weight:500; font-size:0.85rem; color:var(--ink); background:var(--surface-alt); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; margin:0; }
@@ -617,7 +610,6 @@
     btn.classList.add("active");
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     document.getElementById("view-" + btn.dataset.view).classList.add("active");
-    hideCheckinModal();
     renderAll();
   }));
   function goTab(view) {
@@ -890,8 +882,18 @@
     const inp = document.getElementById("addpl-" + teamId);
     const name = inp.value.trim(); if (!name) return;
     const t = teamById(teamId); if (!t) return;
-    state.players.push({ id: uid(), branchId: t.branchId, teamId, name });
+    state.players.push({ id: uid(), branchId: t.branchId, teamId, name, fee: 0, paid: false, invoiced: false });
     inp.value = ""; save(); renderTeams();
+  }
+  function addPlayerCheckin() {
+    const inp = document.getElementById("ci-addpl");
+    if (!inp) return;
+    const name = inp.value.trim(); if (!name) return;
+    const t = teamById(checkinTeamId); if (!t) { alert("Select a team first."); return; }
+    state.players.push({ id: uid(), branchId: t.branchId, teamId: checkinTeamId, name, fee: 0, paid: false, invoiced: false });
+    inp.value = ""; save();
+    renderCheckin();
+    const ni = document.getElementById("ci-addpl"); if (ni) ni.focus();
   }
   function removePlayer(id) {
     if (!confirm("Remove this player and their attendance history?")) return;
@@ -933,24 +935,33 @@
     ensureDraft();
     const players = state.players.filter(p => p.teamId === checkinTeamId);
     html += `<div class="muted" style="margin:8px 0 12px;">Team: ${escapeHtml(teamName(checkinTeamId))}</div>`;
-    if (!players.length) { html += `<div class="empty">This team has no players yet.</div></div>`; el.innerHTML = html; return; }
 
+    // Add a player on the spot
     html += `<div class="row" style="margin-bottom:12px;">
-      <button class="btn btn-sm" onclick="app.bulkMark('present')">Mark all present</button>
-      <button class="btn btn-sm" onclick="app.bulkMark('absent')">Mark all absent</button>
+      <div class="field grow"><input type="text" id="ci-addpl" placeholder="Add a player to this team…" onkeydown="if(event.key==='Enter')app.addPlayerCheckin()"></div>
+      <div class="field"><button class="btn btn-sm" onclick="app.addPlayerCheckin()">＋ Add player</button></div>
     </div>`;
-    html += `<div class="att-list">`;
-    players.forEach(p => {
-      const st = ciDraft.players[p.id] || null;
-      html += `<div class="att-row">
-        <span class="name">${escapeHtml(p.name)}</span>
-        <div class="toggle-btns">
-          <button class="tg p ${st==="present"?"on":""}" onclick="app.mark('${p.id}','present')">Present</button>
-          <button class="tg a ${st==="absent"?"on":""}" onclick="app.mark('${p.id}','absent')">Absent</button>
-        </div>
+
+    if (!players.length) {
+      html += `<div class="empty">No players yet — add them above.</div>`;
+    } else {
+      html += `<div class="row" style="margin-bottom:12px;">
+        <button class="btn btn-sm" onclick="app.bulkMark('present')">Mark all present</button>
+        <button class="btn btn-sm" onclick="app.bulkMark('absent')">Mark all absent</button>
       </div>`;
-    });
-    html += `</div>`; // close att-list
+      html += `<div class="att-list">`;
+      players.forEach(p => {
+        const st = ciDraft.players[p.id] || null;
+        html += `<div class="att-row">
+          <span class="name">${escapeHtml(p.name)}</span>
+          <div class="toggle-btns">
+            <button class="tg p ${st==="present"?"on":""}" onclick="app.mark('${p.id}','present')">Present</button>
+            <button class="tg a ${st==="absent"?"on":""}" onclick="app.mark('${p.id}','absent')">Absent</button>
+          </div>
+        </div>`;
+      });
+      html += `</div>`; // close att-list
+    }
 
     // ----- Coaching staff attendance + replacements -----
     const team = teamById(checkinTeamId);
@@ -1024,8 +1035,8 @@
     if (Object.keys(state.staffAttendance[d]).length === 0) delete state.staffAttendance[d];
     save();
     ciDraft.dirty = false;
+    renderCheckin();
     showToast("Attendance saved ✓");
-    closeCheckin();
   }
 
   function setCheckinDate(v) {
@@ -1036,7 +1047,7 @@
     if (ciDraft && ciDraft.dirty && !confirm("You have unsaved attendance. Discard those changes?")) { renderCheckin(); return; }
     checkinTeamId = v; ciDraft = null; renderCheckin();
   }
-  function checkinFor(teamId) { checkinDate = todayStr(); if (teamId) checkinTeamId = teamId; ciDraft = null; goTab("attendance"); openCheckinModal(); }
+  function checkinFor(teamId) { checkinDate = todayStr(); if (teamId) checkinTeamId = teamId; ciDraft = null; goTab("attendance"); }
 
   function showToast(msg) {
     let t = document.getElementById("bfa-toast");
@@ -1084,7 +1095,6 @@
     checkinDate = d; ciDraft = null;
     if (historyTeamFilter !== "all") checkinTeamId = historyTeamFilter;
     goTab("attendance");
-    openCheckinModal();
   }
 
   // ---- Stats ----
@@ -1216,8 +1226,9 @@
   // ---- Attendance (calendar + check-in combined) ----
   function renderAttendance() {
     const el = document.getElementById("view-attendance");
-    el.innerHTML = `<div id="att-calendar"></div>`;
+    el.innerHTML = `<div id="att-calendar"></div><div id="att-checkin"></div>`;
     renderCalendar();
+    renderCheckin();
   }
 
   // ---- Calendar ----
@@ -1260,7 +1271,7 @@
       </div>`;
     }
     html += `</div>`;
-    html += `<p class="muted" style="margin:12px 0 0;">Tap any day to take attendance for it. Days with a scheduled session are flagged, and the present count shows once validated.</p>`;
+    html += `<p class="muted" style="margin:12px 0 0;">Tap any day to take attendance for it below. Days with a scheduled session are flagged, and the present count shows once validated.</p>`;
     html += `</div>`;
     el.innerHTML = html;
   }
@@ -1268,32 +1279,11 @@
   function calNext() { ensureCal(); calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
   function calToday() { const d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth(); renderCalendar(); }
   function pickDay(iso) {
-    checkinDate = iso; ciDraft = null;
-    renderCalendar();
-    openCheckinModal();
-  }
-  function openCheckinModal() {
-    let ov = document.getElementById("ci-modal");
-    if (!ov) {
-      ov = document.createElement("div");
-      ov.id = "ci-modal";
-      ov.className = "modal-overlay";
-      ov.innerHTML = `<div class="modal"><button class="modal-close" onclick="app.closeCheckin()" aria-label="Close">✕</button><div id="att-checkin"></div></div>`;
-      ov.addEventListener("click", e => { if (e.target === ov) closeCheckin(); });
-      document.body.appendChild(ov);
-    }
-    ov.style.display = "flex";
-    renderCheckin();
-  }
-  function hideCheckinModal() {
-    const ov = document.getElementById("ci-modal");
-    if (ov) ov.style.display = "none";
-  }
-  function closeCheckin() {
     if (ciDraft && ciDraft.dirty && !confirm("You have unsaved attendance. Discard those changes?")) return;
-    hideCheckinModal();
-    ciDraft = null;
-    renderCalendar();
+    checkinDate = iso; ciDraft = null;
+    renderAttendance();
+    const cin = document.getElementById("att-checkin");
+    if (cin) cin.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   // ---- Accounting (admin only) ----
@@ -1366,7 +1356,7 @@
     setCheckinDate, setCheckinTeam, checkinFor, mark, bulkMark,
     markStaff, setStaffReplacement, validateAttendance,
     setHistoryTeam, openDate, exportStats,
-    calPrev, calNext, calToday, pickDay, closeCheckin,
+    calPrev, calNext, calToday, pickDay, addPlayerCheckin,
     setFee, togglePaid, toggleInvoiced, exportAccounting,
     updateBranchName, updateBranchPin, saveAdminPin
   };
