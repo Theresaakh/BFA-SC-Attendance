@@ -217,6 +217,7 @@
   .cal-cell:hover { background:var(--surface-hover); }
   .cal-cell.empty-cell { background:transparent; border:none; cursor:default; }
   .cal-cell.today { border-color:var(--brand-red); box-shadow:0 0 0 1px var(--brand-red) inset; }
+  .cal-cell.selected { border-color:var(--brand-navy); box-shadow:0 0 0 2px var(--brand-navy) inset; background:var(--surface-hover); }
   .cal-daynum { font-family:var(--font-display); font-size:1rem; color:var(--ink); line-height:1; }
   .cal-badge { font-size:0.6rem; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:0.02em; padding:2px 5px; border-radius:6px; line-height:1.3; }
   .cal-badge.sess { background:var(--surface-hover); color:var(--brand-navy); }
@@ -325,10 +326,9 @@
   </header>
   <nav class="tabs">
     <button data-view="dashboard" class="active">Dashboard</button>
-    <button data-view="calendar">Calendar</button>
+    <button data-view="attendance">Attendance</button>
     <button data-view="schedule">Schedule</button>
     <button data-view="teams">Teams</button>
-    <button data-view="checkin">Check-in</button>
     <button data-view="history">History</button>
     <button data-view="stats">Stats</button>
     <button data-view="accounting" id="nav-accounting">Accounting</button>
@@ -336,10 +336,9 @@
   </nav>
   <main>
     <div class="view active" id="view-dashboard"></div>
-    <div class="view" id="view-calendar"></div>
+    <div class="view" id="view-attendance"></div>
     <div class="view" id="view-schedule"></div>
     <div class="view" id="view-teams"></div>
-    <div class="view" id="view-checkin"></div>
     <div class="view" id="view-history"></div>
     <div class="view" id="view-stats"></div>
     <div class="view" id="view-accounting"></div>
@@ -672,10 +671,9 @@
     if (!active) return;
     const v = active.id.replace("view-","");
     if (v === "dashboard") renderDashboard();
-    else if (v === "calendar") renderCalendar();
+    else if (v === "attendance") renderAttendance();
     else if (v === "schedule") renderSchedule();
     else if (v === "teams") renderTeams();
-    else if (v === "checkin") renderCheckin();
     else if (v === "history") renderHistory();
     else if (v === "stats") renderStats();
     else if (v === "accounting") renderAccounting();
@@ -913,21 +911,20 @@
   function ensureDraft() { if (!draftMatches()) loadDraft(); }
 
   function renderCheckin() {
-    const el = document.getElementById("view-checkin");
+    const el = document.getElementById("att-checkin");
+    if (!el) return;
     const teams = scopedTeams();
     if (!checkinTeamId && teams.length) checkinTeamId = teams[0].id;
     if (checkinTeamId && !teams.some(t=>t.id===checkinTeamId)) checkinTeamId = teams.length?teams[0].id:"";
 
-    let html = `<div class="card"><h2>Attendance check-in</h2><div class="row">
-      ${isAdmin()?branchFilterControl():""}
-      <div class="field"><label>Date</label><input type="date" id="ci-date" value="${checkinDate}" onchange="app.setCheckinDate(this.value)"></div>
+    let html = `<div class="card"><h2>Take attendance <span class="sub">${escapeHtml(fmtDate(checkinDate))}</span></h2><div class="row">
       <div class="field grow"><label>Team</label><select id="ci-team" onchange="app.setCheckinTeam(this.value)">${teamSelectOptions(checkinTeamId, false)}</select></div>
     </div>`;
 
     if (!teams.length) { html += `<div class="empty">No teams to check in. Add a team first.</div></div>`; el.innerHTML = html; return; }
     ensureDraft();
     const players = state.players.filter(p => p.teamId === checkinTeamId);
-    html += `<div class="muted" style="margin:8px 0 12px;">${escapeHtml(fmtDate(checkinDate))} · ${escapeHtml(teamName(checkinTeamId))}</div>`;
+    html += `<div class="muted" style="margin:8px 0 12px;">Team: ${escapeHtml(teamName(checkinTeamId))}</div>`;
     if (!players.length) { html += `<div class="empty">This team has no players yet.</div></div>`; el.innerHTML = html; return; }
 
     html += `<div class="row" style="margin-bottom:12px;">
@@ -1031,7 +1028,7 @@
     if (ciDraft && ciDraft.dirty && !confirm("You have unsaved attendance. Discard those changes?")) { renderCheckin(); return; }
     checkinTeamId = v; ciDraft = null; renderCheckin();
   }
-  function checkinFor(teamId) { checkinDate = todayStr(); if (teamId) checkinTeamId = teamId; ciDraft = null; goTab("checkin"); }
+  function checkinFor(teamId) { checkinDate = todayStr(); if (teamId) checkinTeamId = teamId; ciDraft = null; goTab("attendance"); }
 
   function showToast(msg) {
     let t = document.getElementById("bfa-toast");
@@ -1076,9 +1073,9 @@
   }
   function setHistoryTeam(v) { historyTeamFilter = v; renderHistory(); }
   function openDate(d) {
-    checkinDate = d;
+    checkinDate = d; ciDraft = null;
     if (historyTeamFilter !== "all") checkinTeamId = historyTeamFilter;
-    goTab("checkin");
+    goTab("attendance");
   }
 
   // ---- Stats ----
@@ -1207,12 +1204,21 @@
   }
 
   // ===== Expose for inline handlers =====
+  // ---- Attendance (calendar + check-in combined) ----
+  function renderAttendance() {
+    const el = document.getElementById("view-attendance");
+    el.innerHTML = `<div id="att-calendar"></div><div id="att-checkin"></div>`;
+    renderCalendar();
+    renderCheckin();
+  }
+
   // ---- Calendar ----
   let calYear = null, calMonth = null;
   function ensureCal() { if (calYear == null) { const d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth(); } }
   function renderCalendar() {
     ensureCal();
-    const el = document.getElementById("view-calendar");
+    const el = document.getElementById("att-calendar");
+    if (!el) return;
     const first = new Date(calYear, calMonth, 1);
     const monthName = first.toLocaleDateString(undefined, { month:"long", year:"numeric" });
     const startDow = (first.getDay() + 6) % 7;       // 0 = Monday
@@ -1239,20 +1245,24 @@
       let present = 0, marked = 0;
       const att = state.attendance[iso];
       if (att) for (const pid in att) { if (pidSet.has(pid)) { marked++; if (att[pid] === "present") present++; } }
-      html += `<div class="cal-cell ${iso===todayS?"today":""}" onclick="app.openDay('${iso}')">
+      html += `<div class="cal-cell ${iso===todayS?"today":""} ${iso===checkinDate?"selected":""}" onclick="app.pickDay('${iso}')">
         <div class="cal-daynum">${day}</div>
         ${nSess?`<div class="cal-badge sess">${nSess} ${nSess>1?"sessions":"session"}</div>`:""}
         ${marked?`<div class="cal-badge att">${present}/${marked} present</div>`:""}
       </div>`;
     }
-    html += `</div></div>`;
-    html += `<div class="card"><p class="muted">Tap any day to take attendance for that date. Days with a scheduled session are flagged; once players are checked in, the present count appears on the day.</p></div>`;
+    html += `</div>`;
+    html += `<p class="muted" style="margin:12px 0 0;">Select a day above to take attendance for it below. Days with a scheduled session are flagged, and the present count shows once validated.</p>`;
+    html += `</div>`;
     el.innerHTML = html;
   }
   function calPrev() { ensureCal(); calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
   function calNext() { ensureCal(); calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
   function calToday() { const d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth(); renderCalendar(); }
-  function openDay(iso) { checkinDate = iso; goTab("checkin"); }
+  function pickDay(iso) {
+    if (ciDraft && ciDraft.dirty && !confirm("You have unsaved attendance. Discard those changes?")) return;
+    checkinDate = iso; ciDraft = null; renderAttendance();
+  }
 
   // ---- Accounting (admin only) ----
   function renderAccounting() {
@@ -1324,7 +1334,7 @@
     setCheckinDate, setCheckinTeam, checkinFor, mark, bulkMark,
     markStaff, setStaffReplacement, validateAttendance,
     setHistoryTeam, openDate, exportStats,
-    calPrev, calNext, calToday, openDay,
+    calPrev, calNext, calToday, pickDay,
     setFee, togglePaid, toggleInvoiced, exportAccounting,
     updateBranchName, updateBranchPin, saveAdminPin
   };
