@@ -247,6 +247,13 @@
   #bfa-toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px); background:var(--brand-navy); color:#fff; padding:12px 22px; border-radius:999px; font-family:var(--font-heading); font-weight:600; letter-spacing:0.02em; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:9999; }
   #bfa-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
+  /* Check-in modal */
+  .modal-overlay { position:fixed; inset:0; background:rgba(8,12,28,0.6); display:none; align-items:flex-start; justify-content:center; padding:24px 14px; z-index:1000; overflow-y:auto; }
+  .modal { position:relative; width:100%; max-width:560px; margin:auto; }
+  .modal .card { margin-bottom:0; }
+  .modal-close { position:absolute; top:12px; right:12px; z-index:2; width:34px; height:34px; border-radius:50%; border:1px solid var(--border); background:var(--surface-alt); color:var(--ink); cursor:pointer; font-size:0.95rem; line-height:1; }
+  .modal-close:hover { background:var(--surface-hover); }
+
   /* Weekday repeat picker */
   .weekday-picker { display:flex; flex-wrap:wrap; gap:6px; }
   .weekday-picker label { display:inline-flex; align-items:center; gap:5px; text-transform:none; letter-spacing:0; font-family:var(--font-body); font-weight:500; font-size:0.85rem; color:var(--ink); background:var(--surface-alt); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; margin:0; }
@@ -610,6 +617,7 @@
     btn.classList.add("active");
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     document.getElementById("view-" + btn.dataset.view).classList.add("active");
+    hideCheckinModal();
     renderAll();
   }));
   function goTab(view) {
@@ -1016,8 +1024,8 @@
     if (Object.keys(state.staffAttendance[d]).length === 0) delete state.staffAttendance[d];
     save();
     ciDraft.dirty = false;
-    renderCheckin();
     showToast("Attendance saved ✓");
+    closeCheckin();
   }
 
   function setCheckinDate(v) {
@@ -1028,7 +1036,7 @@
     if (ciDraft && ciDraft.dirty && !confirm("You have unsaved attendance. Discard those changes?")) { renderCheckin(); return; }
     checkinTeamId = v; ciDraft = null; renderCheckin();
   }
-  function checkinFor(teamId) { checkinDate = todayStr(); if (teamId) checkinTeamId = teamId; ciDraft = null; goTab("attendance"); }
+  function checkinFor(teamId) { checkinDate = todayStr(); if (teamId) checkinTeamId = teamId; ciDraft = null; goTab("attendance"); openCheckinModal(); }
 
   function showToast(msg) {
     let t = document.getElementById("bfa-toast");
@@ -1076,6 +1084,7 @@
     checkinDate = d; ciDraft = null;
     if (historyTeamFilter !== "all") checkinTeamId = historyTeamFilter;
     goTab("attendance");
+    openCheckinModal();
   }
 
   // ---- Stats ----
@@ -1207,9 +1216,8 @@
   // ---- Attendance (calendar + check-in combined) ----
   function renderAttendance() {
     const el = document.getElementById("view-attendance");
-    el.innerHTML = `<div id="att-calendar"></div><div id="att-checkin"></div>`;
+    el.innerHTML = `<div id="att-calendar"></div>`;
     renderCalendar();
-    renderCheckin();
   }
 
   // ---- Calendar ----
@@ -1252,7 +1260,7 @@
       </div>`;
     }
     html += `</div>`;
-    html += `<p class="muted" style="margin:12px 0 0;">Select a day above to take attendance for it below. Days with a scheduled session are flagged, and the present count shows once validated.</p>`;
+    html += `<p class="muted" style="margin:12px 0 0;">Tap any day to take attendance for it. Days with a scheduled session are flagged, and the present count shows once validated.</p>`;
     html += `</div>`;
     el.innerHTML = html;
   }
@@ -1260,8 +1268,32 @@
   function calNext() { ensureCal(); calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
   function calToday() { const d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth(); renderCalendar(); }
   function pickDay(iso) {
+    checkinDate = iso; ciDraft = null;
+    renderCalendar();
+    openCheckinModal();
+  }
+  function openCheckinModal() {
+    let ov = document.getElementById("ci-modal");
+    if (!ov) {
+      ov = document.createElement("div");
+      ov.id = "ci-modal";
+      ov.className = "modal-overlay";
+      ov.innerHTML = `<div class="modal"><button class="modal-close" onclick="app.closeCheckin()" aria-label="Close">✕</button><div id="att-checkin"></div></div>`;
+      ov.addEventListener("click", e => { if (e.target === ov) closeCheckin(); });
+      document.body.appendChild(ov);
+    }
+    ov.style.display = "flex";
+    renderCheckin();
+  }
+  function hideCheckinModal() {
+    const ov = document.getElementById("ci-modal");
+    if (ov) ov.style.display = "none";
+  }
+  function closeCheckin() {
     if (ciDraft && ciDraft.dirty && !confirm("You have unsaved attendance. Discard those changes?")) return;
-    checkinDate = iso; ciDraft = null; renderAttendance();
+    hideCheckinModal();
+    ciDraft = null;
+    renderCalendar();
   }
 
   // ---- Accounting (admin only) ----
@@ -1334,7 +1366,7 @@
     setCheckinDate, setCheckinTeam, checkinFor, mark, bulkMark,
     markStaff, setStaffReplacement, validateAttendance,
     setHistoryTeam, openDate, exportStats,
-    calPrev, calNext, calToday, pickDay,
+    calPrev, calNext, calToday, pickDay, closeCheckin,
     setFee, togglePaid, toggleInvoiced, exportAccounting,
     updateBranchName, updateBranchPin, saveAdminPin
   };
