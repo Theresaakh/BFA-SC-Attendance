@@ -45,6 +45,8 @@
     background:radial-gradient(1200px 600px at 20% -10%, #26306a 0%, transparent 60%), linear-gradient(135deg,var(--navy-deep),#141c44 55%,var(--red-deep));}
   .gate-card{width:100%;max-width:470px;background:var(--surface);border-radius:20px;box-shadow:var(--shadow);padding:32px 30px;color:var(--ink);}
   .badge-shield{width:54px;height:54px;border-radius:14px;background:linear-gradient(135deg,var(--brand-navy),var(--brand-red));display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:var(--shadow-sm);}
+  .brand-logo{width:60px;height:60px;object-fit:contain;display:block;filter:drop-shadow(0 3px 8px rgba(0,0,0,.18));}
+  .appbar .brand-logo{width:46px;height:46px;}
   .gate-card h1{font-family:var(--f-head);font-weight:700;text-transform:uppercase;letter-spacing:.02em;font-size:1.5rem;color:var(--brand-navy);margin-top:14px;}
   .gate-card .kick{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.18em;font-size:.7rem;color:var(--brand-red);font-weight:600;}
   .gate-card p.sub{margin:6px 0 20px;color:var(--muted);font-size:.9rem;}
@@ -237,7 +239,7 @@
 <!-- LOADING -->
 <div class="gate" id="gate-loading">
   <div class="gate-card">
-    <div class="badge-shield">⚽</div>
+    <img class="brand-logo" src="logo.png" alt="BFA" onerror="this.outerHTML='<div class=&quot;badge-shield&quot;>⚽</div>'">
     <div class="kick">Attendance & Payments</div>
     <h1>Beirut Football Academy</h1>
     <p class="sub" id="loading-text">Connecting…</p>
@@ -247,7 +249,7 @@
 <!-- SETUP -->
 <div class="gate" id="gate-setup" style="display:none;">
   <div class="gate-card">
-    <div class="badge-shield">⚽</div>
+    <img class="brand-logo" src="logo.png" alt="BFA" onerror="this.outerHTML='<div class=&quot;badge-shield&quot;>⚽</div>'">
     <div class="kick">First-time setup</div>
     <h1>Create your PINs</h1>
     <p class="sub">Set an admin PIN and a PIN for each of your 7 branches. You can rename branches and change PINs later in Admin.</p>
@@ -265,7 +267,7 @@
 <!-- LOGIN -->
 <div class="gate" id="gate-login" style="display:none;">
   <div class="gate-card">
-    <div class="badge-shield">⚽</div>
+    <img class="brand-logo" src="logo.png" alt="BFA" onerror="this.outerHTML='<div class=&quot;badge-shield&quot;>⚽</div>'">
     <div class="kick">Sign in</div>
     <h1 id="login-h1">Choose your branch</h1>
     <div id="login-roles">
@@ -285,7 +287,7 @@
 <div id="app-root" style="display:none;">
   <header class="appbar">
     <div class="appbar-inner">
-      <div class="badge-shield">⚽</div>
+      <img class="brand-logo" src="logo.png" alt="BFA" onerror="this.outerHTML='<div class=&quot;badge-shield&quot;>⚽</div>'">
       <div>
         <div class="title">Beirut Football Academy</div>
         <div class="subtitle">Teams · Attendance · Billing</div>
