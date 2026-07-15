@@ -323,7 +323,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
+  import { getDatabase, ref, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
   const firebaseConfig = {
     apiKey: "AIzaSyBGOrBYpLtl4fqb-JFJNHWZheQVkO9VpYA",
     authDomain: "bfa-sc-tracker.firebaseapp.com",
@@ -332,7 +332,13 @@
     messagingSenderId: "337221107402", appId: "1:337221107402:web:90be943b8cfec13db03e33"
   };
   const db = getDatabase(initializeApp(firebaseConfig));
-  const stateRef = ref(db, "bfaTeamsState");
+  const ROOT = "bfaTeamsState";
+  const stateRef = ref(db, ROOT);
+  // ----- Granular writes: each change touches only its own path, so concurrent
+  //       edits on different devices merge instead of overwriting each other. -----
+  function wSet(path,val){ set(ref(db, ROOT+"/"+path), val).catch(e=>console.error("write",path,e)); }
+  function wRemove(path){ remove(ref(db, ROOT+"/"+path)).catch(e=>console.error("remove",path,e)); }
+  function wMulti(updates){ update(stateRef, updates).catch(e=>console.error("multi-write",e)); }
   const SESSION_KEY="bfaTeamsSession_v1", THEME_KEY="bfaTeamsTheme";
   const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
   const DEFAULT_BRANCHES=["Furn El Chebbek","Hazmieh","Sen El Fil","Hadath","Beit Meri","Mansourieh","Sour"];
@@ -361,8 +367,16 @@
   let adminBranchFilter="all", checkinDate=todayStr(), checkinTeamId="", historyTeamFilter="all";
   let calYear=null, calMonth=null, billMonth=todayStr().slice(0,7), playerSearch="";
 
-  function save(){ set(stateRef,state).catch(e=>console.error("Save failed:",e)); }
-  onValue(stateRef, snap=>{ state=normalize(snap.val());
+  let migrated=false;
+  onValue(stateRef, snap=>{ const raw=snap.val(); state=normalize(raw);
+    // One-time migration: old data stored teams/players/schedule as arrays. Re-key them
+    // by id so granular per-item writes work (and stop wholesale overwrites).
+    if(!migrated && raw!==null){ migrated=true;
+      if(Array.isArray(raw.teams)||Array.isArray(raw.players)||Array.isArray(raw.schedule)){
+        const toMap=a=>{const m={};toArray(a).forEach(o=>{if(o&&o.id)m[o.id]=o;});return m;};
+        update(stateRef,{teams:toMap(raw.teams),players:toMap(raw.players),schedule:toMap(raw.schedule)}).catch(e=>console.error("migrate",e));
+      }
+    }
     if(!booted){ booted=true; boot(); }
     else if(session) renderAll();
     else if(state.auth.setupDone && document.getElementById("gate-login").style.display!=="none") showLogin();
@@ -445,7 +459,7 @@
     const names=[],pins=[]; for(let i=0;i<7;i++){ const n=document.getElementById("sb-name-"+i).value.trim(), p=document.getElementById("sb-pin-"+i).value.trim();
       if(!n){err.textContent=`Branch ${i+1} needs a name.`;return;} if(!/^\d{4,8}$/.test(p)){err.textContent=`Branch ${i+1} PIN must be 4–8 digits.`;return;} names.push(n);pins.push(p); }
     const branches=names.map(n=>({id:uid(),name:n})); const bp={}; branches.forEach((b,i)=>bp[b.id]=pins[i]);
-    state.branches=branches; state.auth={setupDone:true,adminPin:a,branchPins:bp}; save(); showLogin(); });
+    state.branches=branches; state.auth={setupDone:true,adminPin:a,branchPins:bp}; wSet("branches",branches); wSet("auth",state.auth); showLogin(); });
 
   let pendingRole=null;
   function selectRole(role,bid){ pendingRole=role==="branch"?{role:"branch",branchId:bid}:{role:"admin"};
@@ -595,14 +609,18 @@
   function markStaff(role,status){ ensureDraft(); const c=ciDraft.staff[role]; c.status=(c.status===status)?null:status; ciDraft.dirty=true; renderCheckin(); }
   function setStaffReplacement(role,name){ ensureDraft(); ciDraft.staff[role].replacement=name.trim(); ciDraft.dirty=true; }
   function addPlayerCheckin(){ const inp=document.getElementById("ci-addpl"); if(!inp)return; const name=inp.value.trim(); if(!name)return; const t=teamById(checkinTeamId); if(!t){alert("Select a team first.");return;}
-    state.players.push({id:uid(),branchId:t.branchId,teamId:checkinTeamId,name,months:{}}); inp.value=""; save(); renderCheckin(); const ni=document.getElementById("ci-addpl"); if(ni)ni.focus(); }
-  function validateAttendance(){ ensureDraft(); const d=checkinDate,t=checkinTeamId;
-    if(!state.attendance[d])state.attendance[d]={}; state.players.filter(p=>p.teamId===t).forEach(p=>{delete state.attendance[d][p.id];});
-    Object.entries(ciDraft.players).forEach(([pid,st])=>{state.attendance[d][pid]=st;}); if(Object.keys(state.attendance[d]).length===0)delete state.attendance[d];
-    if(!state.staffAttendance[d])state.staffAttendance[d]={}; const st={};
-    ["coach","assistant"].forEach(role=>{ const e=ciDraft.staff[role]; if(e.status)st[role]={status:e.status,replacement:e.status==="absent"?(e.replacement||""):""}; });
-    if(Object.keys(st).length)state.staffAttendance[d][t]=st; else delete state.staffAttendance[d][t]; if(Object.keys(state.staffAttendance[d]).length===0)delete state.staffAttendance[d];
-    save(); ciDraft.dirty=false; renderCheckin(); toast("Attendance saved ✓"); }
+    const pl={id:uid(),branchId:t.branchId,teamId:checkinTeamId,name,months:{}}; state.players.push(pl); wSet("players/"+pl.id, pl); inp.value=""; renderCheckin(); const ni=document.getElementById("ci-addpl"); if(ni)ni.focus(); }
+  function validateAttendance(){ ensureDraft(); const d=checkinDate,t=checkinTeamId; const u={};
+    // Only this team's players on this date + this team's staff — nothing else is touched.
+    if(!state.attendance[d])state.attendance[d]={};
+    state.players.filter(p=>p.teamId===t).forEach(p=>{ const st=ciDraft.players[p.id]||null; u["attendance/"+d+"/"+p.id]=st; if(st)state.attendance[d][p.id]=st; else delete state.attendance[d][p.id]; });
+    if(Object.keys(state.attendance[d]).length===0)delete state.attendance[d];
+    const st={}; ["coach","assistant"].forEach(role=>{ const e=ciDraft.staff[role]; if(e.status)st[role]={status:e.status,replacement:e.status==="absent"?(e.replacement||""):""}; });
+    u["staffAttendance/"+d+"/"+t]=Object.keys(st).length?st:null;
+    if(!state.staffAttendance[d])state.staffAttendance[d]={};
+    if(Object.keys(st).length)state.staffAttendance[d][t]=st; else delete state.staffAttendance[d][t];
+    if(Object.keys(state.staffAttendance[d]).length===0)delete state.staffAttendance[d];
+    wMulti(u); ciDraft.dirty=false; renderCheckin(); toast("Attendance saved ✓"); }
 
   // ---- Schedule ----
   function renderSchedule(){ const el=document.getElementById("view-schedule");
@@ -622,8 +640,8 @@
     const days=[...document.querySelectorAll(".sch-dow:checked")].map(c=>parseInt(c.value,10));
     const start=document.getElementById("sch-start").value,end=document.getElementById("sch-end").value,startDate=document.getElementById("sch-sd").value,endDate=document.getElementById("sch-ed").value,location=document.getElementById("sch-loc").value.trim();
     if(!days.length){alert("Pick at least one day.");return;} if(!start){alert("Start time required.");return;} if(startDate&&endDate&&endDate<startDate){alert("End date can't be before start date.");return;}
-    state.schedule.push({id:uid(),branchId,teamId,days,start,end,startDate,endDate,location}); save(); renderSchedule(); }
-  function removeSession(id){ state.schedule=state.schedule.filter(s=>s.id!==id); save(); renderSchedule(); }
+    const sess={id:uid(),branchId,teamId,days,start,end,startDate,endDate,location}; state.schedule.push(sess); wSet("schedule/"+sess.id, sess); renderSchedule(); }
+  function removeSession(id){ state.schedule=state.schedule.filter(s=>s.id!==id); wRemove("schedule/"+id); renderSchedule(); }
 
   // ---- Teams ----
   function renderTeams(){ const el=document.getElementById("view-teams");
@@ -638,11 +656,12 @@
       </div></div>`; });
     el.innerHTML=h; }
   function addTeam(){ const branchId=isAdmin()?document.getElementById("team-branch").value:scopeBranchId(); if(!branchId){alert("No branch.");return;} const name=document.getElementById("team-name").value.trim(); if(!name){alert("Team name required.");return;}
-    state.teams.push({id:uid(),branchId,name,coach:document.getElementById("team-coach").value.trim(),assistant:document.getElementById("team-assistant").value.trim()}); save(); if(isAdmin())adminBranchFilter=branchId; renderTeams(); }
-  function removeTeam(id){ const players=state.players.filter(p=>p.teamId===id); if(!confirm(`Delete this team?${players.length?` Its ${players.length} player(s) will be removed too.`:""}`))return; state.teams=state.teams.filter(t=>t.id!==id); state.players=state.players.filter(p=>p.teamId!==id); save(); renderTeams(); }
-  function updateTeamField(id,f,v){ const t=teamById(id); if(!t)return; t[f]=v.trim(); save(); }
-  function addPlayer(teamId){ const inp=document.getElementById("addpl-"+teamId); const name=inp.value.trim(); if(!name)return; const t=teamById(teamId); if(!t)return; state.players.push({id:uid(),branchId:t.branchId,teamId,name,months:{}}); inp.value=""; save(); renderTeams(); }
-  function removePlayer(id){ if(!confirm("Remove this player and their history?"))return; state.players=state.players.filter(p=>p.id!==id); for(const d in state.attendance){if(state.attendance[d])delete state.attendance[d][id];} save(); const a=document.querySelector(".view.active").id; if(a==="view-teams")renderTeams(); else renderAll(); }
+    const team={id:uid(),branchId,name,coach:document.getElementById("team-coach").value.trim(),assistant:document.getElementById("team-assistant").value.trim()};
+    state.teams.push(team); wSet("teams/"+team.id, team); if(isAdmin())adminBranchFilter=branchId; renderTeams(); }
+  function removeTeam(id){ const players=state.players.filter(p=>p.teamId===id); if(!confirm(`Delete this team?${players.length?` Its ${players.length} player(s) will be removed too.`:""}`))return; state.teams=state.teams.filter(t=>t.id!==id); state.players=state.players.filter(p=>p.teamId!==id); const u={["teams/"+id]:null}; players.forEach(p=>u["players/"+p.id]=null); wMulti(u); renderTeams(); }
+  function updateTeamField(id,f,v){ const t=teamById(id); if(!t)return; t[f]=v.trim(); wSet("teams/"+id+"/"+f, t[f]); }
+  function addPlayer(teamId){ const inp=document.getElementById("addpl-"+teamId); const name=inp.value.trim(); if(!name)return; const t=teamById(teamId); if(!t)return; const pl={id:uid(),branchId:t.branchId,teamId,name,months:{}}; state.players.push(pl); wSet("players/"+pl.id, pl); inp.value=""; renderTeams(); }
+  function removePlayer(id){ if(!confirm("Remove this player and their history?"))return; state.players=state.players.filter(p=>p.id!==id); const u={["players/"+id]:null}; for(const d in state.attendance){if(state.attendance[d]&&state.attendance[d][id]!==undefined){u["attendance/"+d+"/"+id]=null; delete state.attendance[d][id];}} wMulti(u); const a=document.querySelector(".view.active").id; if(a==="view-teams")renderTeams(); else renderAll(); }
 
   // ---- Players (search + profiles) ----
   function renderPlayers(){ const el=document.getElementById("view-players"); const q=playerSearch.trim().toLowerCase();
@@ -735,9 +754,9 @@
   function billPrev(){ billMonth=ymShift(billMonth,-1); renderBilling(); }
   function billNext(){ billMonth=ymShift(billMonth,1); renderBilling(); }
   function billThis(){ billMonth=todayStr().slice(0,7); renderBilling(); }
-  function setBillFee(id,v){ const p=state.players.find(x=>x.id===id); if(!p)return; setMonth(p,billMonth,{fee:parseFloat(String(v).replace(/[^0-9.]/g,""))||0}); save(); renderBilling(); }
-  function toggleBillPaid(id){ const p=state.players.find(x=>x.id===id); if(!p)return; setMonth(p,billMonth,{paid:!monthData(p,billMonth).paid}); save(); renderBilling(); }
-  function toggleBillInv(id){ const p=state.players.find(x=>x.id===id); if(!p)return; setMonth(p,billMonth,{invoiced:!monthData(p,billMonth).invoiced}); save(); renderBilling(); }
+  function setBillFee(id,v){ const p=state.players.find(x=>x.id===id); if(!p)return; setMonth(p,billMonth,{fee:parseFloat(String(v).replace(/[^0-9.]/g,""))||0}); wSet("players/"+id+"/months/"+billMonth, p.months[billMonth]); renderBilling(); }
+  function toggleBillPaid(id){ const p=state.players.find(x=>x.id===id); if(!p)return; setMonth(p,billMonth,{paid:!monthData(p,billMonth).paid}); wSet("players/"+id+"/months/"+billMonth, p.months[billMonth]); renderBilling(); }
+  function toggleBillInv(id){ const p=state.players.find(x=>x.id===id); if(!p)return; setMonth(p,billMonth,{invoiced:!monthData(p,billMonth).invoiced}); wSet("players/"+id+"/months/"+billMonth, p.months[billMonth]); renderBilling(); }
   function exportBilling(){ const players=scopedPlayers(); const rows=[["Player","Team","Branch","Month","DaysPresent","Sessions","Fee","Paid","Invoiced"].join(",")];
     players.forEach(p=>{ const m=monthData(p,billMonth), pr=monthPresence(p.id,billMonth); rows.push([p.name,teamName(p.teamId),branchName(p.branchId),billMonth,pr.present,pr.total,m.fee,m.paid?"Paid":"Unpaid",m.invoiced?"Invoiced":"No"].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")); });
     downloadCsv(rows.join("\n"),`bfa-billing-${billMonth}.csv`); }
@@ -749,11 +768,11 @@
     h+=`</tbody></table></div></div>`;
     h+=`<div class="card"><h2>Change admin PIN</h2><div class="row"><div class="field"><label>New admin PIN</label><input type="text" id="adm-p1" inputmode="numeric" maxlength="8" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,8)"></div><div class="field"><label>Confirm</label><input type="text" id="adm-p2" inputmode="numeric" maxlength="8" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,8)"></div><div class="field"><button class="btn btn-primary" onclick="app.saveAdminPin()">Save</button></div></div><div class="muted" id="adm-msg" style="min-height:18px;margin-top:6px;"></div></div>`;
     el.innerHTML=h; }
-  function updateBranchName(id,v){ const b=state.branches.find(b=>b.id===id); const n=v.trim(); if(!b||!n){renderAdmin();return;} b.name=n; save(); renderAll(); }
-  function updateBranchPin(id,v){ if(!/^\d{4,8}$/.test(v)){renderAdmin();return;} state.auth.branchPins[id]=v; save(); }
+  function updateBranchName(id,v){ const b=state.branches.find(b=>b.id===id); const n=v.trim(); if(!b||!n){renderAdmin();return;} b.name=n; wSet("branches",state.branches); renderAll(); }
+  function updateBranchPin(id,v){ if(!/^\d{4,8}$/.test(v)){renderAdmin();return;} state.auth.branchPins[id]=v; wSet("auth/branchPins/"+id, v); }
   function saveAdminPin(){ const msg=document.getElementById("adm-msg"); const p1=document.getElementById("adm-p1").value.trim(),p2=document.getElementById("adm-p2").value.trim();
     if(!/^\d{4,8}$/.test(p1)){msg.style.color="var(--absent)";msg.textContent="PIN must be 4–8 digits.";return;} if(p1!==p2){msg.style.color="var(--absent)";msg.textContent="PINs don't match.";return;}
-    state.auth.adminPin=p1; save(); document.getElementById("adm-p1").value="";document.getElementById("adm-p2").value=""; msg.style.color="var(--present)"; msg.textContent="Admin PIN updated."; }
+    state.auth.adminPin=p1; wSet("auth/adminPin",p1); document.getElementById("adm-p1").value="";document.getElementById("adm-p2").value=""; msg.style.color="var(--present)"; msg.textContent="Admin PIN updated."; }
 
   // ---- Print ----
   function printReport(title, inner){ const area=document.getElementById("print-area"); const now=new Date().toLocaleString();
