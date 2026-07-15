@@ -3,1363 +3,790 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BFA Teams &amp; Attendance</title>
+<title>Beirut Football Academy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --brand-navy-deep: #0d1330;
-    --brand-red-deep: #7d1019;
-    --font-display: 'Anton', 'Arial Narrow', Impact, sans-serif;
-    --font-heading: 'Oswald', 'Arial Narrow', sans-serif;
-    --font-body: 'Public Sans', -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --navy-deep:#0d1330; --navy:#1b2452; --red:#c8202e; --red-deep:#7d1019;
+    --f-display:'Anton','Arial Narrow',Impact,sans-serif;
+    --f-head:'Oswald','Arial Narrow',sans-serif;
+    --f-body:'Public Sans',-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --brand-navy:#1b2452; --brand-red:#c8202e;
+    --ink:#161c3f; --muted:#5b6178;
+    --surface:#ffffff; --surface-2:#f5f6fb; --surface-3:#eceefb;
+    --border:#e4e6f1; --present:#1f8a4c; --absent:#c8202e; --warn:#c98a00;
+    --input:#ffffff; --shadow:0 10px 30px rgba(20,26,60,.10); --shadow-sm:0 3px 10px rgba(20,26,60,.07);
+    --bg:#eef0f7;
+  }
+  @media (prefers-color-scheme: dark){ :root{
+    --brand-navy:#8092ec; --brand-red:#ff5663; --ink:#eef0fa; --muted:#9aa1c4;
+    --surface:#141a35; --surface-2:#1a2142; --surface-3:#232c56; --border:#2c3467;
+    --present:#3fbf7a; --absent:#ff5663; --warn:#e6b23a; --input:#10152c;
+    --shadow:0 10px 34px rgba(0,0,0,.5); --shadow-sm:0 3px 12px rgba(0,0,0,.4); --bg:#0a0f22;
+  }}
+  :root[data-theme="dark"]{ --brand-navy:#8092ec; --brand-red:#ff5663; --ink:#eef0fa; --muted:#9aa1c4;
+    --surface:#141a35; --surface-2:#1a2142; --surface-3:#232c56; --border:#2c3467;
+    --present:#3fbf7a; --absent:#ff5663; --warn:#e6b23a; --input:#10152c;
+    --shadow:0 10px 34px rgba(0,0,0,.5); --shadow-sm:0 3px 12px rgba(0,0,0,.4); --bg:#0a0f22; }
+  :root[data-theme="light"]{ --brand-navy:#1b2452; --brand-red:#c8202e; --ink:#161c3f; --muted:#5b6178;
+    --surface:#fff; --surface-2:#f5f6fb; --surface-3:#eceefb; --border:#e4e6f1;
+    --present:#1f8a4c; --absent:#c8202e; --warn:#c98a00; --input:#fff;
+    --shadow:0 10px 30px rgba(20,26,60,.10); --shadow-sm:0 3px 10px rgba(20,26,60,.07); --bg:#eef0f7; }
 
-    --brand-navy: #1b2452;
-    --brand-red: #c8202e;
-    --ink: #161c3f;
-    --ink-muted: #5b6178;
-    --surface: #ffffff;
-    --surface-alt: #f5f6fb;
-    --surface-hover: #eceefb;
-    --border: #e1e3ee;
-    --present: #1f8a4c;
-    --absent: #c8202e;
-    --input-bg: #ffffff;
-    --shadow: 0 8px 24px rgba(20,26,60,0.10);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --brand-navy: #7686e0; --brand-red: #ef4f5e;
-      --ink: #eef0fa; --ink-muted: #9aa1c4;
-      --surface: #141a35; --surface-alt: #1a2142; --surface-hover: #212a54;
-      --border: #2a3162; --present: #3fbf7a; --absent: #ef4f5e;
-      --input-bg: #10152c; --shadow: 0 8px 28px rgba(0,0,0,0.45);
-    }
-  }
-  :root[data-theme="dark"] {
-    --brand-navy: #7686e0; --brand-red: #ef4f5e;
-    --ink: #eef0fa; --ink-muted: #9aa1c4;
-    --surface: #141a35; --surface-alt: #1a2142; --surface-hover: #212a54;
-    --border: #2a3162; --present: #3fbf7a; --absent: #ef4f5e;
-    --input-bg: #10152c; --shadow: 0 8px 28px rgba(0,0,0,0.45);
-  }
-  :root[data-theme="light"] {
-    --brand-navy: #1b2452; --brand-red: #c8202e;
-    --ink: #161c3f; --ink-muted: #5b6178;
-    --surface: #ffffff; --surface-alt: #f5f6fb; --surface-hover: #eceefb;
-    --border: #e1e3ee; --present: #1f8a4c; --absent: #c8202e;
-    --input-bg: #ffffff; --shadow: 0 8px 24px rgba(20,26,60,0.10);
-  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:var(--f-body);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{margin:0;}
+  input,select,button{font-family:inherit;}
 
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: var(--font-body);
-    background: var(--surface-alt);
-    color: var(--ink);
-    -webkit-font-smoothing: antialiased;
-  }
+  /* ---------- Gates ---------- */
+  .gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+    background:radial-gradient(1200px 600px at 20% -10%, #26306a 0%, transparent 60%), linear-gradient(135deg,var(--navy-deep),#141c44 55%,var(--red-deep));}
+  .gate-card{width:100%;max-width:470px;background:var(--surface);border-radius:20px;box-shadow:var(--shadow);padding:32px 30px;color:var(--ink);}
+  .badge-shield{width:54px;height:54px;border-radius:14px;background:linear-gradient(135deg,var(--brand-navy),var(--brand-red));display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:var(--shadow-sm);}
+  .gate-card h1{font-family:var(--f-head);font-weight:700;text-transform:uppercase;letter-spacing:.02em;font-size:1.5rem;color:var(--brand-navy);margin-top:14px;}
+  .gate-card .kick{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.18em;font-size:.7rem;color:var(--brand-red);font-weight:600;}
+  .gate-card p.sub{margin:6px 0 20px;color:var(--muted);font-size:.9rem;}
+  label{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.04em;font-size:.7rem;font-weight:600;color:var(--brand-navy);display:block;margin-bottom:5px;}
+  input[type=text],input[type=password],input[type=time],input[type=date],input[type=number],select{
+    width:100%;padding:11px 12px;border-radius:11px;border:1.5px solid var(--border);background:var(--input);color:var(--ink);font-size:.95rem;}
+  input:focus,select:focus{outline:2px solid var(--brand-navy);outline-offset:1px;}
+  .pin-input{text-align:center;font-family:var(--f-display);font-size:1.6rem;letter-spacing:.4em;}
+  .field{margin-bottom:13px;}
+  .setup-branch-row{display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:8px;}
+  .gate-error{color:var(--brand-red);font-size:.85rem;min-height:18px;margin-top:10px;}
+  .gate-actions{display:flex;gap:10px;margin-top:18px;} .gate-actions .btn{flex:1;}
+  .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
+  .role-btn{padding:15px 10px;border-radius:13px;border:1.5px solid var(--border);background:var(--surface-2);cursor:pointer;
+    font-family:var(--f-head);font-weight:600;text-transform:uppercase;letter-spacing:.02em;color:var(--brand-navy);font-size:.9rem;transition:.15s;}
+  .role-btn:hover{background:var(--surface-3);transform:translateY(-1px);}
+  .role-btn.admin-btn{grid-column:1/-1;background:linear-gradient(120deg,var(--brand-navy),var(--brand-red));color:#fff;border:none;}
 
-  /* ---------- Gate screens ---------- */
-  .gate {
-    min-height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-    background: linear-gradient(135deg, var(--brand-navy-deep), #1b2452 55%, var(--brand-red-deep));
-  }
-  .gate-card {
-    width: 100%; max-width: 460px;
-    background: var(--surface);
-    border-radius: 18px;
-    box-shadow: var(--shadow);
-    padding: 30px 28px;
-    color: var(--ink);
-  }
-  .gate-card h1 {
-    margin: 0 0 4px;
-    font-family: var(--font-display);
-    text-transform: uppercase;
-    font-size: 1.7rem; letter-spacing: 0.01em;
-    color: var(--brand-navy);
-  }
-  .gate-card .brandline { height: 4px; width: 56px; background: var(--brand-red); border-radius: 3px; margin: 8px 0 16px; }
-  .gate-card p.sub { margin: 0 0 20px; color: var(--ink-muted); font-size: 0.88rem; }
-  label { font-family: var(--font-heading); text-transform: uppercase; letter-spacing: 0.03em; font-size: 0.72rem; font-weight: 600; color: var(--brand-navy); display: block; margin-bottom: 5px; }
-  input[type=text], input[type=password], input[type=time], input[type=date], select {
-    width: 100%; padding: 10px 12px; border-radius: 10px;
-    border: 1.5px solid var(--border); background: var(--input-bg); color: var(--ink);
-    font-family: var(--font-body); font-size: 0.95rem;
-  }
-  input:focus, select:focus { outline: 2px solid var(--brand-navy); outline-offset: 1px; }
-  .pin-input { text-align: center; font-family: var(--font-display); font-variant-numeric: tabular-nums; font-size: 1.5rem; letter-spacing: 0.4em; }
-
-  .btn {
-    padding: 10px 18px; border-radius: 10px; border: 1.5px solid var(--border);
-    background: var(--surface-alt); color: var(--ink); cursor: pointer;
-    font-family: var(--font-heading); font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.03em; font-size: 0.82rem;
-  }
-  .btn:hover { background: var(--surface-hover); }
-  .btn-primary { background: var(--brand-red); color: #fff; border-color: var(--brand-red); }
-  .btn-primary:hover { filter: brightness(1.08); }
-  .btn-navy { background: var(--brand-navy); color: #fff; border-color: var(--brand-navy); }
-  .btn-sm { padding: 5px 10px; font-size: 0.72rem; }
-  .btn-ghost { background: transparent; }
-
-  .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
-  .role-btn {
-    padding: 15px 10px; border-radius: 12px; border: 1.5px solid var(--border);
-    background: var(--surface-alt); cursor: pointer; font-family: var(--font-heading);
-    font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; color: var(--brand-navy); font-size: 0.9rem;
-  }
-  .role-btn:hover { background: var(--surface-hover); }
-  .role-btn.admin-btn { grid-column: 1 / -1; background: var(--brand-navy); color: #fff; border-color: var(--brand-navy); }
-  .gate-error { color: var(--brand-red); font-size: 0.85rem; min-height: 18px; margin-top: 10px; }
-  .gate-actions { display: flex; gap: 10px; margin-top: 18px; }
-  .gate-actions .btn { flex: 1; }
-  .field { margin-bottom: 12px; }
-  .setup-branch-row { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 8px; }
+  /* ---------- Buttons ---------- */
+  .btn{padding:10px 18px;border-radius:11px;border:1.5px solid var(--border);background:var(--surface-2);color:var(--ink);cursor:pointer;
+    font-family:var(--f-head);font-weight:600;text-transform:uppercase;letter-spacing:.03em;font-size:.82rem;transition:.15s;}
+  .btn:hover{background:var(--surface-3);}
+  .btn-primary{background:var(--brand-red);color:#fff;border-color:var(--brand-red);} .btn-primary:hover{filter:brightness(1.08);}
+  .btn-navy{background:var(--brand-navy);color:#fff;border-color:var(--brand-navy);}
+  .btn-sm{padding:6px 12px;font-size:.72rem;} .btn-ghost{background:transparent;}
 
   /* ---------- App shell ---------- */
-  header {
-    background: linear-gradient(120deg, var(--brand-navy-deep), #1b2452 55%, var(--brand-red-deep));
-    color: #fff; padding: 24px 24px 20px; box-shadow: var(--shadow); border-bottom: 4px solid #c8202e;
+  header.appbar{background:linear-gradient(120deg,var(--navy-deep),#182052 48%,var(--red-deep));color:#fff;
+    box-shadow:var(--shadow);border-bottom:4px solid var(--red);position:sticky;top:0;z-index:50;}
+  .appbar-inner{max-width:1160px;margin:0 auto;padding:16px 22px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .appbar .badge-shield{width:42px;height:42px;font-size:20px;border-radius:11px;}
+  .appbar .title{font-family:var(--f-head);font-weight:700;text-transform:uppercase;letter-spacing:.03em;font-size:1.2rem;line-height:1;}
+  .appbar .subtitle{font-size:.72rem;opacity:.8;letter-spacing:.02em;}
+  .appbar .spacer{flex:1;}
+  .chip-session{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.04em;font-size:.72rem;font-weight:600;
+    background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.32);padding:6px 13px;border-radius:999px;}
+  .hbtn{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.5);color:#fff;}
+  .hbtn:hover{background:rgba(255,255,255,.2);}
+
+  nav.tabs{max-width:1160px;margin:0 auto;padding:12px 22px 0;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;}
+  nav.tabs::-webkit-scrollbar{display:none;}
+  nav.tabs button{white-space:nowrap;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.28);color:#fff;
+    padding:8px 15px;border-radius:999px;cursor:pointer;font-family:var(--f-head);font-weight:600;text-transform:uppercase;
+    letter-spacing:.03em;font-size:.78rem;display:inline-flex;align-items:center;gap:6px;transition:.15s;}
+  nav.tabs button:hover{background:rgba(255,255,255,.22);}
+  nav.tabs button.active{background:#fff;color:var(--navy-deep);border-color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.2);}
+  nav.tabs .tico{font-size:.95rem;}
+
+  main{max-width:1160px;margin:0 auto;padding:22px;}
+  .view{display:none;} .view.active{display:block;animation:fade .2s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  .card{background:var(--surface);border-radius:16px;box-shadow:var(--shadow-sm);padding:20px;margin-bottom:18px;border:1px solid var(--border);}
+  .card.accent{border-top:4px solid var(--brand-red);}
+  .card h2{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.03em;font-size:1rem;color:var(--brand-navy);
+    display:flex;align-items:center;gap:9px;margin-bottom:15px;}
+  .card h2::before{content:"";width:5px;height:19px;border-radius:3px;background:var(--brand-red);display:inline-block;}
+  .card h2 .sub{margin-left:auto;font-family:var(--f-body);text-transform:none;letter-spacing:0;font-size:.8rem;color:var(--muted);font-weight:400;}
+  h3.sub-h{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.03em;font-size:.82rem;color:var(--brand-navy);margin:4px 0 10px;}
+  .muted{color:var(--muted);font-size:.85rem;} .empty{color:var(--muted);font-style:italic;padding:14px 0;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;} .row>.field{margin-bottom:0;}
+  .grow{flex:1;min-width:150px;}
+  a.link{color:var(--brand-red);cursor:pointer;text-decoration:none;font-weight:600;} a.link:hover{text-decoration:underline;}
+
+  /* KPI tiles (bold brand) */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;}
+  .kpi{background:var(--surface);border:2px solid var(--brand-navy);border-radius:14px;padding:15px 16px;transition:.15s;position:relative;overflow:hidden;}
+  .kpi.red{border-color:var(--brand-red);}
+  .kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm);}
+  .kpi .kv{font-family:var(--f-display);font-size:2.1rem;line-height:.95;color:var(--brand-navy);}
+  .kpi.red .kv{color:var(--brand-red);}
+  .kpi .kl{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.04em;font-size:.68rem;color:var(--muted);margin-top:7px;}
+  .kpi .khint{font-size:.72rem;color:var(--muted);margin-top:3px;}
+
+  table{width:100%;border-collapse:collapse;font-size:.9rem;}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);}
+  th{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.03em;font-size:.7rem;color:var(--muted);}
+  tr:last-child td{border-bottom:none;} .num{text-align:right;font-variant-numeric:tabular-nums;}
+  .tbl-wrap{overflow-x:auto;} tbody tr.click{cursor:pointer;} tbody tr.click:hover{background:var(--surface-2);}
+
+  .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.7rem;font-family:var(--f-head);font-weight:600;text-transform:uppercase;letter-spacing:.02em;}
+  .b-navy{background:var(--surface-3);color:var(--brand-navy);}
+  .b-present{background:rgba(31,138,76,.15);color:var(--present);}
+  .b-absent{background:rgba(200,32,46,.15);color:var(--absent);}
+  .b-warn{background:rgba(201,138,0,.16);color:var(--warn);}
+
+  /* progress */
+  .prog{height:8px;border-radius:99px;background:var(--surface-3);overflow:hidden;min-width:70px;}
+  .prog>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand-navy),var(--brand-red));}
+
+  /* horizontal bars (team comparison) */
+  .hbar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:.85rem;}
+  .hbar-label{width:130px;flex-shrink:0;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .hbar-track{flex:1;height:14px;background:var(--surface-3);border-radius:99px;overflow:hidden;}
+  .hbar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand-navy),var(--brand-red));min-width:2px;}
+  .hbar-val{width:44px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.8rem;}
+
+  .chart-wrap{color:var(--brand-navy);}
+
+  /* teams */
+  .team-card{border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;background:var(--surface-2);}
+  .team-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+  .team-title{font-family:var(--f-head);font-weight:700;text-transform:uppercase;letter-spacing:.02em;font-size:1.05rem;}
+  .staff-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0;}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:4px 10px;font-size:.85rem;margin:3px 4px 3px 0;}
+  .chip .x{cursor:pointer;color:var(--brand-red);font-weight:700;}
+
+  /* attendance */
+  .att-list{display:flex;flex-direction:column;gap:8px;}
+  .att-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:11px;}
+  .att-row .name{flex:1;font-weight:500;}
+  .toggle-btns{display:flex;gap:6px;}
+  .tg{padding:6px 14px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-family:var(--f-head);font-weight:600;font-size:.76rem;text-transform:uppercase;color:var(--muted);}
+  .tg.p.on{background:var(--present);color:#fff;border-color:var(--present);}
+  .tg.a.on{background:var(--absent);color:#fff;border-color:var(--absent);}
+  .staff-block{margin-top:18px;padding-top:14px;border-top:1px dashed var(--border);}
+  .role-tag{font-size:.66rem;font-family:var(--f-head);text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-right:8px;}
+  .repl-row{display:flex;align-items:center;gap:10px;margin:-2px 0 8px;padding:2px 12px 0;}
+  .repl-row label{margin:0;color:var(--brand-red);}
+  .ci-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap;}
+  .ci-status{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.03em;font-size:.75rem;}
+  .ci-status.dirty{color:var(--brand-red);} .ci-status.clean{color:var(--present);}
+  .ci-actions .btn-primary{padding:11px 26px;}
+
+  /* calendar */
+  .cal-nav{display:flex;align-items:center;gap:10px;margin:4px 0 14px;}
+  .cal-title{font-family:var(--f-head);font-weight:700;text-transform:uppercase;letter-spacing:.03em;font-size:1rem;color:var(--brand-navy);flex:1;text-align:center;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cal-dow{font-family:var(--f-head);text-transform:uppercase;font-size:.66rem;letter-spacing:.03em;color:var(--muted);text-align:center;padding:4px 0;}
+  .cal-cell{min-height:74px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);padding:6px;cursor:pointer;display:flex;flex-direction:column;gap:4px;transition:.12s;}
+  .cal-cell:hover{background:var(--surface-3);transform:translateY(-1px);}
+  .cal-cell.empty-cell{background:transparent;border:none;cursor:default;}
+  .cal-cell.today{border-color:var(--brand-red);box-shadow:0 0 0 1px var(--brand-red) inset;}
+  .cal-cell.selected{border-color:var(--brand-navy);box-shadow:0 0 0 2px var(--brand-navy) inset;background:var(--surface-3);}
+  .cal-daynum{font-family:var(--f-display);font-size:1rem;line-height:1;}
+  .cal-badge{font-size:.58rem;font-family:var(--f-head);text-transform:uppercase;letter-spacing:.02em;padding:2px 5px;border-radius:6px;line-height:1.25;}
+  .cal-badge.sess{background:var(--surface-3);color:var(--brand-navy);}
+  .cal-badge.att{background:rgba(31,138,76,.16);color:var(--present);}
+  @media(max-width:640px){.cal-cell{min-height:56px;padding:4px;}.cal-daynum{font-size:.85rem;}.cal-badge{font-size:.5rem;}}
+
+  /* schedule */
+  .sched-day{margin-bottom:16px;} .sched-day h3{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.03em;font-size:.9rem;color:var(--brand-navy);margin:0 0 8px;border-bottom:2px solid var(--border);padding-bottom:4px;}
+  .sched-item{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:11px;margin-bottom:6px;}
+  .sched-time{font-family:var(--f-display);font-size:1.05rem;color:var(--brand-navy);min-width:118px;}
+  .sched-body{flex:1;} .sched-body .t{font-weight:600;} .sched-range{font-size:.72rem;color:var(--muted);}
+  .weekday-picker{display:flex;flex-wrap:wrap;gap:6px;}
+  .weekday-picker label{display:inline-flex;align-items:center;gap:5px;text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:500;font-size:.85rem;color:var(--ink);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;margin:0;}
+  .weekday-picker input{width:auto;}
+
+  /* billing pills */
+  .pill{padding:6px 13px;border-radius:999px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-family:var(--f-head);font-weight:600;font-size:.7rem;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);white-space:nowrap;}
+  .pill.paid.on{background:var(--present);color:#fff;border-color:var(--present);}
+  .pill.inv.on{background:var(--brand-navy);color:#fff;border-color:var(--brand-navy);}
+  .fee-input{width:92px;padding:7px 9px;}
+
+  /* search */
+  .search-box{position:relative;} .search-box input{padding-left:36px;}
+  .search-box::before{content:"🔎";position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:.85rem;opacity:.6;}
+
+  /* toast + modal */
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--brand-navy);color:#fff;padding:12px 22px;border-radius:999px;font-family:var(--f-head);font-weight:600;letter-spacing:.02em;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.2s;z-index:9999;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .modal-overlay{position:fixed;inset:0;background:rgba(8,12,28,.62);display:none;align-items:flex-start;justify-content:center;padding:24px 14px;z-index:1000;overflow-y:auto;}
+  .modal-overlay.show{display:flex;}
+  .modal{position:relative;width:100%;max-width:540px;margin:auto;}
+  .modal .card{margin-bottom:0;}
+  .modal-close{position:absolute;top:12px;right:12px;z-index:2;width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface-2);color:var(--ink);cursor:pointer;font-size:.95rem;}
+  .prof-hero{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+  .prof-avatar{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--brand-navy),var(--brand-red));color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-size:1.3rem;}
+  .prof-big{font-family:var(--f-display);font-size:2rem;color:var(--brand-navy);line-height:1;}
+  .dot-row{display:flex;gap:4px;flex-wrap:wrap;}
+  .dot{width:16px;height:16px;border-radius:4px;display:inline-block;} .dot.p{background:var(--present);} .dot.a{background:var(--absent);}
+
+  /* print */
+  #print-area{display:none;}
+  @media print{
+    body.printing>*:not(#print-area){display:none !important;}
+    #print-area{display:block !important;}
   }
-  .header-inner { max-width: 1120px; margin: 0 auto; }
-  header h1 {
-    margin: 0 0 4px; font-family: var(--font-heading); font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.03em; font-size: 1.45rem; display: flex; align-items: center; gap: 10px;
-  }
-  header p { margin: 0; opacity: 0.85; font-size: 0.92rem; }
-  .session-bar { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
-  .session-label {
-    font-family: var(--font-heading); text-transform: uppercase; letter-spacing: 0.04em;
-    font-size: 0.75rem; font-weight: 600; background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.35); padding: 6px 14px; border-radius: 999px;
-  }
-  header .btn.hbtn { background: transparent; border: 1.5px solid rgba(255,255,255,0.6); color: #fff; }
-  header .btn.hbtn:hover { background: rgba(255,255,255,0.15); }
-  .spacer { flex: 1; }
-
-  nav.tabs { display: flex; gap: 6px; max-width: 1120px; margin: 16px auto 0; padding: 0 24px; flex-wrap: wrap; }
-  nav.tabs button {
-    background: var(--surface); border: 1px solid var(--border); color: var(--brand-navy);
-    padding: 9px 15px; border-radius: 999px; cursor: pointer; font-family: var(--font-heading);
-    font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.8rem;
-    box-shadow: 0 1px 2px rgba(20,26,60,0.06);
-  }
-  nav.tabs button:hover { background: var(--surface-hover); }
-  nav.tabs button.active { background: var(--brand-red); border-color: var(--brand-red); color: #fff; }
-
-  main { max-width: 1120px; margin: 0 auto; padding: 24px; }
-  .view { display: none; }
-  .view.active { display: block; animation: fade 0.18s ease; }
-  @keyframes fade { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: none;} }
-
-  .card { background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 18px; border: 1px solid var(--border); }
-  .card h2 { margin: 0 0 14px; font-family: var(--font-heading); text-transform: uppercase; letter-spacing: 0.03em; font-size: 1.05rem; color: var(--brand-navy); }
-  .card h2 .sub { font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-size: 0.8rem; color: var(--ink-muted); font-weight: 400; margin-left: 8px; }
-  .muted { color: var(--ink-muted); font-size: 0.85rem; }
-  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
-  .row > .field { margin-bottom: 0; }
-  .grow { flex: 1; min-width: 140px; }
-
-  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); }
-  th { font-family: var(--font-heading); text-transform: uppercase; letter-spacing: 0.03em; font-size: 0.72rem; color: var(--ink-muted); }
-  tr:last-child td { border-bottom: none; }
-  .num { text-align: right; font-variant-numeric: tabular-nums; }
-  .tbl-wrap { overflow-x: auto; }
-
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-family: var(--font-heading); font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
-  .badge-navy { background: var(--surface-hover); color: var(--brand-navy); }
-  .badge-present { background: rgba(31,138,76,0.15); color: var(--present); }
-  .badge-absent { background: rgba(200,32,46,0.15); color: var(--absent); }
-
-  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
-  .kpi { background: var(--surface-alt); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
-  .kpi .k-val { font-family: var(--font-display); font-size: 1.9rem; line-height: 1; color: var(--brand-navy); }
-  .kpi .k-lbl { font-family: var(--font-heading); text-transform: uppercase; letter-spacing: 0.03em; font-size: 0.7rem; color: var(--ink-muted); margin-top: 6px; }
-
-  .team-card { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; background: var(--surface-alt); }
-  .team-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
-  .team-title { font-family: var(--font-heading); font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; font-size: 1.05rem; color: var(--ink); }
-  .staff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
-  .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: 0.85rem; margin: 3px 4px 3px 0; }
-  .chip .x { cursor: pointer; color: var(--brand-red); font-weight: 700; }
-
-  .att-list { display: flex; flex-direction: column; gap: 8px; }
-  .att-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--surface-alt); border: 1px solid var(--border); border-radius: 10px; }
-  .att-row .name { flex: 1; font-weight: 500; }
-  .toggle-btns { display: flex; gap: 6px; }
-  .tg { padding: 6px 14px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; font-family: var(--font-heading); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; color: var(--ink-muted); }
-  .tg.p.on { background: var(--present); color: #fff; border-color: var(--present); }
-  .tg.a.on { background: var(--absent); color: #fff; border-color: var(--absent); }
-
-  .sched-day { margin-bottom: 16px; }
-  .sched-day h3 { font-family: var(--font-heading); text-transform: uppercase; letter-spacing: 0.03em; font-size: 0.9rem; color: var(--brand-navy); margin: 0 0 8px; border-bottom: 2px solid var(--border); padding-bottom: 4px; }
-  .sched-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface-alt); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 6px; }
-  .sched-time { font-family: var(--font-display); font-size: 1.05rem; color: var(--brand-navy); min-width: 120px; }
-  .sched-body { flex: 1; }
-  .sched-body .t { font-weight: 600; }
-  .empty { color: var(--ink-muted); font-size: 0.9rem; padding: 12px 0; font-style: italic; }
-  a.link { color: var(--brand-red); cursor: pointer; text-decoration: none; font-weight: 600; }
-  a.link:hover { text-decoration: underline; }
-
-  /* Calendar */
-  .cal-nav { display:flex; align-items:center; gap:10px; margin:6px 0 14px; }
-  .cal-title { font-family:var(--font-heading); font-weight:700; text-transform:uppercase; letter-spacing:0.03em; font-size:1rem; color:var(--brand-navy); flex:1; text-align:center; }
-  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
-  .cal-head { margin-bottom:6px; }
-  .cal-dow { font-family:var(--font-heading); text-transform:uppercase; font-size:0.68rem; letter-spacing:0.03em; color:var(--ink-muted); text-align:center; padding:4px 0; }
-  .cal-cell { min-height:76px; border:1px solid var(--border); border-radius:8px; background:var(--surface-alt); padding:6px; cursor:pointer; display:flex; flex-direction:column; gap:4px; }
-  .cal-cell:hover { background:var(--surface-hover); }
-  .cal-cell.empty-cell { background:transparent; border:none; cursor:default; }
-  .cal-cell.today { border-color:var(--brand-red); box-shadow:0 0 0 1px var(--brand-red) inset; }
-  .cal-cell.selected { border-color:var(--brand-navy); box-shadow:0 0 0 2px var(--brand-navy) inset; background:var(--surface-hover); }
-  .cal-daynum { font-family:var(--font-display); font-size:1rem; color:var(--ink); line-height:1; }
-  .cal-badge { font-size:0.6rem; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:0.02em; padding:2px 5px; border-radius:6px; line-height:1.3; }
-  .cal-badge.sess { background:var(--surface-hover); color:var(--brand-navy); }
-  .cal-badge.att { background:rgba(31,138,76,0.15); color:var(--present); }
-
-  /* Accounting pills */
-  .pill { padding:6px 14px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-family:var(--font-heading); font-weight:600; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.02em; color:var(--ink-muted); white-space:nowrap; }
-  .pill.paid.on { background:var(--present); color:#fff; border-color:var(--present); }
-  .pill.inv.on { background:var(--brand-navy); color:#fff; border-color:var(--brand-navy); }
-  .fee-input { width:92px; padding:7px 9px; }
-
-  /* Coaching staff attendance */
-  .staff-block { margin-top:18px; padding-top:14px; border-top:1px dashed var(--border); }
-  .staff-h { font-family:var(--font-heading); text-transform:uppercase; letter-spacing:0.03em; font-size:0.85rem; color:var(--brand-navy); margin:0 0 10px; }
-  .att-row.staff .name { font-weight:600; }
-  .att-row.staff .role-tag { font-size:0.68rem; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:0.03em; color:var(--ink-muted); margin-right:8px; }
-  .repl-row { display:flex; align-items:center; gap:10px; margin:-2px 0 8px; padding:2px 12px 0; }
-  .repl-row label { margin:0; white-space:nowrap; color:var(--brand-red); }
-  .repl-row input { max-width:280px; }
-
-  /* Validate bar + toast */
-  .ci-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px; padding-top:14px; border-top:1px solid var(--border); flex-wrap:wrap; }
-  .ci-status { font-family:var(--font-heading); text-transform:uppercase; letter-spacing:0.03em; font-size:0.75rem; }
-  .ci-status.dirty { color:var(--brand-red); }
-  .ci-status.clean { color:var(--present); }
-  .ci-actions .btn-primary { padding:11px 24px; }
-  #bfa-toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px); background:var(--brand-navy); color:#fff; padding:12px 22px; border-radius:999px; font-family:var(--font-heading); font-weight:600; letter-spacing:0.02em; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:9999; }
-  #bfa-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-
-  /* Weekday repeat picker */
-  .weekday-picker { display:flex; flex-wrap:wrap; gap:6px; }
-  .weekday-picker label { display:inline-flex; align-items:center; gap:5px; text-transform:none; letter-spacing:0; font-family:var(--font-body); font-weight:500; font-size:0.85rem; color:var(--ink); background:var(--surface-alt); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; margin:0; }
-  .weekday-picker input { width:auto; }
-  .sched-range { font-size:0.72rem; color:var(--ink-muted); }
-  @media (max-width:640px){ .cal-cell{ min-height:58px; padding:4px; } .cal-daynum{ font-size:0.85rem; } .cal-badge{ font-size:0.52rem; } }
+  .print-doc{color:#000;background:#fff;padding:24px;font-family:'Public Sans',Arial,sans-serif;}
+  .print-doc h1{font-size:20px;margin:0 0 4px;} .print-doc .pmeta{color:#555;font-size:12px;margin-bottom:16px;}
+  .print-doc h2{font-size:15px;margin:18px 0 6px;border-bottom:2px solid #000;padding-bottom:3px;}
+  .print-doc table{width:100%;border-collapse:collapse;margin-bottom:12px;}
+  .print-doc th,.print-doc td{border:1px solid #999;padding:5px 7px;font-size:11px;text-align:left;}
+  .print-doc th{background:#eee;}
 </style>
 </head>
 <body>
 
-<!-- ============ LOADING ============ -->
+<!-- LOADING -->
 <div class="gate" id="gate-loading">
   <div class="gate-card">
+    <div class="badge-shield">⚽</div>
+    <div class="kick">Attendance & Payments</div>
     <h1>Beirut Football Academy</h1>
-    <div class="brandline"></div>
     <p class="sub" id="loading-text">Connecting…</p>
   </div>
 </div>
 
-<!-- ============ SETUP ============ -->
+<!-- SETUP -->
 <div class="gate" id="gate-setup" style="display:none;">
   <div class="gate-card">
-    <h1>First-time Setup</h1>
-    <div class="brandline"></div>
-    <p class="sub">Create an admin PIN and a PIN for each of your 7 branches. You can rename branches and change PINs later from the Admin tab.</p>
-    <div class="field">
-      <label for="setup-admin-pin">Admin PIN (4–8 digits)</label>
-      <input type="text" id="setup-admin-pin" inputmode="numeric" maxlength="8" value="0000" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
-    </div>
-    <div class="field">
-      <label for="setup-admin-pin2">Confirm Admin PIN</label>
-      <input type="text" id="setup-admin-pin2" inputmode="numeric" maxlength="8" value="0000" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
-    </div>
+    <div class="badge-shield">⚽</div>
+    <div class="kick">First-time setup</div>
+    <h1>Create your PINs</h1>
+    <p class="sub">Set an admin PIN and a PIN for each of your 7 branches. You can rename branches and change PINs later in Admin.</p>
+    <div class="field"><label for="setup-admin-pin">Admin PIN (4–8 digits)</label>
+      <input type="text" id="setup-admin-pin" inputmode="numeric" maxlength="8" value="0000" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)"></div>
+    <div class="field"><label for="setup-admin-pin2">Confirm admin PIN</label>
+      <input type="text" id="setup-admin-pin2" inputmode="numeric" maxlength="8" value="0000" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)"></div>
     <label style="margin-top:6px;">Branches</label>
     <div id="setup-branches"></div>
     <div class="gate-error" id="setup-error"></div>
-    <div class="gate-actions">
-      <button class="btn btn-primary" id="setup-submit-btn">Create &amp; Continue</button>
-    </div>
+    <div class="gate-actions"><button class="btn btn-primary" id="setup-submit">Create &amp; continue</button></div>
   </div>
 </div>
 
-<!-- ============ LOGIN ============ -->
+<!-- LOGIN -->
 <div class="gate" id="gate-login" style="display:none;">
   <div class="gate-card">
-    <h1>Sign In</h1>
-    <div class="brandline"></div>
+    <div class="badge-shield">⚽</div>
+    <div class="kick">Sign in</div>
+    <h1 id="login-h1">Choose your branch</h1>
     <div id="login-roles">
-      <p class="sub">Choose your branch, or sign in as admin to access all branches.</p>
+      <p class="sub">Branch staff see only their own branch. Admin sees everything.</p>
       <div class="role-grid" id="login-role-grid"></div>
     </div>
     <div id="login-pin-panel" style="display:none;">
-      <h3 id="login-pin-title" style="margin:6px 0 12px;">Enter PIN</h3>
+      <p class="sub" id="login-pin-title">Enter PIN</p>
       <input type="password" id="login-pin" class="pin-input" inputmode="numeric" maxlength="8" placeholder="••••" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
       <div class="gate-error" id="login-error"></div>
-      <div class="gate-actions">
-        <button class="btn" id="login-back-btn">Back</button>
-        <button class="btn btn-primary" id="login-unlock-btn">Unlock</button>
-      </div>
+      <div class="gate-actions"><button class="btn" id="login-back">Back</button><button class="btn btn-primary" id="login-unlock">Unlock</button></div>
     </div>
   </div>
 </div>
 
-<!-- ============ APP ============ -->
+<!-- APP -->
 <div id="app-root" style="display:none;">
-  <header>
-    <div class="header-inner">
-      <h1>⚽ BFA Teams &amp; Attendance</h1>
-      <p>Teams · Schedule · Attendance · Stats</p>
-      <div class="session-bar">
-        <span class="session-label" id="session-label"></span>
-        <span class="spacer"></span>
-        <button class="btn hbtn btn-sm" id="theme-btn">◐ Theme</button>
-        <button class="btn hbtn btn-sm" id="logout-btn">Log out</button>
+  <header class="appbar">
+    <div class="appbar-inner">
+      <div class="badge-shield">⚽</div>
+      <div>
+        <div class="title">Beirut Football Academy</div>
+        <div class="subtitle">Teams · Attendance · Billing</div>
       </div>
+      <span class="spacer"></span>
+      <span class="chip-session" id="session-label"></span>
+      <button class="btn hbtn btn-sm" id="theme-btn">◐</button>
+      <button class="btn hbtn btn-sm" id="logout-btn">Log out</button>
     </div>
+    <nav class="tabs" id="tabs">
+      <button data-view="dashboard" class="active"><span class="tico">📊</span>Dashboard</button>
+      <button data-view="attendance"><span class="tico">✅</span>Attendance</button>
+      <button data-view="schedule"><span class="tico">🗓</span>Schedule</button>
+      <button data-view="teams"><span class="tico">👥</span>Teams</button>
+      <button data-view="players"><span class="tico">🔎</span>Players</button>
+      <button data-view="reports"><span class="tico">📈</span>Reports</button>
+      <button data-view="billing" id="nav-billing"><span class="tico">💵</span>Billing</button>
+      <button data-view="admin" id="nav-admin"><span class="tico">⚙️</span>Admin</button>
+    </nav>
   </header>
-  <nav class="tabs">
-    <button data-view="dashboard" class="active">Dashboard</button>
-    <button data-view="attendance">Attendance</button>
-    <button data-view="schedule">Schedule</button>
-    <button data-view="teams">Teams</button>
-    <button data-view="history">History</button>
-    <button data-view="stats">Stats</button>
-    <button data-view="accounting" id="nav-accounting">Accounting</button>
-    <button data-view="admin" id="nav-admin">Admin</button>
-  </nav>
   <main>
     <div class="view active" id="view-dashboard"></div>
     <div class="view" id="view-attendance"></div>
     <div class="view" id="view-schedule"></div>
     <div class="view" id="view-teams"></div>
-    <div class="view" id="view-history"></div>
-    <div class="view" id="view-stats"></div>
-    <div class="view" id="view-accounting"></div>
+    <div class="view" id="view-players"></div>
+    <div class="view" id="view-reports"></div>
+    <div class="view" id="view-billing"></div>
     <div class="view" id="view-admin"></div>
   </main>
 </div>
 
+<div class="modal-overlay" id="modal"><div class="modal"><button class="modal-close" onclick="app.closeModal()">✕</button><div id="modal-body"></div></div></div>
+<div id="print-area"></div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
   import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js";
-
   const firebaseConfig = {
     apiKey: "AIzaSyBGOrBYpLtl4fqb-JFJNHWZheQVkO9VpYA",
     authDomain: "bfa-sc-tracker.firebaseapp.com",
     databaseURL: "https://bfa-sc-tracker-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "bfa-sc-tracker",
-    storageBucket: "bfa-sc-tracker.firebasestorage.app",
-    messagingSenderId: "337221107402",
-    appId: "1:337221107402:web:90be943b8cfec13db03e33"
+    projectId: "bfa-sc-tracker", storageBucket: "bfa-sc-tracker.firebasestorage.app",
+    messagingSenderId: "337221107402", appId: "1:337221107402:web:90be943b8cfec13db03e33"
   };
-  const firebaseApp = initializeApp(firebaseConfig);
-  const db = getDatabase(firebaseApp);
+  const db = getDatabase(initializeApp(firebaseConfig));
   const stateRef = ref(db, "bfaTeamsState");
+  const SESSION_KEY="bfaTeamsSession_v1", THEME_KEY="bfaTeamsTheme";
+  const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  const DEFAULT_BRANCHES=["Furn El Chebbek","Hazmieh","Sen El Fil","Hadath","Beit Meri","Mansourieh","Sour"];
 
-  const SESSION_KEY = "bfaTeamsSession_v1";
-  const THEME_KEY = "bfaTeamsTheme";
-  const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-  const DEFAULT_BRANCHES = ["Furn El Chebbek","Hazmieh","Sen El Fil","Hadath","Beit Meri","Mansourieh","Sour"];
-
-  // ===== State model =====
-  // branches:  [{id, name}]
-  // teams:     [{id, branchId, name, coach, assistant}]
-  // players:   [{id, branchId, teamId|null, name}]
-  // schedule:  [{id, branchId, teamId|null, day(0-6), start, end, location}]
-  // attendance:{ "YYYY-MM-DD": { playerId: "present"|"absent" } }
-  // staffAttendance:{ "YYYY-MM-DD": { teamId: { coach:{status,replacement}, assistant:{status,replacement} } } }
-  // auth:      { setupDone, adminPin, branchPins:{branchId:pin} }
-  function defaultState() {
-    return { branches: [], teams: [], players: [], schedule: [], attendance: {}, staffAttendance: {},
-             auth: { setupDone: false, adminPin: "", branchPins: {} } };
-  }
-  function toArray(x) {
-    if (Array.isArray(x)) return x;
-    if (x && typeof x === "object") return Object.values(x);
-    return [];
-  }
-  function normalize(s) {
-    if (!s || typeof s !== "object") s = defaultState();
-    s.branches = toArray(s.branches);
-    s.teams = toArray(s.teams);
-    s.players = toArray(s.players);
-    s.schedule = toArray(s.schedule);
-    s.schedule.forEach(x => {
-      if (!Array.isArray(x.days)) x.days = (typeof x.day === "number") ? [x.day] : [];
-      if (typeof x.startDate !== "string") x.startDate = "";
-      if (typeof x.endDate !== "string") x.endDate = "";
-    });
-    if (!s.attendance) s.attendance = {};
-    if (!s.staffAttendance) s.staffAttendance = {};
-    if (!s.auth) s.auth = { setupDone: false, adminPin: "", branchPins: {} };
-    if (!s.auth.branchPins) s.auth.branchPins = {};
-    s.players.forEach(p => {
-      if (!("teamId" in p)) p.teamId = null;
-      if (typeof p.fee !== "number") p.fee = 0;
-      if (typeof p.paid !== "boolean") p.paid = false;
-      if (typeof p.invoiced !== "boolean") p.invoiced = false;
+  // ===== State =====
+  function defaultState(){ return { branches:[],teams:[],players:[],schedule:[],attendance:{},staffAttendance:{},auth:{setupDone:false,adminPin:"",branchPins:{}} }; }
+  function toArray(x){ if(Array.isArray(x))return x; if(x&&typeof x==="object")return Object.values(x); return []; }
+  function normalize(s){
+    if(!s||typeof s!=="object") s=defaultState();
+    s.branches=toArray(s.branches); s.teams=toArray(s.teams); s.players=toArray(s.players); s.schedule=toArray(s.schedule);
+    s.schedule.forEach(x=>{ if(!Array.isArray(x.days)) x.days=(typeof x.day==="number")?[x.day]:[]; if(typeof x.startDate!=="string")x.startDate=""; if(typeof x.endDate!=="string")x.endDate=""; });
+    if(!s.attendance)s.attendance={}; if(!s.staffAttendance)s.staffAttendance={};
+    if(!s.auth)s.auth={setupDone:false,adminPin:"",branchPins:{}}; if(!s.auth.branchPins)s.auth.branchPins={};
+    const curKey=todayStr().slice(0,7);
+    s.players.forEach(p=>{
+      if(!("teamId" in p))p.teamId=null;
+      if(!p.months||typeof p.months!=="object"){
+        p.months={};
+        const f=Number(p.fee)||0, pd=!!p.paid, iv=!!p.invoiced;
+        if(f||pd||iv) p.months[curKey]={fee:f,paid:pd,invoiced:iv};
+      }
     });
     return s;
   }
+  let state=defaultState(), session=null, booted=false;
+  let adminBranchFilter="all", checkinDate=todayStr(), checkinTeamId="", historyTeamFilter="all";
+  let calYear=null, calMonth=null, billMonth=todayStr().slice(0,7), playerSearch="";
 
-  let state = defaultState();
-  let session = null;      // {role:'admin'} | {role:'branch', branchId}
-  let booted = false;
-  let adminBranchFilter = "all";
-  let checkinDate = todayStr();
-  let checkinTeamId = "";
-  let historyTeamFilter = "all";
-
-  function save() { set(stateRef, state).catch(e => console.error("Save failed:", e)); }
-
-  onValue(stateRef, snap => {
-    state = normalize(snap.val());
-    if (!booted) { booted = true; boot(); }
-    else if (session) renderAll();
-    else if (state.auth.setupDone && document.getElementById("gate-login").style.display !== "none") showLogin();
-  }, err => {
-    console.error("Firebase read failed:", err);
-    document.getElementById("loading-text").textContent = "Could not connect. Check your internet connection and reload.";
-  });
+  function save(){ set(stateRef,state).catch(e=>console.error("Save failed:",e)); }
+  onValue(stateRef, snap=>{ state=normalize(snap.val());
+    if(!booted){ booted=true; boot(); }
+    else if(session) renderAll();
+    else if(state.auth.setupDone && document.getElementById("gate-login").style.display!=="none") showLogin();
+  }, err=>{ console.error(err); document.getElementById("loading-text").textContent="Could not connect. Check your internet and reload."; });
 
   // ===== Helpers =====
-  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
-  function todayStr() {
-    const d = new Date(); const off = d.getTimezoneOffset();
-    return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
-  }
-  function fmtDate(iso) {
-    const [y,m,d] = iso.split("-").map(Number);
-    return new Date(y, m-1, d).toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric", year:"numeric" });
-  }
-  function fmtMoney(n) { return "$" + (Math.round((Number(n)||0) * 100) / 100).toLocaleString(); }
-  function fmtShort(iso) { const [y,m,d] = iso.split("-").map(Number); return new Date(y, m-1, d).toLocaleDateString(undefined, { month:"short", day:"numeric" }); }
-  function fmtMed(iso) { const [y,m,d] = iso.split("-").map(Number); return new Date(y, m-1, d).toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" }); }
-  function sessionOccursOn(s, iso) {
-    const days = s.days || (typeof s.day === "number" ? [s.day] : []);
-    if (!days.includes(dayIdxOf(iso))) return false;
-    if (s.startDate && iso < s.startDate) return false;
-    if (s.endDate && iso > s.endDate) return false;
-    return true;
-  }
-  function scheduleRangeText(s) {
-    if (s.startDate && s.endDate) return `${fmtMed(s.startDate)} – ${fmtMed(s.endDate)}`;
-    if (s.startDate) return `from ${fmtMed(s.startDate)}`;
-    if (s.endDate) return `until ${fmtMed(s.endDate)}`;
-    return "ongoing (no end date)";
-  }
-  function staffStatus(date, teamId, role) {
-    const d = state.staffAttendance[date]; if (!d) return null;
-    const t = d[teamId]; if (!t) return null;
-    return t[role] || null;
-  }
-  function staffStats(teamId) {
-    const res = { coach:{present:0,total:0,repl:[]}, assistant:{present:0,total:0,repl:[]} };
-    for (const date in state.staffAttendance) {
-      const t = state.staffAttendance[date][teamId]; if (!t) continue;
-      ["coach","assistant"].forEach(role => {
-        const e = t[role]; if (!e) return;
-        res[role].total++;
-        if (e.status === "present") res[role].present++;
-        if (e.status === "absent" && e.replacement) res[role].repl.push({ date, name: e.replacement });
-      });
-    }
-    return res;
-  }
-  function dayIdxOf(iso) { const [y,m,d]=iso.split("-").map(Number); return (new Date(y,m-1,d).getDay()+6)%7; } // 0=Mon
-  function escapeHtml(s) { return String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-  function isAdmin() { return !!session && session.role === "admin"; }
-  function scopeBranchId() { return session && session.role === "branch" ? session.branchId : null; }
-  function branchName(id) { const b = state.branches.find(b=>b.id===id); return b ? b.name : "—"; }
-  function teamById(id) { return state.teams.find(t=>t.id===id) || null; }
-  function teamName(id) { const t = teamById(id); return t ? t.name : "Unassigned"; }
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+  function todayStr(){ const d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+  function fmtDate(iso){ const [y,m,d]=iso.split("-").map(Number); return new Date(y,m-1,d).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric",year:"numeric"}); }
+  function fmtShort(iso){ const [y,m,d]=iso.split("-").map(Number); return new Date(y,m-1,d).toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
+  function fmtMed(iso){ const [y,m,d]=iso.split("-").map(Number); return new Date(y,m-1,d).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); }
+  function dayIdxOf(iso){ const [y,m,d]=iso.split("-").map(Number); return (new Date(y,m-1,d).getDay()+6)%7; }
+  function fmtMoney(n){ return "$"+(Math.round((Number(n)||0)*100)/100).toLocaleString(); }
+  function ymLabel(k){ const [y,m]=k.split("-").map(Number); return new Date(y,m-1,1).toLocaleDateString(undefined,{month:"long",year:"numeric"}); }
+  function ymShift(k,delta){ let [y,m]=k.split("-").map(Number); m+=delta; while(m<1){m+=12;y--;} while(m>12){m-=12;y++;} return `${y}-${String(m).padStart(2,"0")}`; }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  function isAdmin(){ return !!session&&session.role==="admin"; }
+  function scopeBranchId(){ return session&&session.role==="branch"?session.branchId:null; }
+  function branchName(id){ const b=state.branches.find(b=>b.id===id); return b?b.name:"—"; }
+  function teamById(id){ return state.teams.find(t=>t.id===id)||null; }
+  function teamName(id){ const t=teamById(id); return t?t.name:"Unassigned"; }
+  function initials(n){ return (n||"?").trim().split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase()||"?"; }
+  function activeBranchIds(){ if(isAdmin())return adminBranchFilter==="all"?state.branches.map(b=>b.id):[adminBranchFilter]; return [scopeBranchId()]; }
+  function inScope(bid){ return activeBranchIds().includes(bid); }
+  function scopedTeams(){ return state.teams.filter(t=>inScope(t.branchId)); }
+  function scopedPlayers(){ return state.players.filter(p=>inScope(p.branchId)); }
+  function scopedSchedule(){ return state.schedule.filter(s=>inScope(s.branchId)); }
 
-  // active branch scope for admin filter
-  function activeBranchIds() {
-    if (isAdmin()) return adminBranchFilter === "all" ? state.branches.map(b=>b.id) : [adminBranchFilter];
-    return [scopeBranchId()];
-  }
-  function inScope(branchId) { return activeBranchIds().includes(branchId); }
-  function scopedTeams() { return state.teams.filter(t => inScope(t.branchId)); }
-  function scopedPlayers() { return state.players.filter(p => inScope(p.branchId)); }
-  function scopedSchedule() { return state.schedule.filter(s => inScope(s.branchId)); }
+  function attStatus(date,pid){ return (state.attendance[date]&&state.attendance[date][pid])||null; }
+  function playerAttStats(pid){ let present=0,total=0; for(const d in state.attendance){ const s=state.attendance[d][pid]; if(s==="present"){present++;total++;} else if(s==="absent")total++; } return {present,total,rate:total?Math.round(present/total*100):null}; }
+  function rateForPlayers(ids){ let present=0,total=0; for(const d in state.attendance){ const day=state.attendance[d]; ids.forEach(id=>{const s=day[id]; if(s==="present"){present++;total++;} else if(s==="absent")total++;}); } return {present,total,rate:total?Math.round(present/total*100):null}; }
+  function sessionDates(ids){ const set=new Set(); for(const d in state.attendance){ if(ids.some(id=>state.attendance[d][id])) set.add(d);} return [...set]; }
+  function recentRates(ids,n){ const idSet=new Set(ids); const dates=Object.keys(state.attendance).filter(d=>Object.keys(state.attendance[d]).some(pid=>idSet.has(pid))).sort();
+    return dates.slice(-n).map(d=>{ const day=state.attendance[d]; let p=0,t=0; idSet.forEach(id=>{const s=day[id]; if(s==="present"){p++;t++;} else if(s==="absent")t++;}); return {date:d,rate:t?Math.round(p/t*100):0}; }); }
+  function sessionOccursOn(s,iso){ const days=s.days||(typeof s.day==="number"?[s.day]:[]); if(!days.includes(dayIdxOf(iso)))return false; if(s.startDate&&iso<s.startDate)return false; if(s.endDate&&iso>s.endDate)return false; return true; }
+  function scheduleRangeText(s){ if(s.startDate&&s.endDate)return `${fmtMed(s.startDate)} – ${fmtMed(s.endDate)}`; if(s.startDate)return `from ${fmtMed(s.startDate)}`; if(s.endDate)return `until ${fmtMed(s.endDate)}`; return "ongoing (no end date)"; }
+  function staffStatus(date,teamId,role){ const d=state.staffAttendance[date]; if(!d)return null; const t=d[teamId]; if(!t)return null; return t[role]||null; }
+  function staffStats(teamId){ const res={coach:{present:0,total:0,repl:[]},assistant:{present:0,total:0,repl:[]}}; for(const date in state.staffAttendance){ const t=state.staffAttendance[date][teamId]; if(!t)continue; ["coach","assistant"].forEach(role=>{ const e=t[role]; if(!e)return; res[role].total++; if(e.status==="present")res[role].present++; if(e.status==="absent"&&e.replacement)res[role].repl.push({date,name:e.replacement}); }); } return res; }
+  // billing
+  function monthData(p,key){ const m=(p.months&&p.months[key])||null; if(m)return {fee:Number(m.fee)||0,paid:!!m.paid,invoiced:!!m.invoiced}; let fee=0; if(p.months){const ks=Object.keys(p.months).filter(k=>k<key).sort(); if(ks.length)fee=Number(p.months[ks[ks.length-1]].fee)||0;} return {fee,paid:false,invoiced:false}; }
+  function setMonth(p,key,patch){ if(!p.months)p.months={}; const cur=p.months[key]||{fee:monthData(p,key).fee,paid:false,invoiced:false}; p.months[key]={fee:cur.fee,paid:cur.paid,invoiced:cur.invoiced,...patch}; }
+  function monthPresence(pid,key){ let present=0,total=0; for(const d in state.attendance){ if(d.slice(0,7)!==key)continue; const s=state.attendance[d][pid]; if(s==="present"){present++;total++;} else if(s==="absent")total++;} return {present,total}; }
 
-  // ===== Session =====
-  function getSession() { try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch(e){ return null; } }
-  function setSession(s) { sessionStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
-  function clearSession() { sessionStorage.removeItem(SESSION_KEY); }
-  function isValidSession(s) {
-    if (!s) return false;
-    if (s.role === "admin") return true;
-    if (s.role === "branch") return state.branches.some(b => b.id === s.branchId);
-    return false;
-  }
+  // ===== Session/auth =====
+  function getSession(){ try{return JSON.parse(sessionStorage.getItem(SESSION_KEY));}catch(e){return null;} }
+  function setSess(s){ sessionStorage.setItem(SESSION_KEY,JSON.stringify(s)); }
+  function isValidSession(s){ if(!s)return false; if(s.role==="admin")return true; if(s.role==="branch")return state.branches.some(b=>b.id===s.branchId); return false; }
 
-  // ===== Theme =====
-  function applyTheme(t) { if (t) document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme"); }
-  (function initTheme(){ const t = localStorage.getItem(THEME_KEY); if (t) applyTheme(t); })();
-  document.getElementById("theme-btn").addEventListener("click", () => {
-    const cur = document.documentElement.getAttribute("data-theme");
-    const isDark = cur ? cur === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const next = isDark ? "light" : "dark";
-    applyTheme(next); localStorage.setItem(THEME_KEY, next);
-  });
+  // theme
+  function applyTheme(t){ if(t)document.documentElement.setAttribute("data-theme",t); else document.documentElement.removeAttribute("data-theme"); }
+  (function(){ const t=localStorage.getItem(THEME_KEY); if(t)applyTheme(t); })();
+  document.getElementById("theme-btn").addEventListener("click",()=>{ const cur=document.documentElement.getAttribute("data-theme"); const dark=cur?cur==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches; const next=dark?"light":"dark"; applyTheme(next); localStorage.setItem(THEME_KEY,next); });
 
-  // ===== Gates =====
-  function hideAllGates() {
-    ["gate-loading","gate-setup","gate-login","app-root"].forEach(id => document.getElementById(id).style.display = "none");
-  }
-  function showSetup() {
-    hideAllGates(); document.getElementById("gate-setup").style.display = "flex";
-    const wrap = document.getElementById("setup-branches");
-    wrap.innerHTML = Array.from({length:7}, (_,i) => `
-      <div class="setup-branch-row">
-        <input type="text" id="setup-b-name-${i}" placeholder="Branch ${i+1} name" value="${escapeHtml(DEFAULT_BRANCHES[i]||("Branch "+(i+1)))}">
-        <input type="text" id="setup-b-pin-${i}" inputmode="numeric" maxlength="8" placeholder="PIN" value="${(i+1).toString().repeat(4)}" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,8)">
-      </div>`).join("");
-  }
-  function showLogin() {
-    hideAllGates(); document.getElementById("gate-login").style.display = "flex";
-    document.getElementById("login-roles").style.display = "block";
-    document.getElementById("login-pin-panel").style.display = "none";
-    document.getElementById("login-role-grid").innerHTML =
-      state.branches.map(b => `<button class="role-btn" onclick="app.selectRole('branch','${b.id}')">${escapeHtml(b.name)}</button>`).join("")
-      + `<button class="role-btn admin-btn" onclick="app.selectRole('admin')">🔑 Admin — all branches</button>`;
-  }
-  function showApp() {
-    hideAllGates(); document.getElementById("app-root").style.display = "block";
-    document.getElementById("nav-admin").style.display = isAdmin() ? "" : "none";
-    document.getElementById("nav-accounting").style.display = isAdmin() ? "" : "none";
-    document.getElementById("session-label").textContent = isAdmin() ? "Admin — all branches" : "Branch — " + branchName(scopeBranchId());
-    if (!isAdmin()) checkinTeamId = "";
-    document.querySelectorAll("nav.tabs button").forEach(b => b.classList.remove("active"));
+  // gates
+  function hideGates(){ ["gate-loading","gate-setup","gate-login","app-root"].forEach(id=>document.getElementById(id).style.display="none"); }
+  function showSetup(){ hideGates(); document.getElementById("gate-setup").style.display="flex";
+    document.getElementById("setup-branches").innerHTML=Array.from({length:7},(_,i)=>`<div class="setup-branch-row">
+      <input type="text" id="sb-name-${i}" placeholder="Branch ${i+1}" value="${esc(DEFAULT_BRANCHES[i]||("Branch "+(i+1)))}">
+      <input type="text" id="sb-pin-${i}" inputmode="numeric" maxlength="8" placeholder="PIN" value="${(i+1).toString().repeat(4)}" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,8)"></div>`).join(""); }
+  function showLogin(){ hideGates(); document.getElementById("gate-login").style.display="flex";
+    document.getElementById("login-roles").style.display="block"; document.getElementById("login-pin-panel").style.display="none";
+    document.getElementById("login-role-grid").innerHTML=state.branches.map(b=>`<button class="role-btn" onclick="app.selectRole('branch','${b.id}')">${esc(b.name)}</button>`).join("")
+      +`<button class="role-btn admin-btn" onclick="app.selectRole('admin')">🔑 Admin — all branches</button>`; }
+  function showApp(){ hideGates(); document.getElementById("app-root").style.display="block";
+    document.getElementById("nav-admin").style.display=isAdmin()?"":"none";
+    document.getElementById("nav-billing").style.display=isAdmin()?"":"none";
+    document.getElementById("session-label").textContent=isAdmin()?"Admin · all branches":branchName(scopeBranchId());
+    if(!isAdmin())checkinTeamId="";
+    document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.remove("active"));
     document.querySelector('nav.tabs button[data-view="dashboard"]').classList.add("active");
-    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
     document.getElementById("view-dashboard").classList.add("active");
-    renderAll();
-  }
-  function boot() {
-    if (!state.auth || !state.auth.setupDone) { showSetup(); return; }
-    const s = getSession();
-    if (isValidSession(s)) { session = s; showApp(); } else showLogin();
-  }
+    renderAll(); }
+  function boot(){ if(!state.auth||!state.auth.setupDone){showSetup();return;} const s=getSession(); if(isValidSession(s)){session=s;showApp();} else showLogin(); }
 
-  // ===== Setup submit =====
-  document.getElementById("setup-submit-btn").addEventListener("click", () => {
-    const err = document.getElementById("setup-error"); err.textContent = "";
-    const adminPin = document.getElementById("setup-admin-pin").value.trim();
-    const adminPin2 = document.getElementById("setup-admin-pin2").value.trim();
-    if (!/^\d{4,8}$/.test(adminPin)) { err.textContent = "Admin PIN must be 4–8 digits."; return; }
-    if (adminPin !== adminPin2) { err.textContent = "Admin PIN confirmation does not match."; return; }
-    const names = [], pins = [];
-    for (let i=0;i<7;i++){
-      const n = document.getElementById("setup-b-name-"+i).value.trim();
-      const p = document.getElementById("setup-b-pin-"+i).value.trim();
-      if (!n) { err.textContent = `Branch ${i+1} needs a name.`; return; }
-      if (!/^\d{4,8}$/.test(p)) { err.textContent = `Branch ${i+1} PIN must be 4–8 digits.`; return; }
-      names.push(n); pins.push(p);
-    }
-    const branches = names.map(n => ({ id: uid(), name: n }));
-    const branchPins = {}; branches.forEach((b,i) => branchPins[b.id] = pins[i]);
-    state.branches = branches;
-    state.auth = { setupDone: true, adminPin, branchPins };
-    save(); showLogin();
-  });
+  document.getElementById("setup-submit").addEventListener("click",()=>{ const err=document.getElementById("setup-error"); err.textContent="";
+    const a=document.getElementById("setup-admin-pin").value.trim(), a2=document.getElementById("setup-admin-pin2").value.trim();
+    if(!/^\d{4,8}$/.test(a)){err.textContent="Admin PIN must be 4–8 digits.";return;}
+    if(a!==a2){err.textContent="Admin PIN confirmation doesn't match.";return;}
+    const names=[],pins=[]; for(let i=0;i<7;i++){ const n=document.getElementById("sb-name-"+i).value.trim(), p=document.getElementById("sb-pin-"+i).value.trim();
+      if(!n){err.textContent=`Branch ${i+1} needs a name.`;return;} if(!/^\d{4,8}$/.test(p)){err.textContent=`Branch ${i+1} PIN must be 4–8 digits.`;return;} names.push(n);pins.push(p); }
+    const branches=names.map(n=>({id:uid(),name:n})); const bp={}; branches.forEach((b,i)=>bp[b.id]=pins[i]);
+    state.branches=branches; state.auth={setupDone:true,adminPin:a,branchPins:bp}; save(); showLogin(); });
 
-  // ===== Login =====
-  let pendingRole = null;
-  function selectRole(role, branchId) {
-    pendingRole = role === "branch" ? { role:"branch", branchId } : { role:"admin" };
-    document.getElementById("login-pin-title").textContent = "Enter PIN for " + (role==="branch" ? branchName(branchId) : "Admin");
-    document.getElementById("login-roles").style.display = "none";
-    document.getElementById("login-pin-panel").style.display = "block";
-    const pin = document.getElementById("login-pin"); pin.value = "";
-    document.getElementById("login-error").textContent = ""; pin.focus();
-  }
-  function submitLogin() {
-    if (!pendingRole) return;
-    const pin = document.getElementById("login-pin").value.trim();
-    const err = document.getElementById("login-error");
-    const ok = pendingRole.role === "admin"
-      ? (pin.length>0 && pin === state.auth.adminPin)
-      : (pin.length>0 && pin === state.auth.branchPins[pendingRole.branchId]);
-    if (!ok) { err.textContent = "Incorrect PIN. Try again."; return; }
-    setSession(pendingRole); session = pendingRole; showApp();
-  }
-  document.getElementById("login-back-btn").addEventListener("click", () => {
-    pendingRole = null;
-    document.getElementById("login-pin-panel").style.display = "none";
-    document.getElementById("login-roles").style.display = "block";
-  });
-  document.getElementById("login-unlock-btn").addEventListener("click", submitLogin);
-  document.getElementById("login-pin").addEventListener("keydown", e => { if (e.key === "Enter") submitLogin(); });
-  document.getElementById("logout-btn").addEventListener("click", () => { clearSession(); session = null; showLogin(); });
+  let pendingRole=null;
+  function selectRole(role,bid){ pendingRole=role==="branch"?{role:"branch",branchId:bid}:{role:"admin"};
+    document.getElementById("login-pin-title").textContent="Enter PIN for "+(role==="branch"?branchName(bid):"Admin");
+    document.getElementById("login-roles").style.display="none"; document.getElementById("login-pin-panel").style.display="block";
+    const pin=document.getElementById("login-pin"); pin.value=""; document.getElementById("login-error").textContent=""; pin.focus(); }
+  function submitLogin(){ if(!pendingRole)return; const pin=document.getElementById("login-pin").value.trim(); const err=document.getElementById("login-error");
+    const ok=pendingRole.role==="admin"?(pin.length>0&&pin===state.auth.adminPin):(pin.length>0&&pin===state.auth.branchPins[pendingRole.branchId]);
+    if(!ok){err.textContent="Incorrect PIN. Try again.";return;} setSess(pendingRole); session=pendingRole; showApp(); }
+  document.getElementById("login-back").addEventListener("click",()=>{ pendingRole=null; document.getElementById("login-pin-panel").style.display="none"; document.getElementById("login-roles").style.display="block"; });
+  document.getElementById("login-unlock").addEventListener("click",submitLogin);
+  document.getElementById("login-pin").addEventListener("keydown",e=>{ if(e.key==="Enter")submitLogin(); });
+  document.getElementById("logout-btn").addEventListener("click",()=>{ sessionStorage.removeItem(SESSION_KEY); session=null; showLogin(); });
 
-  // ===== Tabs =====
-  const tabButtons = document.querySelectorAll("nav.tabs button");
-  tabButtons.forEach(btn => btn.addEventListener("click", () => {
-    if ((btn.dataset.view === "admin" || btn.dataset.view === "accounting") && !isAdmin()) return;
-    tabButtons.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-    document.getElementById("view-" + btn.dataset.view).classList.add("active");
-    renderAll();
-  }));
-  function goTab(view) {
-    const btn = document.querySelector(`nav.tabs button[data-view="${view}"]`);
-    if (btn) btn.click();
-  }
+  // tabs
+  const tabButtons=document.querySelectorAll("nav.tabs button");
+  tabButtons.forEach(btn=>btn.addEventListener("click",()=>{ if((btn.dataset.view==="admin"||btn.dataset.view==="billing")&&!isAdmin())return;
+    tabButtons.forEach(b=>b.classList.remove("active")); btn.classList.add("active");
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active")); document.getElementById("view-"+btn.dataset.view).classList.add("active"); renderAll(); }));
+  function goTab(v){ const b=document.querySelector(`nav.tabs button[data-view="${v}"]`); if(b)b.click(); }
 
-  // ===== Admin-branch-filter select (shared control) =====
-  function branchFilterControl() {
-    if (!isAdmin()) return "";
-    const opts = `<option value="all">All branches</option>` +
-      state.branches.map(b => `<option value="${b.id}" ${adminBranchFilter===b.id?"selected":""}>${escapeHtml(b.name)}</option>`).join("");
-    return `<div class="field"><label>Branch</label><select onchange="app.setBranchFilter(this.value)">${opts}</select></div>`;
-  }
-  function setBranchFilter(v) { adminBranchFilter = v; renderAll(); }
+  function branchFilterControl(){ if(!isAdmin())return ""; const opts=`<option value="all">All branches</option>`+state.branches.map(b=>`<option value="${b.id}" ${adminBranchFilter===b.id?"selected":""}>${esc(b.name)}</option>`).join("");
+    return `<div class="field"><label>Branch</label><select onchange="app.setBranchFilter(this.value)">${opts}</select></div>`; }
+  function setBranchFilter(v){ adminBranchFilter=v; renderAll(); }
+  function teamSelectOptions(sel,unassigned){ let h=""; if(unassigned)h+=`<option value="">— Select team —</option>`; scopedTeams().forEach(t=>{ const lbl=isAdmin()?`${t.name} · ${branchName(t.branchId)}`:t.name; h+=`<option value="${t.id}" ${sel===t.id?"selected":""}>${esc(lbl)}</option>`; }); return h; }
 
-  // team <select> for scoped teams
-  function teamSelectOptions(selected, includeUnassigned) {
-    let html = "";
-    if (includeUnassigned) html += `<option value="">— Select team —</option>`;
-    scopedTeams().forEach(t => {
-      const label = isAdmin() ? `${t.name} · ${branchName(t.branchId)}` : t.name;
-      html += `<option value="${t.id}" ${selected===t.id?"selected":""}>${escapeHtml(label)}</option>`;
-    });
-    return html;
-  }
-
-  // ===== Attendance calc =====
-  function attStatus(date, playerId) { return (state.attendance[date] && state.attendance[date][playerId]) || null; }
-  function playerAttStats(playerId) {
-    let present = 0, total = 0;
-    for (const date in state.attendance) {
-      const st = state.attendance[date][playerId];
-      if (st === "present") { present++; total++; }
-      else if (st === "absent") { total++; }
-    }
-    return { present, total, rate: total ? Math.round(present/total*100) : null };
-  }
-  function rateForPlayers(ids) {
-    let present=0,total=0;
-    for (const date in state.attendance) {
-      const day = state.attendance[date];
-      ids.forEach(id => { const st = day[id]; if (st==="present"){present++;total++;} else if (st==="absent"){total++;} });
-    }
-    return { present, total, rate: total ? Math.round(present/total*100) : null };
-  }
-  function sessionDates(ids) {
-    const set = new Set();
-    for (const date in state.attendance) {
-      const day = state.attendance[date];
-      if (ids.some(id => day[id])) set.add(date);
-    }
-    return [...set];
-  }
+  // charts
+  function svgBars(series,opts){ opts=opts||{}; const max=opts.max||Math.max(1,...series.map(s=>s.value)); const w=opts.w||300,h=opts.h||110,n=series.length||1,bw=w/n,pad=Math.min(6,bw*0.18);
+    if(!series.length)return `<div class="empty">Not enough data yet.</div>`;
+    let bars=""; series.forEach((s,i)=>{ const bh=max?Math.round((s.value/max)*(h-26)):0; const x=i*bw+pad,y=h-16-bh,ww=bw-2*pad;
+      bars+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${ww.toFixed(1)}" height="${bh}" rx="3" fill="var(--brand-red)"></rect>`;
+      bars+=`<text x="${(x+ww/2).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" font-size="9" fill="var(--muted)">${s.value}${opts.suffix||""}</text>`;
+      bars+=`<text x="${(x+ww/2).toFixed(1)}" y="${h-4}" text-anchor="middle" font-size="8" fill="var(--muted)">${esc(s.label)}</text>`; });
+    return `<div class="chart-wrap"><svg viewBox="0 0 ${w} ${h}" width="100%" style="max-width:${w}px">${bars}</svg></div>`; }
+  function hBars(series){ if(!series.length)return `<div class="empty">No teams yet.</div>`; return series.map(s=>`<div class="hbar-row"><div class="hbar-label">${esc(s.label)}</div><div class="hbar-track"><div class="hbar-fill" style="width:${s.value||0}%"></div></div><div class="hbar-val">${s.value==null?"—":s.value+"%"}</div></div>`).join(""); }
 
   // ================= RENDER =================
-  function renderAll() {
-    const active = document.querySelector(".view.active");
-    if (!active) return;
-    const v = active.id.replace("view-","");
-    if (v === "dashboard") renderDashboard();
-    else if (v === "attendance") renderAttendance();
-    else if (v === "schedule") renderSchedule();
-    else if (v === "teams") renderTeams();
-    else if (v === "history") renderHistory();
-    else if (v === "stats") renderStats();
-    else if (v === "accounting") renderAccounting();
-    else if (v === "admin") renderAdmin();
-  }
+  function renderAll(){ const a=document.querySelector(".view.active"); if(!a)return; const v=a.id.replace("view-","");
+    ({dashboard:renderDashboard,attendance:renderAttendance,schedule:renderSchedule,teams:renderTeams,players:renderPlayers,reports:renderReports,billing:renderBilling,admin:renderAdmin}[v]||(()=>{}))(); }
 
   // ---- Dashboard ----
-  function renderDashboard() {
-    const el = document.getElementById("view-dashboard");
-    const teams = scopedTeams(), players = scopedPlayers();
-    const ids = players.map(p=>p.id);
-    const overall = rateForPlayers(ids);
-    const sessions = sessionDates(ids).length;
-    const todayIdx = dayIdxOf(todayStr());
-    const todaySessions = scopedSchedule().filter(s => sessionOccursOn(s, todayStr())).sort((a,b)=> (a.start||"").localeCompare(b.start||""));
+  function renderDashboard(){ const el=document.getElementById("view-dashboard");
+    const teams=scopedTeams(), players=scopedPlayers(), ids=players.map(p=>p.id);
+    const overall=rateForPlayers(ids), sessions=sessionDates(ids).length;
+    const key=todayStr().slice(0,7); let outstanding=0,unpaid=0; players.forEach(p=>{ const m=monthData(p,key); if(!m.paid&&m.fee>0){outstanding+=m.fee;unpaid++;} });
+    const todaySessions=scopedSchedule().filter(s=>sessionOccursOn(s,todayStr())).sort((a,b)=>(a.start||"").localeCompare(b.start||""));
+    const trend=recentRates(ids,8).map(r=>({label:fmtShort(r.date).replace(" ",""),value:r.rate}));
+    const teamComp=teams.map(t=>{ const r=rateForPlayers(state.players.filter(p=>p.teamId===t.id).map(p=>p.id)); return {label:t.name,value:r.rate}; }).filter(x=>x.value!=null);
+    const atRisk=players.map(p=>({p,s:playerAttStats(p.id)})).filter(x=>x.s.total>=2&&x.s.rate!=null&&x.s.rate<60).sort((a,b)=>a.s.rate-b.s.rate).slice(0,5);
 
-    let html = `<div class="card"><h2>Overview ${isAdmin()?`<span class="sub">${adminBranchFilter==="all"?"all branches":escapeHtml(branchName(adminBranchFilter))}</span>`:""}</h2>`;
-    html += branchFilterControl();
-    html += `<div class="kpis">
-      <div class="kpi"><div class="k-val">${players.length}</div><div class="k-lbl">Players</div></div>
-      <div class="kpi"><div class="k-val">${teams.length}</div><div class="k-lbl">Teams</div></div>
-      <div class="kpi"><div class="k-val">${sessions}</div><div class="k-lbl">Sessions logged</div></div>
-      <div class="kpi"><div class="k-val">${overall.rate==null?"—":overall.rate+"%"}</div><div class="k-lbl">Attendance rate</div></div>
+    let h=`<div class="card accent"><h2>Overview ${isAdmin()?`<span class="sub">${adminBranchFilter==="all"?"all branches":esc(branchName(adminBranchFilter))}</span>`:""}</h2>`;
+    h+=branchFilterControl();
+    h+=`<div class="kpis">
+      <div class="kpi"><div class="kv">${players.length}</div><div class="kl">Players</div></div>
+      <div class="kpi red"><div class="kv">${teams.length}</div><div class="kl">Teams</div></div>
+      <div class="kpi"><div class="kv">${sessions}</div><div class="kl">Sessions logged</div></div>
+      <div class="kpi red"><div class="kv">${overall.rate==null?"—":overall.rate+"%"}</div><div class="kl">Attendance rate</div></div>
     </div></div>`;
 
-    // Today's sessions
-    html += `<div class="card"><h2>Today · ${escapeHtml(DAYS[todayIdx])}</h2>`;
-    if (!todaySessions.length) html += `<div class="empty">No sessions scheduled for today.</div>`;
-    else html += todaySessions.map(s => `
-      <div class="sched-item">
-        <div class="sched-time">${escapeHtml(s.start||"")}${s.end?"–"+escapeHtml(s.end):""}</div>
-        <div class="sched-body"><div class="t">${escapeHtml(s.teamId?teamName(s.teamId):"All / general")}</div>
-        <div class="muted">${escapeHtml(s.location||"")}${isAdmin()?" · "+escapeHtml(branchName(s.branchId)):""}</div></div>
-        <button class="btn btn-sm" onclick="app.checkinFor('${s.teamId||""}')">Check-in</button>
-      </div>`).join("");
-    html += `</div>`;
+    h+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;">`;
+    h+=`<div class="card"><h2>Attendance trend <span class="sub">last ${trend.length} sessions</span></h2>${svgBars(trend,{max:100,suffix:"%"})}</div>`;
+    h+=`<div class="card"><h2>By team</h2>${hBars(teamComp)}</div>`;
+    h+=`</div>`;
 
-    // Per-branch (admin) or per-team breakdown
-    if (isAdmin() && adminBranchFilter === "all") {
-      html += `<div class="card"><h2>Branches</h2><div class="tbl-wrap"><table><thead><tr><th>Branch</th><th class="num">Teams</th><th class="num">Players</th><th class="num">Sessions</th><th class="num">Attendance</th></tr></thead><tbody>`;
-      state.branches.forEach(b => {
-        const bTeams = state.teams.filter(t=>t.branchId===b.id).length;
-        const bPlayers = state.players.filter(p=>p.branchId===b.id);
-        const r = rateForPlayers(bPlayers.map(p=>p.id));
-        const sess = sessionDates(bPlayers.map(p=>p.id)).length;
-        html += `<tr><td><a class="link" onclick="app.setBranchFilter('${b.id}')">${escapeHtml(b.name)}</a></td><td class="num">${bTeams}</td><td class="num">${bPlayers.length}</td><td class="num">${sess}</td><td class="num">${r.rate==null?"—":r.rate+"%"}</td></tr>`;
-      });
-      html += `</tbody></table></div></div>`;
-    } else {
-      html += `<div class="card"><h2>Teams</h2>`;
-      if (!teams.length) html += `<div class="empty">No teams yet. Add them in the Teams tab.</div>`;
-      else {
-        html += `<div class="tbl-wrap"><table><thead><tr><th>Team</th>${isAdmin()?"<th>Branch</th>":""}<th>Coach</th><th class="num">Players</th><th class="num">Attendance</th></tr></thead><tbody>`;
-        teams.forEach(t => {
-          const tp = state.players.filter(p=>p.teamId===t.id);
-          const r = rateForPlayers(tp.map(p=>p.id));
-          html += `<tr><td>${escapeHtml(t.name)}</td>${isAdmin()?`<td>${escapeHtml(branchName(t.branchId))}</td>`:""}<td>${escapeHtml(t.coach||"—")}</td><td class="num">${tp.length}</td><td class="num">${r.rate==null?"—":r.rate+"%"}</td></tr>`;
-        });
-        html += `</tbody></table></div>`;
-      }
-      html += `</div>`;
+    h+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;">`;
+    // Today
+    h+=`<div class="card"><h2>Today · ${DAYS[dayIdxOf(todayStr())]}</h2>`;
+    if(!todaySessions.length)h+=`<div class="empty">No sessions scheduled for today.</div>`;
+    else h+=todaySessions.map(s=>`<div class="sched-item"><div class="sched-time">${esc(s.start||"")}${s.end?"–"+esc(s.end):""}</div><div class="sched-body"><div class="t">${esc(s.teamId?teamName(s.teamId):"General")}</div><div class="muted">${esc(s.location||"")}${isAdmin()?" · "+esc(branchName(s.branchId)):""}</div></div><button class="btn btn-sm" onclick="app.checkinFor('${s.teamId||""}')">Open</button></div>`).join("");
+    h+=`</div>`;
+    // Insights
+    h+=`<div class="card"><h2>Insights</h2>`;
+    h+=`<div class="kpis" style="grid-template-columns:1fr 1fr;">
+      <div class="kpi red"><div class="kv">${fmtMoney(outstanding)}</div><div class="kl">Outstanding · ${esc(ymLabel(key))}</div><div class="khint">${unpaid} player${unpaid===1?"":"s"} unpaid</div></div>
+      <div class="kpi"><div class="kv">${atRisk.length}</div><div class="kl">At-risk (&lt;60%)</div></div>
+    </div>`;
+    if(atRisk.length){ h+=`<h3 class="sub-h" style="margin-top:14px;">Needs attention</h3>`;
+      h+=atRisk.map(x=>`<div class="att-row" style="cursor:pointer" onclick="app.openProfile('${x.p.id}')"><span class="name">${esc(x.p.name)} <span class="muted">· ${esc(teamName(x.p.teamId))}</span></span><span class="badge b-warn">${x.s.rate}%</span></div>`).join(""); }
+    h+=`</div></div>`;
+
+    if(isAdmin()&&adminBranchFilter==="all"){
+      h+=`<div class="card"><h2>Branches</h2><div class="tbl-wrap"><table><thead><tr><th>Branch</th><th class="num">Teams</th><th class="num">Players</th><th class="num">Attendance</th><th class="num">Outstanding</th></tr></thead><tbody>`;
+      state.branches.forEach(b=>{ const bp=state.players.filter(p=>p.branchId===b.id); const r=rateForPlayers(bp.map(p=>p.id));
+        let out=0; bp.forEach(p=>{const m=monthData(p,key); if(!m.paid&&m.fee>0)out+=m.fee;});
+        h+=`<tr class="click" onclick="app.setBranchFilter('${b.id}')"><td>${esc(b.name)}</td><td class="num">${state.teams.filter(t=>t.branchId===b.id).length}</td><td class="num">${bp.length}</td><td class="num">${r.rate==null?"—":r.rate+"%"}</td><td class="num">${fmtMoney(out)}</td></tr>`; });
+      h+=`</tbody></table></div></div>`;
     }
-    el.innerHTML = html;
+    el.innerHTML=h;
   }
+
+  // ---- Attendance (calendar + inline check-in) ----
+  function renderAttendance(){ const el=document.getElementById("view-attendance"); el.innerHTML=`<div id="att-calendar"></div><div id="att-checkin"></div>`; renderCalendar(); renderCheckin(); }
+  function ensureCal(){ if(calYear==null){ const d=new Date(); calYear=d.getFullYear(); calMonth=d.getMonth(); } }
+  function renderCalendar(){ ensureCal(); const el=document.getElementById("att-calendar"); if(!el)return;
+    const first=new Date(calYear,calMonth,1), monthName=first.toLocaleDateString(undefined,{month:"long",year:"numeric"});
+    const startDow=(first.getDay()+6)%7, daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+    const pidSet=new Set(scopedPlayers().map(p=>p.id)), sched=scopedSchedule(), todayS=todayStr();
+    let h=`<div class="card accent"><h2>Attendance calendar ${isAdmin()?`<span class="sub">${adminBranchFilter==="all"?"all branches":esc(branchName(adminBranchFilter))}</span>`:""}</h2>`;
+    h+=branchFilterControl();
+    h+=`<div class="cal-nav"><button class="btn btn-sm" onclick="app.calPrev()">‹</button><div class="cal-title">${esc(monthName)}</div><button class="btn btn-sm btn-ghost" onclick="app.calToday()">Today</button><button class="btn btn-sm" onclick="app.calNext()">›</button></div>`;
+    h+=`<div class="cal-grid" style="margin-bottom:6px;">`+["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>`<div class="cal-dow">${d}</div>`).join("")+`</div><div class="cal-grid">`;
+    for(let i=0;i<startDow;i++)h+=`<div class="cal-cell empty-cell"></div>`;
+    for(let day=1;day<=daysInMonth;day++){ const iso=`${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+      const nSess=sched.filter(s=>sessionOccursOn(s,iso)).length; let present=0,marked=0; const att=state.attendance[iso];
+      if(att)for(const pid in att){ if(pidSet.has(pid)){marked++; if(att[pid]==="present")present++;} }
+      h+=`<div class="cal-cell ${iso===todayS?"today":""} ${iso===checkinDate?"selected":""}" onclick="app.pickDay('${iso}')"><div class="cal-daynum">${day}</div>${nSess?`<div class="cal-badge sess">${nSess} sess</div>`:""}${marked?`<div class="cal-badge att">${present}/${marked}</div>`:""}</div>`; }
+    h+=`</div><p class="muted" style="margin:12px 0 0;">Tap a day to take attendance for it below.</p></div>`;
+    el.innerHTML=h;
+  }
+  function calPrev(){ ensureCal(); calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+  function calNext(){ ensureCal(); calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+  function calToday(){ const d=new Date(); calYear=d.getFullYear(); calMonth=d.getMonth(); renderCalendar(); }
+  function pickDay(iso){ if(ciDraft&&ciDraft.dirty&&!confirm("You have unsaved attendance. Discard those changes?"))return; checkinDate=iso; ciDraft=null; renderAttendance(); const c=document.getElementById("att-checkin"); if(c)c.scrollIntoView({behavior:"smooth",block:"start"}); }
+
+  // check-in draft
+  let ciDraft=null;
+  function draftMatches(){ return ciDraft&&ciDraft.date===checkinDate&&ciDraft.teamId===checkinTeamId; }
+  function loadDraft(){ const players={}; const sp=state.attendance[checkinDate]||{}; state.players.filter(p=>p.teamId===checkinTeamId).forEach(p=>{if(sp[p.id])players[p.id]=sp[p.id];});
+    const ss=(state.staffAttendance[checkinDate]&&state.staffAttendance[checkinDate][checkinTeamId])||{};
+    const staff={coach:{status:ss.coach?ss.coach.status:null,replacement:ss.coach?(ss.coach.replacement||""):""},assistant:{status:ss.assistant?ss.assistant.status:null,replacement:ss.assistant?(ss.assistant.replacement||""):""}};
+    ciDraft={date:checkinDate,teamId:checkinTeamId,players,staff,dirty:false}; }
+  function ensureDraft(){ if(!draftMatches())loadDraft(); }
+  function renderCheckin(){ const el=document.getElementById("att-checkin"); if(!el)return; const teams=scopedTeams();
+    if(!checkinTeamId&&teams.length)checkinTeamId=teams[0].id; if(checkinTeamId&&!teams.some(t=>t.id===checkinTeamId))checkinTeamId=teams.length?teams[0].id:"";
+    let h=`<div class="card"><h2>Take attendance <span class="sub">${esc(fmtDate(checkinDate))}</span></h2><div class="row"><div class="field grow"><label>Team</label><select id="ci-team" onchange="app.setCheckinTeam(this.value)">${teamSelectOptions(checkinTeamId,false)}</select></div></div>`;
+    if(!teams.length){ h+=`<div class="empty">No teams yet. Add one in the Teams tab.</div></div>`; el.innerHTML=h; return; }
+    ensureDraft(); const players=state.players.filter(p=>p.teamId===checkinTeamId);
+    h+=`<div class="muted" style="margin:8px 0 12px;">Team: ${esc(teamName(checkinTeamId))}</div>`;
+    h+=`<div class="row" style="margin-bottom:12px;"><div class="field grow"><input type="text" id="ci-addpl" placeholder="Add a player to this team…" onkeydown="if(event.key==='Enter')app.addPlayerCheckin()"></div><div class="field"><button class="btn btn-sm" onclick="app.addPlayerCheckin()">＋ Add player</button></div></div>`;
+    if(!players.length){ h+=`<div class="empty">No players yet — add them above.</div>`; }
+    else{ h+=`<div class="row" style="margin-bottom:12px;"><button class="btn btn-sm" onclick="app.bulkMark('present')">Mark all present</button><button class="btn btn-sm" onclick="app.bulkMark('absent')">Mark all absent</button></div><div class="att-list">`;
+      players.forEach(p=>{ const st=ciDraft.players[p.id]||null; h+=`<div class="att-row"><span class="name">${esc(p.name)}</span><div class="toggle-btns"><button class="tg p ${st==="present"?"on":""}" onclick="app.mark('${p.id}','present')">Present</button><button class="tg a ${st==="absent"?"on":""}" onclick="app.mark('${p.id}','absent')">Absent</button></div></div>`; });
+      h+=`</div>`; }
+    const team=teamById(checkinTeamId);
+    h+=`<div class="staff-block"><h3 class="sub-h">Coaching staff</h3>`;
+    ["coach","assistant"].forEach(role=>{ const label=role==="coach"?"Coach":"Assistant"; const person=team?(team[role]||""):""; const status=ciDraft.staff[role].status; const repl=ciDraft.staff[role].replacement||"";
+      h+=`<div class="att-row staff"><span class="name"><span class="role-tag">${label}</span>${person?esc(person):'<span class="muted">not set</span>'}</span><div class="toggle-btns"><button class="tg p ${status==="present"?"on":""}" onclick="app.markStaff('${role}','present')">Present</button><button class="tg a ${status==="absent"?"on":""}" onclick="app.markStaff('${role}','absent')">Absent</button></div></div>`;
+      if(status==="absent")h+=`<div class="repl-row"><label>Replacement</label><input type="text" value="${esc(repl)}" placeholder="Who covered?" onchange="app.setStaffReplacement('${role}',this.value)"></div>`; });
+    h+=`</div>`;
+    h+=`<div class="ci-actions"><span class="ci-status ${ciDraft.dirty?"dirty":"clean"}">${ciDraft.dirty?"● Unsaved changes":"✓ All changes saved"}</span><button class="btn btn-primary" onclick="app.validateAttendance()">Validate &amp; save</button></div></div>`;
+    el.innerHTML=h;
+  }
+  function setCheckinTeam(v){ if(ciDraft&&ciDraft.dirty&&!confirm("Unsaved attendance. Discard?")){renderCheckin();return;} checkinTeamId=v; ciDraft=null; renderCheckin(); }
+  function checkinFor(teamId){ checkinDate=todayStr(); if(teamId)checkinTeamId=teamId; ciDraft=null; goTab("attendance"); }
+  function mark(pid,status){ ensureDraft(); if(ciDraft.players[pid]===status)delete ciDraft.players[pid]; else ciDraft.players[pid]=status; ciDraft.dirty=true; renderCheckin(); }
+  function bulkMark(status){ ensureDraft(); state.players.filter(p=>p.teamId===checkinTeamId).forEach(p=>ciDraft.players[p.id]=status); ciDraft.dirty=true; renderCheckin(); }
+  function markStaff(role,status){ ensureDraft(); const c=ciDraft.staff[role]; c.status=(c.status===status)?null:status; ciDraft.dirty=true; renderCheckin(); }
+  function setStaffReplacement(role,name){ ensureDraft(); ciDraft.staff[role].replacement=name.trim(); ciDraft.dirty=true; }
+  function addPlayerCheckin(){ const inp=document.getElementById("ci-addpl"); if(!inp)return; const name=inp.value.trim(); if(!name)return; const t=teamById(checkinTeamId); if(!t){alert("Select a team first.");return;}
+    state.players.push({id:uid(),branchId:t.branchId,teamId:checkinTeamId,name,months:{}}); inp.value=""; save(); renderCheckin(); const ni=document.getElementById("ci-addpl"); if(ni)ni.focus(); }
+  function validateAttendance(){ ensureDraft(); const d=checkinDate,t=checkinTeamId;
+    if(!state.attendance[d])state.attendance[d]={}; state.players.filter(p=>p.teamId===t).forEach(p=>{delete state.attendance[d][p.id];});
+    Object.entries(ciDraft.players).forEach(([pid,st])=>{state.attendance[d][pid]=st;}); if(Object.keys(state.attendance[d]).length===0)delete state.attendance[d];
+    if(!state.staffAttendance[d])state.staffAttendance[d]={}; const st={};
+    ["coach","assistant"].forEach(role=>{ const e=ciDraft.staff[role]; if(e.status)st[role]={status:e.status,replacement:e.status==="absent"?(e.replacement||""):""}; });
+    if(Object.keys(st).length)state.staffAttendance[d][t]=st; else delete state.staffAttendance[d][t]; if(Object.keys(state.staffAttendance[d]).length===0)delete state.staffAttendance[d];
+    save(); ciDraft.dirty=false; renderCheckin(); toast("Attendance saved ✓"); }
 
   // ---- Schedule ----
-  function renderSchedule() {
-    const el = document.getElementById("view-schedule");
-    let html = `<div class="card"><h2>Add session</h2>`;
-    if (!scopedTeams().length && !isAdmin()) html += `<div class="empty">Create a team first (Teams tab), then schedule its sessions.</div>`;
-    html += `<div class="row">
-      ${isAdmin()?branchFilterControl():""}
-      <div class="field grow"><label>Team</label><select id="sch-team">${teamSelectOptions("", true)}<option value="__none">General / all teams</option></select></div>
-      <div class="field"><label>Start time</label><input type="time" id="sch-start" value="17:00"></div>
-      <div class="field"><label>End time</label><input type="time" id="sch-end" value="18:30"></div>
-      <div class="field grow"><label>Location / notes</label><input type="text" id="sch-loc" placeholder="e.g. Main pitch"></div>
-    </div>
-    <div class="row" style="margin-top:10px;">
-      <div class="field grow"><label>Repeat on (pick one or more days)</label><div class="weekday-picker">${DAYS.map((d,i)=>`<label><input type="checkbox" class="sch-dow" value="${i}"> ${d.slice(0,3)}</label>`).join("")}</div></div>
-    </div>
-    <div class="row" style="margin-top:10px;">
-      <div class="field"><label>Repeat from</label><input type="date" id="sch-start-date" value="${todayStr()}"></div>
-      <div class="field"><label>Repeat until</label><input type="date" id="sch-end-date"></div>
-      <div class="field"><button class="btn btn-primary" onclick="app.addSession()">Add session</button></div>
-    </div></div>`;
-
-    html += `<div class="card"><h2>Weekly schedule</h2>`;
-    const sched = scopedSchedule();
-    if (!sched.length) html += `<div class="empty">No sessions scheduled yet.</div>`;
-    else {
-      DAYS.forEach((d, i) => {
-        const items = sched.filter(s => (s.days||[]).includes(i)).sort((a,b)=>(a.start||"").localeCompare(b.start||""));
-        if (!items.length) return;
-        html += `<div class="sched-day"><h3>${d}</h3>`;
-        items.forEach(s => {
-          html += `<div class="sched-item">
-            <div class="sched-time">${escapeHtml(s.start||"")}${s.end?"–"+escapeHtml(s.end):""}</div>
-            <div class="sched-body"><div class="t">${escapeHtml(s.teamId?teamName(s.teamId):"General / all teams")}</div>
-            <div class="muted">${escapeHtml(s.location||"")}${isAdmin()?" · "+escapeHtml(branchName(s.branchId)):""}</div>
-            <div class="sched-range">🗓 ${escapeHtml(scheduleRangeText(s))}${(s.days&&s.days.length>1)?" · "+s.days.map(x=>DAYS[x].slice(0,3)).join("/"):""}</div></div>
-            <button class="btn btn-sm btn-ghost" onclick="app.removeSession('${s.id}')">✕</button>
-          </div>`;
-        });
-        html += `</div>`;
-      });
-    }
-    html += `</div>`;
-    el.innerHTML = html;
-  }
-
-  function addSession() {
-    const teamSel = document.getElementById("sch-team");
-    let teamId = teamSel.value;
-    let branchId;
-    if (teamId === "__none" || teamId === "") {
-      teamId = null;
-      branchId = isAdmin() ? (adminBranchFilter !== "all" ? adminBranchFilter : (state.branches[0] && state.branches[0].id)) : scopeBranchId();
-      if (!branchId) { alert("Select a branch (top of page) for a general session."); return; }
-    } else {
-      const t = teamById(teamId); if (!t) return; branchId = t.branchId;
-    }
-    const days = [...document.querySelectorAll(".sch-dow:checked")].map(c => parseInt(c.value, 10));
-    const start = document.getElementById("sch-start").value;
-    const end = document.getElementById("sch-end").value;
-    const startDate = document.getElementById("sch-start-date").value;
-    const endDate = document.getElementById("sch-end-date").value;
-    const location = document.getElementById("sch-loc").value.trim();
-    if (!days.length) { alert("Pick at least one day to repeat on."); return; }
-    if (!start) { alert("Start time required."); return; }
-    if (startDate && endDate && endDate < startDate) { alert("The end date can't be before the start date."); return; }
-    state.schedule.push({ id: uid(), branchId, teamId, days, start, end, startDate, endDate, location });
-    save(); renderSchedule();
-  }
-  function removeSession(id) {
-    state.schedule = state.schedule.filter(s => s.id !== id);
-    save(); renderSchedule();
-  }
+  function renderSchedule(){ const el=document.getElementById("view-schedule");
+    let h=`<div class="card accent"><h2>Add session</h2>`;
+    if(!scopedTeams().length&&!isAdmin())h+=`<div class="empty">Create a team first, then schedule its sessions.</div>`;
+    h+=`<div class="row">${isAdmin()?branchFilterControl():""}<div class="field grow"><label>Team</label><select id="sch-team">${teamSelectOptions("",true)}<option value="__none">General / all teams</option></select></div><div class="field"><label>Start</label><input type="time" id="sch-start" value="17:00"></div><div class="field"><label>End</label><input type="time" id="sch-end" value="18:30"></div><div class="field grow"><label>Location / notes</label><input type="text" id="sch-loc" placeholder="e.g. Main pitch"></div></div>
+    <div class="row" style="margin-top:10px;"><div class="field grow"><label>Repeat on (one or more days)</label><div class="weekday-picker">${DAYS.map((d,i)=>`<label><input type="checkbox" class="sch-dow" value="${i}"> ${d.slice(0,3)}</label>`).join("")}</div></div></div>
+    <div class="row" style="margin-top:10px;"><div class="field"><label>Repeat from</label><input type="date" id="sch-sd" value="${todayStr()}"></div><div class="field"><label>Repeat until</label><input type="date" id="sch-ed"></div><div class="field"><button class="btn btn-primary" onclick="app.addSession()">Add session</button></div></div></div>`;
+    h+=`<div class="card"><h2>Weekly schedule</h2>`; const sched=scopedSchedule();
+    if(!sched.length)h+=`<div class="empty">No sessions scheduled yet.</div>`;
+    else DAYS.forEach((d,i)=>{ const items=sched.filter(s=>(s.days||[]).includes(i)).sort((a,b)=>(a.start||"").localeCompare(b.start||"")); if(!items.length)return;
+      h+=`<div class="sched-day"><h3>${d}</h3>`; items.forEach(s=>{ h+=`<div class="sched-item"><div class="sched-time">${esc(s.start||"")}${s.end?"–"+esc(s.end):""}</div><div class="sched-body"><div class="t">${esc(s.teamId?teamName(s.teamId):"General / all teams")}</div><div class="muted">${esc(s.location||"")}${isAdmin()?" · "+esc(branchName(s.branchId)):""}</div><div class="sched-range">🗓 ${esc(scheduleRangeText(s))}${(s.days&&s.days.length>1)?" · "+s.days.map(x=>DAYS[x].slice(0,3)).join("/"):""}</div></div><button class="btn btn-sm btn-ghost" onclick="app.removeSession('${s.id}')">✕</button></div>`; }); h+=`</div>`; });
+    h+=`</div>`; el.innerHTML=h; }
+  function addSession(){ const sel=document.getElementById("sch-team"); let teamId=sel.value,branchId;
+    if(teamId==="__none"||teamId===""){ teamId=null; branchId=isAdmin()?(adminBranchFilter!=="all"?adminBranchFilter:(state.branches[0]&&state.branches[0].id)):scopeBranchId(); if(!branchId){alert("Select a branch for a general session.");return;} }
+    else{ const t=teamById(teamId); if(!t)return; branchId=t.branchId; }
+    const days=[...document.querySelectorAll(".sch-dow:checked")].map(c=>parseInt(c.value,10));
+    const start=document.getElementById("sch-start").value,end=document.getElementById("sch-end").value,startDate=document.getElementById("sch-sd").value,endDate=document.getElementById("sch-ed").value,location=document.getElementById("sch-loc").value.trim();
+    if(!days.length){alert("Pick at least one day.");return;} if(!start){alert("Start time required.");return;} if(startDate&&endDate&&endDate<startDate){alert("End date can't be before start date.");return;}
+    state.schedule.push({id:uid(),branchId,teamId,days,start,end,startDate,endDate,location}); save(); renderSchedule(); }
+  function removeSession(id){ state.schedule=state.schedule.filter(s=>s.id!==id); save(); renderSchedule(); }
 
   // ---- Teams ----
-  function renderTeams() {
-    const el = document.getElementById("view-teams");
-    let html = `<div class="card"><h2>Add team</h2><div class="row">
-      ${isAdmin()?`<div class="field"><label>Branch</label><select id="team-branch">${state.branches.map(b=>`<option value="${b.id}" ${adminBranchFilter===b.id?"selected":""}>${escapeHtml(b.name)}</option>`).join("")}</select></div>`:""}
-      <div class="field grow"><label>Team name</label><input type="text" id="team-name" placeholder="e.g. U-12 Reds"></div>
-      <div class="field grow"><label>Coach</label><input type="text" id="team-coach" placeholder="Coach name"></div>
-      <div class="field grow"><label>Assistant</label><input type="text" id="team-assistant" placeholder="Assistant name"></div>
-      <div class="field"><button class="btn btn-primary" onclick="app.addTeam()">Add team</button></div>
-    </div></div>`;
+  function renderTeams(){ const el=document.getElementById("view-teams");
+    let h=`<div class="card accent"><h2>Add team</h2><div class="row">${isAdmin()?`<div class="field"><label>Branch</label><select id="team-branch">${state.branches.map(b=>`<option value="${b.id}" ${adminBranchFilter===b.id?"selected":""}>${esc(b.name)}</option>`).join("")}</select></div>`:""}<div class="field grow"><label>Team name</label><input type="text" id="team-name" placeholder="e.g. U-12 Reds"></div><div class="field grow"><label>Coach</label><input type="text" id="team-coach" placeholder="Coach name"></div><div class="field grow"><label>Assistant</label><input type="text" id="team-assistant" placeholder="Assistant name"></div><div class="field"><button class="btn btn-primary" onclick="app.addTeam()">Add team</button></div></div></div>`;
+    if(isAdmin())h+=`<div class="card">${branchFilterControl()}</div>`;
+    const teams=scopedTeams(); if(!teams.length)h+=`<div class="card"><div class="empty">No teams yet.</div></div>`;
+    teams.forEach(t=>{ const players=state.players.filter(p=>p.teamId===t.id);
+      h+=`<div class="card"><div class="team-card"><div class="team-head"><div><div class="team-title">${esc(t.name)}</div>${isAdmin()?`<span class="badge b-navy">${esc(branchName(t.branchId))}</span>`:""} <span class="muted">${players.length} players</span></div><button class="btn btn-sm btn-ghost" onclick="app.removeTeam('${t.id}')">Delete team</button></div>
+        <div class="staff-grid"><div class="field"><label>Coach</label><input type="text" value="${esc(t.coach||"")}" onchange="app.updateTeamField('${t.id}','coach',this.value)"></div><div class="field"><label>Assistant</label><input type="text" value="${esc(t.assistant||"")}" onchange="app.updateTeamField('${t.id}','assistant',this.value)"></div></div>
+        <div class="field"><label>Players</label><div>${players.length?players.map(p=>`<span class="chip">${esc(p.name)} <span class="x" onclick="app.removePlayer('${p.id}')">✕</span></span>`).join(""):'<span class="muted">No players yet.</span>'}</div></div>
+        <div class="row" style="margin-top:8px;"><div class="field grow"><input type="text" id="addpl-${t.id}" placeholder="Add player name" onkeydown="if(event.key==='Enter')app.addPlayer('${t.id}')"></div><div class="field"><button class="btn btn-sm" onclick="app.addPlayer('${t.id}')">Add player</button></div></div>
+      </div></div>`; });
+    el.innerHTML=h; }
+  function addTeam(){ const branchId=isAdmin()?document.getElementById("team-branch").value:scopeBranchId(); if(!branchId){alert("No branch.");return;} const name=document.getElementById("team-name").value.trim(); if(!name){alert("Team name required.");return;}
+    state.teams.push({id:uid(),branchId,name,coach:document.getElementById("team-coach").value.trim(),assistant:document.getElementById("team-assistant").value.trim()}); save(); if(isAdmin())adminBranchFilter=branchId; renderTeams(); }
+  function removeTeam(id){ const players=state.players.filter(p=>p.teamId===id); if(!confirm(`Delete this team?${players.length?` Its ${players.length} player(s) will be removed too.`:""}`))return; state.teams=state.teams.filter(t=>t.id!==id); state.players=state.players.filter(p=>p.teamId!==id); save(); renderTeams(); }
+  function updateTeamField(id,f,v){ const t=teamById(id); if(!t)return; t[f]=v.trim(); save(); }
+  function addPlayer(teamId){ const inp=document.getElementById("addpl-"+teamId); const name=inp.value.trim(); if(!name)return; const t=teamById(teamId); if(!t)return; state.players.push({id:uid(),branchId:t.branchId,teamId,name,months:{}}); inp.value=""; save(); renderTeams(); }
+  function removePlayer(id){ if(!confirm("Remove this player and their history?"))return; state.players=state.players.filter(p=>p.id!==id); for(const d in state.attendance){if(state.attendance[d])delete state.attendance[d][id];} save(); const a=document.querySelector(".view.active").id; if(a==="view-teams")renderTeams(); else renderAll(); }
 
-    if (isAdmin()) html += `<div class="card">${branchFilterControl()}</div>`;
-
-    const teams = scopedTeams();
-    if (!teams.length) html += `<div class="card"><div class="empty">No teams yet.</div></div>`;
-
-    teams.forEach(t => {
-      const players = state.players.filter(p => p.teamId === t.id);
-      html += `<div class="card"><div class="team-card">
-        <div class="team-head">
-          <div>
-            <div class="team-title">${escapeHtml(t.name)}</div>
-            ${isAdmin()?`<span class="badge badge-navy">${escapeHtml(branchName(t.branchId))}</span>`:""}
-            <span class="muted"> ${players.length} players</span>
-          </div>
-          <button class="btn btn-sm btn-ghost" onclick="app.removeTeam('${t.id}')">Delete team</button>
-        </div>
-        <div class="staff-grid">
-          <div class="field"><label>Coach</label><input type="text" value="${escapeHtml(t.coach||"")}" onchange="app.updateTeamField('${t.id}','coach',this.value)"></div>
-          <div class="field"><label>Assistant</label><input type="text" value="${escapeHtml(t.assistant||"")}" onchange="app.updateTeamField('${t.id}','assistant',this.value)"></div>
-        </div>
-        <div class="field"><label>Players</label>
-          <div>${players.length ? players.map(p=>`<span class="chip">${escapeHtml(p.name)} <span class="x" onclick="app.removePlayer('${p.id}')">✕</span></span>`).join("") : '<span class="muted">No players yet.</span>'}</div>
-        </div>
-        <div class="row" style="margin-top:8px;">
-          <div class="field grow"><input type="text" id="addpl-${t.id}" placeholder="Add player name" onkeydown="if(event.key==='Enter')app.addPlayer('${t.id}')"></div>
-          <div class="field"><button class="btn btn-sm" onclick="app.addPlayer('${t.id}')">Add player</button></div>
-        </div>
-      </div></div>`;
-    });
-    el.innerHTML = html;
-  }
-
-  function addTeam() {
-    const branchId = isAdmin() ? document.getElementById("team-branch").value : scopeBranchId();
-    if (!branchId) { alert("No branch available."); return; }
-    const name = document.getElementById("team-name").value.trim();
-    if (!name) { alert("Team name required."); return; }
-    const coach = document.getElementById("team-coach").value.trim();
-    const assistant = document.getElementById("team-assistant").value.trim();
-    state.teams.push({ id: uid(), branchId, name, coach, assistant });
-    save();
-    if (isAdmin()) adminBranchFilter = branchId;
-    renderTeams();
-  }
-  function removeTeam(id) {
-    const players = state.players.filter(p => p.teamId === id);
-    if (!confirm(`Delete this team?${players.length?` Its ${players.length} player(s) will be removed too.`:""}`)) return;
-    state.teams = state.teams.filter(t => t.id !== id);
-    state.players = state.players.filter(p => p.teamId !== id);
-    save(); renderTeams();
-  }
-  function updateTeamField(id, field, value) {
-    const t = teamById(id); if (!t) return;
-    t[field] = value.trim(); save();
-  }
-  function addPlayer(teamId) {
-    const inp = document.getElementById("addpl-" + teamId);
-    const name = inp.value.trim(); if (!name) return;
-    const t = teamById(teamId); if (!t) return;
-    state.players.push({ id: uid(), branchId: t.branchId, teamId, name, fee: 0, paid: false, invoiced: false });
-    inp.value = ""; save(); renderTeams();
-  }
-  function addPlayerCheckin() {
-    const inp = document.getElementById("ci-addpl");
-    if (!inp) return;
-    const name = inp.value.trim(); if (!name) return;
-    const t = teamById(checkinTeamId); if (!t) { alert("Select a team first."); return; }
-    state.players.push({ id: uid(), branchId: t.branchId, teamId: checkinTeamId, name, fee: 0, paid: false, invoiced: false });
-    inp.value = ""; save();
-    renderCheckin();
-    const ni = document.getElementById("ci-addpl"); if (ni) ni.focus();
-  }
-  function removePlayer(id) {
-    if (!confirm("Remove this player and their attendance history?")) return;
-    state.players = state.players.filter(p => p.id !== id);
-    for (const date in state.attendance) { if (state.attendance[date]) delete state.attendance[date][id]; }
-    save();
-    const active = document.querySelector(".view.active").id;
-    if (active === "view-teams") renderTeams(); else renderAll();
-  }
-
-  // ---- Check-in (draft model: mark freely, then Validate to save) ----
-  let ciDraft = null; // { date, teamId, players:{pid:status}, staff:{coach,assistant}, dirty }
-  function draftMatches() { return ciDraft && ciDraft.date === checkinDate && ciDraft.teamId === checkinTeamId; }
-  function loadDraft() {
-    const players = {};
-    const savedP = state.attendance[checkinDate] || {};
-    state.players.filter(p => p.teamId === checkinTeamId).forEach(p => { if (savedP[p.id]) players[p.id] = savedP[p.id]; });
-    const savedS = (state.staffAttendance[checkinDate] && state.staffAttendance[checkinDate][checkinTeamId]) || {};
-    const staff = {
-      coach:     { status: savedS.coach ? savedS.coach.status : null,         replacement: savedS.coach ? (savedS.coach.replacement||"") : "" },
-      assistant: { status: savedS.assistant ? savedS.assistant.status : null, replacement: savedS.assistant ? (savedS.assistant.replacement||"") : "" }
-    };
-    ciDraft = { date: checkinDate, teamId: checkinTeamId, players, staff, dirty: false };
-  }
-  function ensureDraft() { if (!draftMatches()) loadDraft(); }
-
-  function renderCheckin() {
-    const el = document.getElementById("att-checkin");
-    if (!el) return;
-    const teams = scopedTeams();
-    if (!checkinTeamId && teams.length) checkinTeamId = teams[0].id;
-    if (checkinTeamId && !teams.some(t=>t.id===checkinTeamId)) checkinTeamId = teams.length?teams[0].id:"";
-
-    let html = `<div class="card"><h2>Take attendance <span class="sub">${escapeHtml(fmtDate(checkinDate))}</span></h2><div class="row">
-      <div class="field grow"><label>Team</label><select id="ci-team" onchange="app.setCheckinTeam(this.value)">${teamSelectOptions(checkinTeamId, false)}</select></div>
+  // ---- Players (search + profiles) ----
+  function renderPlayers(){ const el=document.getElementById("view-players"); const q=playerSearch.trim().toLowerCase();
+    let list=scopedPlayers(); if(q)list=list.filter(p=>p.name.toLowerCase().includes(q)); list=list.slice().sort((a,b)=>a.name.localeCompare(b.name));
+    const key=todayStr().slice(0,7);
+    let h=`<div class="card accent"><h2>Players <span class="sub">${scopedPlayers().length} total</span></h2>${isAdmin()?branchFilterControl():""}<div class="field search-box"><input type="text" id="pl-search" placeholder="Search players by name…" value="${esc(playerSearch)}" oninput="app.setPlayerSearch(this.value)"></div></div>`;
+    h+=`<div class="card">`;
+    if(!list.length)h+=`<div class="empty">${q?"No players match your search.":"No players yet."}</div>`;
+    else{ h+=`<div class="tbl-wrap"><table><thead><tr><th>Player</th><th>Team</th>${isAdmin()?"<th>Branch</th>":""}<th>Attendance</th><th class="num">Rate</th><th>${esc(ymLabel(key))}</th></tr></thead><tbody>`;
+      list.forEach(p=>{ const s=playerAttStats(p.id), m=monthData(p,key);
+        h+=`<tr class="click" onclick="app.openProfile('${p.id}')"><td>${esc(p.name)}</td><td>${esc(teamName(p.teamId))}</td>${isAdmin()?`<td>${esc(branchName(p.branchId))}</td>`:""}<td><div class="prog"><i style="width:${s.rate||0}%"></i></div></td><td class="num">${s.rate==null?"—":s.rate+"%"}</td><td>${m.paid?'<span class="badge b-present">Paid</span>':(m.fee>0?'<span class="badge b-absent">Unpaid</span>':'<span class="muted">—</span>')}</td></tr>`; });
+      h+=`</tbody></table></div>`; }
+    h+=`</div>`; el.innerHTML=h;
+    const si=document.getElementById("pl-search"); if(si&&document.activeElement!==si){} }
+  function setPlayerSearch(v){ playerSearch=v; const el=document.getElementById("view-players");
+    // re-render only the list to keep focus
+    renderPlayers(); const si=document.getElementById("pl-search"); if(si){ si.focus(); si.setSelectionRange(si.value.length,si.value.length); } }
+  function openProfile(id){ const p=state.players.find(x=>x.id===id); if(!p)return; const s=playerAttStats(id);
+    const dates=Object.keys(state.attendance).filter(d=>state.attendance[d][id]).sort().reverse().slice(0,14);
+    const dots=dates.map(d=>`<span class="dot ${state.attendance[d][id]==="present"?"p":"a"}" title="${esc(fmtShort(d))}: ${state.attendance[d][id]}"></span>`).join("")||'<span class="muted">No sessions yet.</span>';
+    const months=Object.keys(p.months||{}).sort().reverse();
+    let pay=months.length?months.map(k=>{ const m=p.months[k]; return `<tr><td>${esc(ymLabel(k))}</td><td class="num">${fmtMoney(m.fee)}</td><td>${m.paid?'<span class="badge b-present">Paid</span>':'<span class="badge b-absent">Unpaid</span>'}</td><td>${m.invoiced?'<span class="badge b-navy">Invoiced</span>':'<span class="muted">—</span>'}</td></tr>`; }).join(""):`<tr><td colspan="4" class="muted">No billing records yet.</td></tr>`;
+    let h=`<div class="card"><div class="prof-hero"><div class="prof-avatar">${esc(initials(p.name))}</div><div><div style="font-family:var(--f-head);font-weight:700;text-transform:uppercase;font-size:1.15rem;">${esc(p.name)}</div><div class="muted">${esc(teamName(p.teamId))}${isAdmin()?" · "+esc(branchName(p.branchId)):""}</div></div></div>
+      <div class="kpis" style="grid-template-columns:1fr 1fr 1fr;"><div class="kpi"><div class="kv">${s.rate==null?"—":s.rate+"%"}</div><div class="kl">Attendance</div></div><div class="kpi"><div class="kv">${s.present}</div><div class="kl">Present</div></div><div class="kpi red"><div class="kv">${s.total}</div><div class="kl">Sessions</div></div></div>
+      <h3 class="sub-h" style="margin-top:16px;">Recent sessions</h3><div class="dot-row">${dots}</div>
+      <h3 class="sub-h" style="margin-top:16px;">Payments</h3><div class="tbl-wrap"><table><thead><tr><th>Month</th><th class="num">Fee</th><th>Paid</th><th>Invoice</th></tr></thead><tbody>${pay}</tbody></table></div>
+      ${isAdmin()?`<div class="row" style="margin-top:14px;"><button class="btn btn-sm" onclick="app.setBranchFilter('${p.branchId}');app.closeModal();app.goto('billing')">Open in Billing</button></div>`:""}
     </div>`;
+    openModal(h); }
 
-    if (!teams.length) { html += `<div class="empty">No teams to check in. Add a team first.</div></div>`; el.innerHTML = html; return; }
-    ensureDraft();
-    const players = state.players.filter(p => p.teamId === checkinTeamId);
-    html += `<div class="muted" style="margin:8px 0 12px;">Team: ${escapeHtml(teamName(checkinTeamId))}</div>`;
+  // ---- Reports (history + stats + print) ----
+  function renderReports(){ const el=document.getElementById("view-reports"); const teams=scopedTeams(), players=scopedPlayers(), ids=players.map(p=>p.id);
+    const overall=rateForPlayers(ids), sessions=sessionDates(ids).length;
+    let h=`<div class="card accent"><h2>Reports ${isAdmin()?`<span class="sub">${adminBranchFilter==="all"?"all branches":esc(branchName(adminBranchFilter))}</span>`:""}</h2>${branchFilterControl()}
+      <div class="kpis"><div class="kpi"><div class="kv">${players.length}</div><div class="kl">Players</div></div><div class="kpi red"><div class="kv">${teams.length}</div><div class="kl">Teams</div></div><div class="kpi"><div class="kv">${sessions}</div><div class="kl">Sessions</div></div><div class="kpi red"><div class="kv">${overall.rate==null?"—":overall.rate+"%"}</div><div class="kl">Attendance</div></div></div>
+      <div class="row" style="margin-top:14px;"><button class="btn btn-navy btn-sm" onclick="app.printAttendance()">🖨 Print attendance sheet</button></div></div>`;
 
-    // Add a player on the spot
-    html += `<div class="row" style="margin-bottom:12px;">
-      <div class="field grow"><input type="text" id="ci-addpl" placeholder="Add a player to this team…" onkeydown="if(event.key==='Enter')app.addPlayerCheckin()"></div>
-      <div class="field"><button class="btn btn-sm" onclick="app.addPlayerCheckin()">＋ Add player</button></div>
-    </div>`;
+    // History
+    let pids; if(historyTeamFilter==="all")pids=ids; else pids=state.players.filter(p=>p.teamId===historyTeamFilter).map(p=>p.id); const idSet=new Set(pids);
+    const dates=Object.keys(state.attendance).filter(d=>Object.keys(state.attendance[d]).some(pid=>idSet.has(pid))).sort().reverse();
+    h+=`<div class="card"><h2>Attendance history</h2><div class="field"><label>Team</label><select onchange="app.setHistoryTeam(this.value)"><option value="all" ${historyTeamFilter==="all"?"selected":""}>All teams</option>${teams.map(t=>`<option value="${t.id}" ${historyTeamFilter===t.id?"selected":""}>${esc(isAdmin()?t.name+" · "+branchName(t.branchId):t.name)}</option>`).join("")}</select></div>`;
+    if(!dates.length)h+=`<div class="empty">No attendance recorded yet.</div>`;
+    else{ h+=`<div class="tbl-wrap"><table><thead><tr><th>Date</th><th class="num">Present</th><th class="num">Absent</th><th class="num">Rate</th><th></th></tr></thead><tbody>`;
+      dates.forEach(d=>{ const day=state.attendance[d]; let p=0,ab=0; idSet.forEach(pid=>{if(day[pid]==="present")p++;else if(day[pid]==="absent")ab++;}); const tot=p+ab;
+        h+=`<tr><td>${esc(fmtDate(d))}</td><td class="num"><span class="badge b-present">${p}</span></td><td class="num"><span class="badge b-absent">${ab}</span></td><td class="num">${tot?Math.round(p/tot*100)+"%":"—"}</td><td class="num"><a class="link" onclick="app.openDate('${d}')">Open</a></td></tr>`; });
+      h+=`</tbody></table></div>`; } h+=`</div>`;
 
-    if (!players.length) {
-      html += `<div class="empty">No players yet — add them above.</div>`;
-    } else {
-      html += `<div class="row" style="margin-bottom:12px;">
-        <button class="btn btn-sm" onclick="app.bulkMark('present')">Mark all present</button>
-        <button class="btn btn-sm" onclick="app.bulkMark('absent')">Mark all absent</button>
-      </div>`;
-      html += `<div class="att-list">`;
-      players.forEach(p => {
-        const st = ciDraft.players[p.id] || null;
-        html += `<div class="att-row">
-          <span class="name">${escapeHtml(p.name)}</span>
-          <div class="toggle-btns">
-            <button class="tg p ${st==="present"?"on":""}" onclick="app.mark('${p.id}','present')">Present</button>
-            <button class="tg a ${st==="absent"?"on":""}" onclick="app.mark('${p.id}','absent')">Absent</button>
-          </div>
-        </div>`;
-      });
-      html += `</div>`; // close att-list
-    }
+    // By team
+    h+=`<div class="card"><h2>By team</h2>`;
+    if(!teams.length)h+=`<div class="empty">No teams.</div>`;
+    else{ h+=`<div class="tbl-wrap"><table><thead><tr><th>Team</th>${isAdmin()?"<th>Branch</th>":""}<th>Coach</th><th class="num">Players</th><th class="num">Sessions</th><th class="num">Rate</th></tr></thead><tbody>`;
+      teams.forEach(t=>{ const tp=state.players.filter(p=>p.teamId===t.id); const r=rateForPlayers(tp.map(p=>p.id)); h+=`<tr><td>${esc(t.name)}</td>${isAdmin()?`<td>${esc(branchName(t.branchId))}</td>`:""}<td>${esc(t.coach||"—")}</td><td class="num">${tp.length}</td><td class="num">${sessionDates(tp.map(p=>p.id)).length}</td><td class="num">${r.rate==null?"—":r.rate+"%"}</td></tr>`; });
+      h+=`</tbody></table></div>`; } h+=`</div>`;
 
-    // ----- Coaching staff attendance + replacements -----
-    const team = teamById(checkinTeamId);
-    html += `<div class="staff-block"><h3 class="staff-h">Coaching staff</h3>`;
-    ["coach","assistant"].forEach(role => {
-      const label = role === "coach" ? "Coach" : "Assistant";
-      const person = team ? (team[role] || "") : "";
-      const status = ciDraft.staff[role].status;
-      const repl = ciDraft.staff[role].replacement || "";
-      html += `<div class="att-row staff">
-        <span class="name"><span class="role-tag">${label}</span>${person ? escapeHtml(person) : '<span class="muted">not set — add in Teams</span>'}</span>
-        <div class="toggle-btns">
-          <button class="tg p ${status==="present"?"on":""}" onclick="app.markStaff('${role}','present')">Present</button>
-          <button class="tg a ${status==="absent"?"on":""}" onclick="app.markStaff('${role}','absent')">Absent</button>
-        </div>
-      </div>`;
-      if (status === "absent") {
-        html += `<div class="repl-row"><label>Replacement</label><input type="text" value="${escapeHtml(repl)}" placeholder="Who covered the session?" onchange="app.setStaffReplacement('${role}',this.value)"></div>`;
-      }
-    });
-    html += `</div>`;
+    // Coaching staff
+    h+=`<div class="card"><h2>Coaching staff attendance</h2>`;
+    if(!teams.length)h+=`<div class="empty">No teams.</div>`;
+    else{ h+=`<div class="tbl-wrap"><table><thead><tr><th>Team</th>${isAdmin()?"<th>Branch</th>":""}<th>Role</th><th>Person</th><th class="num">Present</th><th class="num">Sessions</th><th class="num">Rate</th><th>Replacements</th></tr></thead><tbody>`;
+      teams.forEach(t=>{ const ss=staffStats(t.id); ["coach","assistant"].forEach(role=>{ const s=ss[role]; const person=t[role]||"—"; const rate=s.total?Math.round(s.present/s.total*100)+"%":"—"; const repl=s.repl.length?s.repl.map(r=>esc(r.name)+" ("+fmtShort(r.date)+")").join(", "):"—";
+        h+=`<tr><td>${esc(t.name)}</td>${isAdmin()?`<td>${esc(branchName(t.branchId))}</td>`:""}<td>${role==="coach"?"Coach":"Assistant"}</td><td>${esc(person)}</td><td class="num">${s.present}</td><td class="num">${s.total}</td><td class="num">${rate}</td><td>${repl}</td></tr>`; }); });
+      h+=`</tbody></table></div>`; } h+=`</div>`;
 
-    // ----- Validate / save -----
-    html += `<div class="ci-actions">
-      <span class="ci-status ${ciDraft.dirty?"dirty":"clean"}">${ciDraft.dirty?"● Unsaved changes":"✓ All changes saved"}</span>
-      <button class="btn btn-primary" onclick="app.validateAttendance()">Validate &amp; save</button>
-    </div>`;
+    // By player
+    h+=`<div class="card"><h2>By player <span class="sub"><a class="link" onclick="app.exportStats()">Export CSV</a></span></h2>`;
+    if(!players.length)h+=`<div class="empty">No players.</div>`;
+    else{ const rows=players.map(p=>({p,s:playerAttStats(p.id)})).sort((a,b)=>(b.s.rate??-1)-(a.s.rate??-1));
+      h+=`<div class="tbl-wrap"><table><thead><tr><th>Player</th><th>Team</th>${isAdmin()?"<th>Branch</th>":""}<th class="num">Present</th><th class="num">Sessions</th><th class="num">Rate</th></tr></thead><tbody>`;
+      rows.forEach(({p,s})=>{ h+=`<tr class="click" onclick="app.openProfile('${p.id}')"><td>${esc(p.name)}</td><td>${esc(teamName(p.teamId))}</td>${isAdmin()?`<td>${esc(branchName(p.branchId))}</td>`:""}<td class="num">${s.present}</td><td class="num">${s.total}</td><td class="num">${s.rate==null?"—":s.rate+"%"}</td></tr>`; });
+      h+=`</tbody></table></div>`; } h+=`</div>`;
+    el.innerHTML=h; }
+  function setHistoryTeam(v){ historyTeamFilter=v; renderReports(); }
+  function openDate(d){ checkinDate=d; ciDraft=null; if(historyTeamFilter!=="all")checkinTeamId=historyTeamFilter; goTab("attendance"); }
+  function exportStats(){ const players=scopedPlayers(); const rows=[["Player","Team","Branch","Present","Sessions","Rate%"].join(",")];
+    players.forEach(p=>{ const s=playerAttStats(p.id); rows.push([p.name,teamName(p.teamId),branchName(p.branchId),s.present,s.total,s.rate==null?"":s.rate].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")); });
+    downloadCsv(rows.join("\n"),"bfa-attendance.csv"); }
 
-    html += `</div>`; // close card
-    el.innerHTML = html;
-  }
-
-  function mark(playerId, status) {
-    ensureDraft();
-    if (ciDraft.players[playerId] === status) delete ciDraft.players[playerId];
-    else ciDraft.players[playerId] = status;
-    ciDraft.dirty = true; renderCheckin();
-  }
-  function bulkMark(status) {
-    ensureDraft();
-    state.players.filter(p => p.teamId === checkinTeamId).forEach(p => ciDraft.players[p.id] = status);
-    ciDraft.dirty = true; renderCheckin();
-  }
-  function markStaff(role, status) {
-    ensureDraft();
-    const cur = ciDraft.staff[role];
-    cur.status = (cur.status === status) ? null : status;
-    ciDraft.dirty = true; renderCheckin();
-  }
-  function setStaffReplacement(role, name) {
-    ensureDraft();
-    ciDraft.staff[role].replacement = name.trim();
-    ciDraft.dirty = true; // no re-render so the field keeps focus
-  }
-  function validateAttendance() {
-    ensureDraft();
-    const d = checkinDate, t = checkinTeamId;
-    // Players: replace this team's marks for the date with the draft
-    if (!state.attendance[d]) state.attendance[d] = {};
-    state.players.filter(p => p.teamId === t).forEach(p => { delete state.attendance[d][p.id]; });
-    Object.entries(ciDraft.players).forEach(([pid, st]) => { state.attendance[d][pid] = st; });
-    if (Object.keys(state.attendance[d]).length === 0) delete state.attendance[d];
-    // Staff
-    if (!state.staffAttendance[d]) state.staffAttendance[d] = {};
-    const st = {};
-    ["coach","assistant"].forEach(role => {
-      const e = ciDraft.staff[role];
-      if (e.status) st[role] = { status: e.status, replacement: e.status === "absent" ? (e.replacement || "") : "" };
-    });
-    if (Object.keys(st).length) state.staffAttendance[d][t] = st; else delete state.staffAttendance[d][t];
-    if (Object.keys(state.staffAttendance[d]).length === 0) delete state.staffAttendance[d];
-    save();
-    ciDraft.dirty = false;
-    renderCheckin();
-    showToast("Attendance saved ✓");
-  }
-
-  function setCheckinDate(v) {
-    if (ciDraft && ciDraft.dirty && !confirm("You have unsaved attendance. Discard those changes?")) { renderCheckin(); return; }
-    checkinDate = v || todayStr(); ciDraft = null; renderCheckin();
-  }
-  function setCheckinTeam(v) {
-    if (ciDraft && ciDraft.dirty && !confirm("You have unsaved attendance. Discard those changes?")) { renderCheckin(); return; }
-    checkinTeamId = v; ciDraft = null; renderCheckin();
-  }
-  function checkinFor(teamId) { checkinDate = todayStr(); if (teamId) checkinTeamId = teamId; ciDraft = null; goTab("attendance"); }
-
-  function showToast(msg) {
-    let t = document.getElementById("bfa-toast");
-    if (!t) { t = document.createElement("div"); t.id = "bfa-toast"; document.body.appendChild(t); }
-    t.textContent = msg; t.className = "show";
-    clearTimeout(showToast._t); showToast._t = setTimeout(() => { t.className = ""; }, 2200);
-  }
-
-  // ---- History ----
-  function renderHistory() {
-    const el = document.getElementById("view-history");
-    const teams = scopedTeams();
-    let html = `<div class="card"><h2>Attendance history</h2><div class="row">
-      ${isAdmin()?branchFilterControl():""}
-      <div class="field grow"><label>Team</label><select onchange="app.setHistoryTeam(this.value)"><option value="all" ${historyTeamFilter==="all"?"selected":""}>All teams</option>${teams.map(t=>`<option value="${t.id}" ${historyTeamFilter===t.id?"selected":""}>${escapeHtml(isAdmin()?t.name+" · "+branchName(t.branchId):t.name)}</option>`).join("")}</select></div>
-    </div>`;
-
-    let playerIds;
-    if (historyTeamFilter === "all") playerIds = scopedPlayers().map(p=>p.id);
-    else playerIds = state.players.filter(p=>p.teamId===historyTeamFilter).map(p=>p.id);
-    const idSet = new Set(playerIds);
-
-    const dates = Object.keys(state.attendance)
-      .filter(d => Object.keys(state.attendance[d]).some(pid => idSet.has(pid)))
-      .sort().reverse();
-
-    if (!dates.length) html += `<div class="empty">No attendance recorded yet.</div>`;
-    else {
-      html += `<div class="tbl-wrap"><table><thead><tr><th>Date</th><th class="num">Present</th><th class="num">Absent</th><th class="num">Rate</th><th></th></tr></thead><tbody>`;
-      dates.forEach(d => {
-        const day = state.attendance[d];
-        let present=0, absent=0;
-        idSet.forEach(pid => { if (day[pid]==="present") present++; else if (day[pid]==="absent") absent++; });
-        const tot = present+absent;
-        const rate = tot ? Math.round(present/tot*100)+"%" : "—";
-        html += `<tr><td>${escapeHtml(fmtDate(d))}</td><td class="num"><span class="badge badge-present">${present}</span></td><td class="num"><span class="badge badge-absent">${absent}</span></td><td class="num">${rate}</td><td class="num"><a class="link" onclick="app.openDate('${d}')">Open</a></td></tr>`;
-      });
-      html += `</tbody></table></div>`;
-    }
-    html += `</div>`;
-    el.innerHTML = html;
-  }
-  function setHistoryTeam(v) { historyTeamFilter = v; renderHistory(); }
-  function openDate(d) {
-    checkinDate = d; ciDraft = null;
-    if (historyTeamFilter !== "all") checkinTeamId = historyTeamFilter;
-    goTab("attendance");
-  }
-
-  // ---- Stats ----
-  function renderStats() {
-    const el = document.getElementById("view-stats");
-    const teams = scopedTeams(), players = scopedPlayers();
-    const ids = players.map(p=>p.id);
-    const overall = rateForPlayers(ids);
-    const sessions = sessionDates(ids).length;
-
-    let html = `<div class="card"><h2>Statistics ${isAdmin()?`<span class="sub">${adminBranchFilter==="all"?"all branches":escapeHtml(branchName(adminBranchFilter))}</span>`:""}</h2>`;
-    html += branchFilterControl();
-    html += `<div class="kpis">
-      <div class="kpi"><div class="k-val">${players.length}</div><div class="k-lbl">Players</div></div>
-      <div class="kpi"><div class="k-val">${teams.length}</div><div class="k-lbl">Teams</div></div>
-      <div class="kpi"><div class="k-val">${sessions}</div><div class="k-lbl">Sessions logged</div></div>
-      <div class="kpi"><div class="k-val">${overall.rate==null?"—":overall.rate+"%"}</div><div class="k-lbl">Attendance rate</div></div>
-    </div></div>`;
-
-    // Per team
-    html += `<div class="card"><h2>By team</h2>`;
-    if (!teams.length) html += `<div class="empty">No teams.</div>`;
-    else {
-      html += `<div class="tbl-wrap"><table><thead><tr><th>Team</th>${isAdmin()?"<th>Branch</th>":""}<th>Coach</th><th class="num">Players</th><th class="num">Sessions</th><th class="num">Present</th><th class="num">Rate</th></tr></thead><tbody>`;
-      teams.forEach(t => {
-        const tp = state.players.filter(p=>p.teamId===t.id);
-        const r = rateForPlayers(tp.map(p=>p.id));
-        const sess = sessionDates(tp.map(p=>p.id)).length;
-        html += `<tr><td>${escapeHtml(t.name)}</td>${isAdmin()?`<td>${escapeHtml(branchName(t.branchId))}</td>`:""}<td>${escapeHtml(t.coach||"—")}</td><td class="num">${tp.length}</td><td class="num">${sess}</td><td class="num">${r.present}</td><td class="num">${r.rate==null?"—":r.rate+"%"}</td></tr>`;
-      });
-      html += `</tbody></table></div>`;
-    }
-    html += `</div>`;
-
-    // Coaching staff attendance
-    html += `<div class="card"><h2>Coaching staff attendance</h2>`;
-    if (!teams.length) html += `<div class="empty">No teams.</div>`;
-    else {
-      html += `<div class="tbl-wrap"><table><thead><tr><th>Team</th>${isAdmin()?"<th>Branch</th>":""}<th>Role</th><th>Person</th><th class="num">Present</th><th class="num">Sessions</th><th class="num">Rate</th><th>Replacements used</th></tr></thead><tbody>`;
-      teams.forEach(t => {
-        const ss = staffStats(t.id);
-        ["coach","assistant"].forEach(role => {
-          const s = ss[role];
-          const person = t[role] || "—";
-          const rate = s.total ? Math.round(s.present/s.total*100)+"%" : "—";
-          const repl = s.repl.length ? s.repl.map(r => escapeHtml(r.name)+" ("+fmtShort(r.date)+")").join(", ") : "—";
-          html += `<tr><td>${escapeHtml(t.name)}</td>${isAdmin()?`<td>${escapeHtml(branchName(t.branchId))}</td>`:""}<td>${role==="coach"?"Coach":"Assistant"}</td><td>${escapeHtml(person)}</td><td class="num">${s.present}</td><td class="num">${s.total}</td><td class="num">${rate}</td><td>${repl}</td></tr>`;
-        });
-      });
-      html += `</tbody></table></div>`;
-    }
-    html += `</div>`;
-
-    // Per player
-    html += `<div class="card"><h2>By player <span class="sub"><a class="link" onclick="app.exportStats()">Export CSV</a></span></h2>`;
-    if (!players.length) html += `<div class="empty">No players.</div>`;
-    else {
-      const rows = players.map(p => ({ p, s: playerAttStats(p.id) }))
-        .sort((a,b) => (b.s.rate??-1) - (a.s.rate??-1));
-      html += `<div class="tbl-wrap"><table><thead><tr><th>Player</th><th>Team</th>${isAdmin()?"<th>Branch</th>":""}<th class="num">Present</th><th class="num">Sessions</th><th class="num">Rate</th></tr></thead><tbody>`;
-      rows.forEach(({p,s}) => {
-        html += `<tr><td>${escapeHtml(p.name)}</td><td>${escapeHtml(teamName(p.teamId))}</td>${isAdmin()?`<td>${escapeHtml(branchName(p.branchId))}</td>`:""}<td class="num">${s.present}</td><td class="num">${s.total}</td><td class="num">${s.rate==null?"—":s.rate+"%"}</td></tr>`;
-      });
-      html += `</tbody></table></div>`;
-    }
-    html += `</div>`;
-    el.innerHTML = html;
-  }
-  function exportStats() {
-    const players = scopedPlayers();
-    const header = ["Player","Team","Branch","Present","Sessions","Rate%"];
-    const lines = [header.join(",")];
-    players.forEach(p => {
-      const s = playerAttStats(p.id);
-      lines.push([p.name, teamName(p.teamId), branchName(p.branchId), s.present, s.total, s.rate==null?"":s.rate]
-        .map(v => `"${String(v).replace(/"/g,'""')}"`).join(","));
-    });
-    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "bfa-attendance-stats.csv";
-    a.click(); URL.revokeObjectURL(a.href);
-  }
+  // ---- Billing (admin, monthly) ----
+  function renderBilling(){ if(!isAdmin())return; const el=document.getElementById("view-billing"); const key=billMonth; const players=scopedPlayers();
+    let collected=0,outstanding=0,paidC=0,invC=0; players.forEach(p=>{ const m=monthData(p,key); if(m.paid){collected+=m.fee;paidC++;} else if(m.fee>0)outstanding+=m.fee; if(m.invoiced)invC++; });
+    let h=`<div class="card accent"><h2>Billing <span class="sub">admin only</span></h2>${branchFilterControl()}
+      <div class="cal-nav"><button class="btn btn-sm" onclick="app.billPrev()">‹</button><div class="cal-title">${esc(ymLabel(key))}</div><button class="btn btn-sm btn-ghost" onclick="app.billThis()">This month</button><button class="btn btn-sm" onclick="app.billNext()">›</button></div>
+      <div class="kpis"><div class="kpi"><div class="kv">${fmtMoney(collected)}</div><div class="kl">Collected</div></div><div class="kpi red"><div class="kv">${fmtMoney(outstanding)}</div><div class="kl">Outstanding</div></div><div class="kpi"><div class="kv">${paidC}/${players.length}</div><div class="kl">Paid</div></div><div class="kpi red"><div class="kv">${invC}/${players.length}</div><div class="kl">Invoiced</div></div></div>
+      <div class="row" style="margin-top:14px;"><button class="btn btn-navy btn-sm" onclick="app.printBilling()">🖨 Print payment summary</button><button class="btn btn-sm" onclick="app.exportBilling()">Export CSV</button></div></div>`;
+    h+=`<div class="card"><h2>Players &amp; fees <span class="sub">${esc(ymLabel(key))}</span></h2>`;
+    if(!players.length)h+=`<div class="empty">No players.</div>`;
+    else{ h+=`<div class="tbl-wrap"><table><thead><tr><th>Player</th><th>Team</th><th>Branch</th><th class="num">Days present</th><th>Fee ($)</th><th>Paid</th><th>Invoiced</th></tr></thead><tbody>`;
+      players.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(p=>{ const m=monthData(p,key); const pr=monthPresence(p.id,key);
+        h+=`<tr><td><a class="link" onclick="app.openProfile('${p.id}')">${esc(p.name)}</a></td><td>${esc(teamName(p.teamId))}</td><td>${esc(branchName(p.branchId))}</td><td class="num">${pr.present} / ${pr.total}</td><td><input type="text" inputmode="decimal" class="fee-input" value="${m.fee}" onchange="app.setBillFee('${p.id}',this.value)"></td><td><button class="pill paid ${m.paid?"on":""}" onclick="app.toggleBillPaid('${p.id}')">${m.paid?"Paid":"Unpaid"}</button></td><td><button class="pill inv ${m.invoiced?"on":""}" onclick="app.toggleBillInv('${p.id}')">${m.invoiced?"Invoiced":"Not invoiced"}</button></td></tr>`; });
+      h+=`</tbody></table></div>`; } h+=`</div>`; el.innerHTML=h; }
+  function billPrev(){ billMonth=ymShift(billMonth,-1); renderBilling(); }
+  function billNext(){ billMonth=ymShift(billMonth,1); renderBilling(); }
+  function billThis(){ billMonth=todayStr().slice(0,7); renderBilling(); }
+  function setBillFee(id,v){ const p=state.players.find(x=>x.id===id); if(!p)return; setMonth(p,billMonth,{fee:parseFloat(String(v).replace(/[^0-9.]/g,""))||0}); save(); renderBilling(); }
+  function toggleBillPaid(id){ const p=state.players.find(x=>x.id===id); if(!p)return; setMonth(p,billMonth,{paid:!monthData(p,billMonth).paid}); save(); renderBilling(); }
+  function toggleBillInv(id){ const p=state.players.find(x=>x.id===id); if(!p)return; setMonth(p,billMonth,{invoiced:!monthData(p,billMonth).invoiced}); save(); renderBilling(); }
+  function exportBilling(){ const players=scopedPlayers(); const rows=[["Player","Team","Branch","Month","DaysPresent","Sessions","Fee","Paid","Invoiced"].join(",")];
+    players.forEach(p=>{ const m=monthData(p,billMonth), pr=monthPresence(p.id,billMonth); rows.push([p.name,teamName(p.teamId),branchName(p.branchId),billMonth,pr.present,pr.total,m.fee,m.paid?"Paid":"Unpaid",m.invoiced?"Invoiced":"No"].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")); });
+    downloadCsv(rows.join("\n"),`bfa-billing-${billMonth}.csv`); }
 
   // ---- Admin ----
-  function renderAdmin() {
-    if (!isAdmin()) return;
-    const el = document.getElementById("view-admin");
-    let html = `<div class="card"><h2>Branches &amp; access PINs</h2><p class="muted" style="margin-top:-6px;">Rename a branch or change its PIN. Branch staff use this PIN to log in and see only their own branch.</p><div class="tbl-wrap"><table><thead><tr><th>Branch name</th><th>Access PIN</th><th class="num">Teams</th><th class="num">Players</th></tr></thead><tbody>`;
-    state.branches.forEach(b => {
-      const tc = state.teams.filter(t=>t.branchId===b.id).length;
-      const pc = state.players.filter(p=>p.branchId===b.id).length;
-      html += `<tr>
-        <td><input type="text" value="${escapeHtml(b.name)}" onchange="app.updateBranchName('${b.id}',this.value)"></td>
-        <td><input type="text" inputmode="numeric" maxlength="8" value="${escapeHtml(state.auth.branchPins[b.id]||"")}" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,8)" onchange="app.updateBranchPin('${b.id}',this.value)"></td>
-        <td class="num">${tc}</td><td class="num">${pc}</td>
-      </tr>`;
-    });
-    html += `</tbody></table></div></div>`;
+  function renderAdmin(){ if(!isAdmin())return; const el=document.getElementById("view-admin");
+    let h=`<div class="card accent"><h2>Branches &amp; access PINs</h2><p class="muted" style="margin-top:-8px;">Rename a branch or change its PIN. Branch staff use this PIN to log in.</p><div class="tbl-wrap"><table><thead><tr><th>Branch</th><th>PIN</th><th class="num">Teams</th><th class="num">Players</th></tr></thead><tbody>`;
+    state.branches.forEach(b=>{ h+=`<tr><td><input type="text" value="${esc(b.name)}" onchange="app.updateBranchName('${b.id}',this.value)"></td><td><input type="text" inputmode="numeric" maxlength="8" value="${esc(state.auth.branchPins[b.id]||"")}" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,8)" onchange="app.updateBranchPin('${b.id}',this.value)"></td><td class="num">${state.teams.filter(t=>t.branchId===b.id).length}</td><td class="num">${state.players.filter(p=>p.branchId===b.id).length}</td></tr>`; });
+    h+=`</tbody></table></div></div>`;
+    h+=`<div class="card"><h2>Change admin PIN</h2><div class="row"><div class="field"><label>New admin PIN</label><input type="text" id="adm-p1" inputmode="numeric" maxlength="8" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,8)"></div><div class="field"><label>Confirm</label><input type="text" id="adm-p2" inputmode="numeric" maxlength="8" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,8)"></div><div class="field"><button class="btn btn-primary" onclick="app.saveAdminPin()">Save</button></div></div><div class="muted" id="adm-msg" style="min-height:18px;margin-top:6px;"></div></div>`;
+    el.innerHTML=h; }
+  function updateBranchName(id,v){ const b=state.branches.find(b=>b.id===id); const n=v.trim(); if(!b||!n){renderAdmin();return;} b.name=n; save(); renderAll(); }
+  function updateBranchPin(id,v){ if(!/^\d{4,8}$/.test(v)){renderAdmin();return;} state.auth.branchPins[id]=v; save(); }
+  function saveAdminPin(){ const msg=document.getElementById("adm-msg"); const p1=document.getElementById("adm-p1").value.trim(),p2=document.getElementById("adm-p2").value.trim();
+    if(!/^\d{4,8}$/.test(p1)){msg.style.color="var(--absent)";msg.textContent="PIN must be 4–8 digits.";return;} if(p1!==p2){msg.style.color="var(--absent)";msg.textContent="PINs don't match.";return;}
+    state.auth.adminPin=p1; save(); document.getElementById("adm-p1").value="";document.getElementById("adm-p2").value=""; msg.style.color="var(--present)"; msg.textContent="Admin PIN updated."; }
 
-    html += `<div class="card"><h2>Change admin PIN</h2><div class="row">
-      <div class="field"><label>New admin PIN</label><input type="text" id="adm-p1" inputmode="numeric" maxlength="8" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,8)"></div>
-      <div class="field"><label>Confirm</label><input type="text" id="adm-p2" inputmode="numeric" maxlength="8" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,8)"></div>
-      <div class="field"><button class="btn btn-primary" onclick="app.saveAdminPin()">Save</button></div>
-    </div><div class="muted" id="adm-msg" style="min-height:18px;margin-top:6px;"></div></div>`;
-    el.innerHTML = html;
-  }
-  function updateBranchName(id, value) {
-    const b = state.branches.find(b=>b.id===id); const name = value.trim();
-    if (!b || !name) { renderAdmin(); return; }
-    b.name = name; save(); renderAll();
-  }
-  function updateBranchPin(id, value) {
-    if (!/^\d{4,8}$/.test(value)) { renderAdmin(); return; }
-    state.auth.branchPins[id] = value; save();
-  }
-  function saveAdminPin() {
-    const msg = document.getElementById("adm-msg");
-    const p1 = document.getElementById("adm-p1").value.trim();
-    const p2 = document.getElementById("adm-p2").value.trim();
-    if (!/^\d{4,8}$/.test(p1)) { msg.style.color="var(--absent)"; msg.textContent="PIN must be 4–8 digits."; return; }
-    if (p1 !== p2) { msg.style.color="var(--absent)"; msg.textContent="PINs do not match."; return; }
-    state.auth.adminPin = p1; save();
-    document.getElementById("adm-p1").value=""; document.getElementById("adm-p2").value="";
-    msg.style.color="var(--present)"; msg.textContent="Admin PIN updated.";
-  }
+  // ---- Print ----
+  function printReport(title, inner){ const area=document.getElementById("print-area"); const now=new Date().toLocaleString();
+    area.innerHTML=`<div class="print-doc"><h1>⚽ Beirut Football Academy</h1><div class="pmeta">${esc(title)} · generated ${esc(now)}</div>${inner}</div>`;
+    document.body.classList.add("printing"); window.print(); setTimeout(()=>document.body.classList.remove("printing"),400); }
+  function printAttendance(){ const teams=scopedTeams(); const idsAll=scopedPlayers().map(p=>p.id);
+    const dates=Object.keys(state.attendance).filter(d=>Object.keys(state.attendance[d]).some(pid=>idsAll.includes(pid))).sort().slice(-12);
+    let inner=""; if(!teams.length){inner="<p>No teams.</p>";}
+    teams.forEach(t=>{ const players=state.players.filter(p=>p.teamId===t.id); if(!players.length)return;
+      inner+=`<h2>${esc(t.name)}${isAdmin()?" — "+esc(branchName(t.branchId)):""}</h2><table><thead><tr><th>Player</th>${dates.map(d=>`<th>${esc(fmtShort(d))}</th>`).join("")}<th>Rate</th></tr></thead><tbody>`;
+      players.forEach(p=>{ const s=playerAttStats(p.id); inner+=`<tr><td>${esc(p.name)}</td>${dates.map(d=>{const st=attStatus(d,p.id);return `<td>${st==="present"?"P":st==="absent"?"A":""}</td>`;}).join("")}<td>${s.rate==null?"—":s.rate+"%"}</td></tr>`; });
+      inner+=`</tbody></table>`; });
+    printReport(`Attendance sheet${isAdmin()&&adminBranchFilter!=="all"?" — "+branchName(adminBranchFilter):""}`, inner||"<p>No data.</p>"); }
+  function printBilling(){ const players=scopedPlayers().slice().sort((a,b)=>a.name.localeCompare(b.name)); const key=billMonth; let coll=0,out=0;
+    let rows=players.map(p=>{ const m=monthData(p,key); if(m.paid)coll+=m.fee; else if(m.fee>0)out+=m.fee; return `<tr><td>${esc(p.name)}</td><td>${esc(teamName(p.teamId))}</td><td>${esc(branchName(p.branchId))}</td><td>${fmtMoney(m.fee)}</td><td>${m.paid?"PAID":"UNPAID"}</td><td>${m.invoiced?"Invoiced":"—"}</td></tr>`; }).join("");
+    const inner=`<table><thead><tr><th>Player</th><th>Team</th><th>Branch</th><th>Fee</th><th>Paid</th><th>Invoice</th></tr></thead><tbody>${rows}</tbody></table><p><b>Collected:</b> ${fmtMoney(coll)} &nbsp; <b>Outstanding:</b> ${fmtMoney(out)}</p>`;
+    printReport(`Payments — ${ymLabel(key)}`, inner); }
 
-  // ===== Expose for inline handlers =====
-  // ---- Attendance (calendar + check-in combined) ----
-  function renderAttendance() {
-    const el = document.getElementById("view-attendance");
-    el.innerHTML = `<div id="att-calendar"></div><div id="att-checkin"></div>`;
-    renderCalendar();
-    renderCheckin();
-  }
+  function downloadCsv(text,filename){ const b=new Blob([text],{type:"text/csv"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
 
-  // ---- Calendar ----
-  let calYear = null, calMonth = null;
-  function ensureCal() { if (calYear == null) { const d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth(); } }
-  function renderCalendar() {
-    ensureCal();
-    const el = document.getElementById("att-calendar");
-    if (!el) return;
-    const first = new Date(calYear, calMonth, 1);
-    const monthName = first.toLocaleDateString(undefined, { month:"long", year:"numeric" });
-    const startDow = (first.getDay() + 6) % 7;       // 0 = Monday
-    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-    const pidSet = new Set(scopedPlayers().map(p => p.id));
-    const sched = scopedSchedule();
-    const todayS = todayStr();
+  // ---- modal + toast ----
+  function openModal(html){ document.getElementById("modal-body").innerHTML=html; document.getElementById("modal").classList.add("show"); }
+  function closeModal(){ document.getElementById("modal").classList.remove("show"); }
+  document.getElementById("modal").addEventListener("click",e=>{ if(e.target.id==="modal")closeModal(); });
+  function toast(msg){ let t=document.getElementById("toast"); if(!t){t=document.createElement("div");t.id="toast";document.body.appendChild(t);} t.textContent=msg; t.className="show"; clearTimeout(toast._t); toast._t=setTimeout(()=>t.className="",2200); }
 
-    let html = `<div class="card"><h2>Monthly calendar ${isAdmin()?`<span class="sub">${adminBranchFilter==="all"?"all branches":escapeHtml(branchName(adminBranchFilter))}</span>`:""}</h2>`;
-    html += branchFilterControl();
-    html += `<div class="cal-nav">
-      <button class="btn btn-sm" onclick="app.calPrev()">‹ Prev</button>
-      <div class="cal-title">${escapeHtml(monthName)}</div>
-      <button class="btn btn-sm btn-ghost" onclick="app.calToday()">Today</button>
-      <button class="btn btn-sm" onclick="app.calNext()">Next ›</button>
-    </div>`;
-    html += `<div class="cal-grid cal-head">` + ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>`<div class="cal-dow">${d}</div>`).join("") + `</div>`;
-    html += `<div class="cal-grid">`;
-    for (let i = 0; i < startDow; i++) html += `<div class="cal-cell empty-cell"></div>`;
-    for (let day = 1; day <= daysInMonth; day++) {
-      const iso = `${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
-      const dow = (new Date(calYear, calMonth, day).getDay() + 6) % 7;
-      const nSess = sched.filter(s => sessionOccursOn(s, iso)).length;
-      let present = 0, marked = 0;
-      const att = state.attendance[iso];
-      if (att) for (const pid in att) { if (pidSet.has(pid)) { marked++; if (att[pid] === "present") present++; } }
-      html += `<div class="cal-cell ${iso===todayS?"today":""} ${iso===checkinDate?"selected":""}" onclick="app.pickDay('${iso}')">
-        <div class="cal-daynum">${day}</div>
-        ${nSess?`<div class="cal-badge sess">${nSess} ${nSess>1?"sessions":"session"}</div>`:""}
-        ${marked?`<div class="cal-badge att">${present}/${marked} present</div>`:""}
-      </div>`;
-    }
-    html += `</div>`;
-    html += `<p class="muted" style="margin:12px 0 0;">Tap any day to take attendance for it below. Days with a scheduled session are flagged, and the present count shows once validated.</p>`;
-    html += `</div>`;
-    el.innerHTML = html;
-  }
-  function calPrev() { ensureCal(); calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
-  function calNext() { ensureCal(); calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
-  function calToday() { const d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth(); renderCalendar(); }
-  function pickDay(iso) {
-    if (ciDraft && ciDraft.dirty && !confirm("You have unsaved attendance. Discard those changes?")) return;
-    checkinDate = iso; ciDraft = null;
-    renderAttendance();
-    const cin = document.getElementById("att-checkin");
-    if (cin) cin.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  // ---- Accounting (admin only) ----
-  function renderAccounting() {
-    if (!isAdmin()) return;
-    const el = document.getElementById("view-accounting");
-    const players = scopedPlayers();
-    let collected = 0, outstanding = 0, paidCount = 0, invoicedCount = 0;
-    players.forEach(p => {
-      const fee = Number(p.fee) || 0;
-      if (p.paid) { collected += fee; paidCount++; } else { outstanding += fee; }
-      if (p.invoiced) invoicedCount++;
-    });
-
-    let html = `<div class="card"><h2>Accounting <span class="sub">admin only · ${adminBranchFilter==="all"?"all branches":escapeHtml(branchName(adminBranchFilter))}</span></h2>`;
-    html += branchFilterControl();
-    html += `<div class="kpis">
-      <div class="kpi"><div class="k-val">${fmtMoney(collected)}</div><div class="k-lbl">Collected (paid)</div></div>
-      <div class="kpi"><div class="k-val">${fmtMoney(outstanding)}</div><div class="k-lbl">Outstanding</div></div>
-      <div class="kpi"><div class="k-val">${paidCount}/${players.length}</div><div class="k-lbl">Players paid</div></div>
-      <div class="kpi"><div class="k-val">${invoicedCount}/${players.length}</div><div class="k-lbl">Invoiced</div></div>
-    </div></div>`;
-
-    html += `<div class="card"><h2>Players &amp; fees <span class="sub"><a class="link" onclick="app.exportAccounting()">Export CSV</a></span></h2>`;
-    if (!players.length) html += `<div class="empty">No players.</div>`;
-    else {
-      html += `<div class="tbl-wrap"><table><thead><tr><th>Player</th><th>Team</th><th>Branch</th><th class="num">Days present</th><th class="num">Attendance</th><th>Fee ($)</th><th>Paid</th><th>Invoiced</th></tr></thead><tbody>`;
-      players.forEach(p => {
-        const s = playerAttStats(p.id);
-        html += `<tr>
-          <td>${escapeHtml(p.name)}</td>
-          <td>${escapeHtml(teamName(p.teamId))}</td>
-          <td>${escapeHtml(branchName(p.branchId))}</td>
-          <td class="num">${s.present} / ${s.total}</td>
-          <td class="num">${s.rate==null?"—":s.rate+"%"}</td>
-          <td><input type="text" inputmode="decimal" class="fee-input" value="${Number(p.fee)||0}" onchange="app.setFee('${p.id}',this.value)"></td>
-          <td><button class="pill paid ${p.paid?"on":""}" onclick="app.togglePaid('${p.id}')">${p.paid?"Paid":"Unpaid"}</button></td>
-          <td><button class="pill inv ${p.invoiced?"on":""}" onclick="app.toggleInvoiced('${p.id}')">${p.invoiced?"Invoiced":"Not invoiced"}</button></td>
-        </tr>`;
-      });
-      html += `</tbody></table></div>`;
-    }
-    html += `</div>`;
-    el.innerHTML = html;
-  }
-  function setFee(id, val) {
-    const p = state.players.find(p => p.id === id); if (!p) return;
-    p.fee = parseFloat(String(val).replace(/[^0-9.]/g, "")) || 0;
-    save(); renderAccounting();
-  }
-  function togglePaid(id) { const p = state.players.find(p => p.id === id); if (!p) return; p.paid = !p.paid; save(); renderAccounting(); }
-  function toggleInvoiced(id) { const p = state.players.find(p => p.id === id); if (!p) return; p.invoiced = !p.invoiced; save(); renderAccounting(); }
-  function exportAccounting() {
-    const players = scopedPlayers();
-    const header = ["Player","Team","Branch","Days present","Sessions","Attendance%","Fee","Paid","Invoiced"];
-    const lines = [header.join(",")];
-    players.forEach(p => {
-      const s = playerAttStats(p.id);
-      lines.push([p.name, teamName(p.teamId), branchName(p.branchId), s.present, s.total, s.rate==null?"":s.rate, Number(p.fee)||0, p.paid?"Paid":"Unpaid", p.invoiced?"Invoiced":"Not invoiced"]
-        .map(v => `"${String(v).replace(/"/g,'""')}"`).join(","));
-    });
-    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob); a.download = "bfa-accounting.csv"; a.click(); URL.revokeObjectURL(a.href);
-  }
-
-  window.app = {
-    selectRole, setBranchFilter, addSession, removeSession,
-    addTeam, removeTeam, updateTeamField, addPlayer, removePlayer,
-    setCheckinDate, setCheckinTeam, checkinFor, mark, bulkMark,
-    markStaff, setStaffReplacement, validateAttendance,
-    setHistoryTeam, openDate, exportStats,
-    calPrev, calNext, calToday, pickDay, addPlayerCheckin,
-    setFee, togglePaid, toggleInvoiced, exportAccounting,
-    updateBranchName, updateBranchPin, saveAdminPin
-  };
+  window.app={ selectRole,setBranchFilter, calPrev,calNext,calToday,pickDay,
+    setCheckinTeam,checkinFor,mark,bulkMark,markStaff,setStaffReplacement,validateAttendance,addPlayerCheckin,
+    addSession,removeSession, addTeam,removeTeam,updateTeamField,addPlayer,removePlayer,
+    setPlayerSearch,openProfile,closeModal, goto:goTab,
+    setHistoryTeam,openDate,exportStats,printAttendance,
+    billPrev,billNext,billThis,setBillFee,toggleBillPaid,toggleBillInv,exportBilling,printBilling,
+    updateBranchName,updateBranchPin,saveAdminPin };
 </script>
 </body>
 </html>
