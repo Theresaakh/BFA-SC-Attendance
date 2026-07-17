@@ -293,6 +293,7 @@
         <div class="subtitle">Teams · Attendance · Billing</div>
       </div>
       <span class="spacer"></span>
+      <span class="chip-session" id="season-chip" style="display:none;"></span>
       <span class="chip-session" id="session-label"></span>
       <button class="btn hbtn btn-sm" id="theme-btn">◐</button>
       <button class="btn hbtn btn-sm" id="logout-btn">Log out</button>
@@ -346,11 +347,12 @@
   const DEFAULT_BRANCHES=["Furn El Chebbek","Hazmieh","Sen El Fil","Hadath","Beit Meri","Mansourieh","Sour"];
 
   // ===== State =====
-  function defaultState(){ return { branches:[],teams:[],players:[],schedule:[],attendance:{},staffAttendance:{},auth:{setupDone:false,adminPin:"",branchPins:{}} }; }
+  function defaultState(){ return { branches:[],teams:[],players:[],schedule:[],attendance:{},staffAttendance:{},seasons:[],currentSeasonId:null,auth:{setupDone:false,adminPin:"",branchPins:{}} }; }
   function toArray(x){ if(Array.isArray(x))return x; if(x&&typeof x==="object")return Object.values(x); return []; }
   function normalize(s){
     if(!s||typeof s!=="object") s=defaultState();
-    s.branches=toArray(s.branches); s.teams=toArray(s.teams); s.players=toArray(s.players); s.schedule=toArray(s.schedule);
+    s.branches=toArray(s.branches); s.teams=toArray(s.teams); s.players=toArray(s.players); s.schedule=toArray(s.schedule); s.seasons=toArray(s.seasons);
+    if(typeof s.currentSeasonId!=="string") s.currentSeasonId=null;
     s.schedule.forEach(x=>{ if(!Array.isArray(x.days)) x.days=(typeof x.day==="number")?[x.day]:[]; if(typeof x.startDate!=="string")x.startDate=""; if(typeof x.endDate!=="string")x.endDate=""; });
     if(!s.attendance)s.attendance={}; if(!s.staffAttendance)s.staffAttendance={};
     if(!s.auth)s.auth={setupDone:false,adminPin:"",branchPins:{}}; if(!s.auth.branchPins)s.auth.branchPins={};
@@ -370,14 +372,28 @@
   let calYear=null, calMonth=null, billMonth=todayStr().slice(0,7), playerSearch="";
 
   let migrated=false;
-  onValue(stateRef, snap=>{ const raw=snap.val(); state=normalize(raw);
+  onValue(stateRef, snap=>{ const raw=snap.val();
+    // Capture the pre-normalize shape BEFORE normalize() runs — it mutates its argument
+    // in place (JS objects are by-reference), so raw.teams/raw.seasons etc. would already
+    // reflect the normalized (always-array) shape if read after normalize(raw) below.
+    const rawWasArrayFmt = !!(raw && (Array.isArray(raw.teams)||Array.isArray(raw.players)||Array.isArray(raw.schedule)));
+    const rawNeedsSeason = !!(raw && raw.auth && raw.auth.setupDone && raw.seasons==null);
+    state=normalize(raw);
     // One-time migration: old data stored teams/players/schedule as arrays. Re-key them
-    // by id so granular per-item writes work (and stop wholesale overwrites).
+    // by id so granular per-item writes work (and stop wholesale overwrites). Also gives
+    // pre-seasons installs a default season, non-destructively.
     if(!migrated && raw!==null){ migrated=true;
-      if(Array.isArray(raw.teams)||Array.isArray(raw.players)||Array.isArray(raw.schedule)){
+      const migUpdates={};
+      if(rawWasArrayFmt){
         const toMap=a=>{const m={};toArray(a).forEach(o=>{if(o&&o.id)m[o.id]=o;});return m;};
-        update(stateRef,{teams:toMap(raw.teams),players:toMap(raw.players),schedule:toMap(raw.schedule)}).catch(e=>console.error("migrate",e));
+        migUpdates.teams=toMap(raw.teams); migUpdates.players=toMap(raw.players); migUpdates.schedule=toMap(raw.schedule);
       }
+      if(rawNeedsSeason){
+        const ns={id:uid(),name:"Season 1",startDate:todayStr(),endDate:"",status:"active"};
+        migUpdates.seasons={[ns.id]:ns}; migUpdates.currentSeasonId=ns.id;
+        state.seasons=[ns]; state.currentSeasonId=ns.id;
+      }
+      if(Object.keys(migUpdates).length) update(stateRef,migUpdates).catch(e=>console.error("migrate",e));
     }
     if(!booted){ booted=true; boot(); }
     else if(session) renderAll();
@@ -394,6 +410,8 @@
   function fmtMoney(n){ return "$"+(Math.round((Number(n)||0)*100)/100).toLocaleString(); }
   function ymLabel(k){ const [y,m]=k.split("-").map(Number); return new Date(y,m-1,1).toLocaleDateString(undefined,{month:"long",year:"numeric"}); }
   function ymShift(k,delta){ let [y,m]=k.split("-").map(Number); m+=delta; while(m<1){m+=12;y--;} while(m>12){m-=12;y++;} return `${y}-${String(m).padStart(2,"0")}`; }
+  function daysSince(iso){ const [y,m,d]=iso.split("-").map(Number); const start=new Date(y,m-1,d); const [ty,tm,td]=todayStr().split("-").map(Number); const now=new Date(ty,tm-1,td); return Math.max(0,Math.round((now-start)/86400000)); }
+  function currentSeason(){ return state.seasons.find(s=>s.id===state.currentSeasonId)||null; }
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
   function isAdmin(){ return !!session&&session.role==="admin"; }
   function scopeBranchId(){ return session&&session.role==="branch"?session.branchId:null; }
@@ -461,7 +479,10 @@
     const names=[],pins=[]; for(let i=0;i<7;i++){ const n=document.getElementById("sb-name-"+i).value.trim(), p=document.getElementById("sb-pin-"+i).value.trim();
       if(!n){err.textContent=`Branch ${i+1} needs a name.`;return;} if(!/^\d{4,8}$/.test(p)){err.textContent=`Branch ${i+1} PIN must be 4–8 digits.`;return;} names.push(n);pins.push(p); }
     const branches=names.map(n=>({id:uid(),name:n})); const bp={}; branches.forEach((b,i)=>bp[b.id]=pins[i]);
-    state.branches=branches; state.auth={setupDone:true,adminPin:a,branchPins:bp}; wSet("branches",branches); wSet("auth",state.auth); showLogin(); });
+    state.branches=branches; state.auth={setupDone:true,adminPin:a,branchPins:bp}; wSet("branches",branches); wSet("auth",state.auth);
+    const ns={id:uid(),name:"Season 1",startDate:todayStr(),endDate:"",status:"active"}; state.seasons=[ns]; state.currentSeasonId=ns.id;
+    wSet("seasons/"+ns.id, ns); wSet("currentSeasonId", ns.id);
+    showLogin(); });
 
   let pendingRole=null;
   function selectRole(role,bid){ pendingRole=role==="branch"?{role:"branch",branchId:bid}:{role:"admin"};
@@ -499,8 +520,9 @@
   function hBars(series){ if(!series.length)return `<div class="empty">No teams yet.</div>`; return series.map(s=>`<div class="hbar-row"><div class="hbar-label">${esc(s.label)}</div><div class="hbar-track"><div class="hbar-fill" style="width:${s.value||0}%"></div></div><div class="hbar-val">${s.value==null?"—":s.value+"%"}</div></div>`).join(""); }
 
   // ================= RENDER =================
-  function renderAll(){ const a=document.querySelector(".view.active"); if(!a)return; const v=a.id.replace("view-","");
+  function renderAll(){ updateSeasonChip(); const a=document.querySelector(".view.active"); if(!a)return; const v=a.id.replace("view-","");
     ({dashboard:renderDashboard,attendance:renderAttendance,schedule:renderSchedule,teams:renderTeams,players:renderPlayers,reports:renderReports,billing:renderBilling,admin:renderAdmin}[v]||(()=>{}))(); }
+  function updateSeasonChip(){ const el=document.getElementById("season-chip"); if(!el)return; const cur=currentSeason(); if(cur){ el.textContent="🏆 "+cur.name; el.style.display=""; } else { el.style.display="none"; } }
 
   // ---- Dashboard ----
   function renderDashboard(){ const el=document.getElementById("view-dashboard");
@@ -765,11 +787,46 @@
 
   // ---- Admin ----
   function renderAdmin(){ if(!isAdmin())return; const el=document.getElementById("view-admin");
-    let h=`<div class="card accent"><h2>Branches &amp; access PINs</h2><p class="muted" style="margin-top:-8px;">Rename a branch or change its PIN. Branch staff use this PIN to log in.</p><div class="tbl-wrap"><table><thead><tr><th>Branch</th><th>PIN</th><th class="num">Teams</th><th class="num">Players</th></tr></thead><tbody>`;
+    const cur=currentSeason();
+    let h=`<div class="card accent"><h2>Season</h2>`;
+    if(cur){ h+=`<div class="kpis" style="grid-template-columns:1fr 1fr;">
+        <div class="kpi"><div class="kv" style="font-size:1.3rem;">${esc(cur.name)}</div><div class="kl">Current season · since ${esc(fmtMed(cur.startDate))}</div></div>
+        <div class="kpi red"><div class="kv">${daysSince(cur.startDate)}</div><div class="kl">Days running</div></div>
+      </div>`;
+    } else h+=`<div class="empty">No season set yet.</div>`;
+    h+=`<div class="row" style="margin-top:14px;"><button class="btn btn-navy btn-sm" onclick="app.openStartSeasonModal()">🏁 Start new season</button></div>`;
+    const archived=state.seasons.filter(s=>s.status==="archived").sort((a,b)=>b.startDate.localeCompare(a.startDate));
+    if(archived.length){ h+=`<h3 class="sub-h" style="margin-top:16px;">Past seasons</h3><div class="tbl-wrap"><table><thead><tr><th>Season</th><th>Start</th><th>End</th></tr></thead><tbody>`;
+      archived.forEach(s=>{ h+=`<tr><td>${esc(s.name)}</td><td>${esc(fmtMed(s.startDate))}</td><td>${s.endDate?esc(fmtMed(s.endDate)):"—"}</td></tr>`; });
+      h+=`</tbody></table></div>`; }
+    h+=`</div>`;
+
+    h+=`<div class="card"><h2>Backup</h2><p class="muted" style="margin-top:-8px;">Download a full copy of every branch, team, player, attendance record and payment as one file — keep it somewhere safe.</p><div class="row"><button class="btn btn-primary btn-sm" onclick="app.downloadBackup()">💾 Download full backup</button></div></div>`;
+
+    h+=`<div class="card"><h2>Branches &amp; access PINs</h2><p class="muted" style="margin-top:-8px;">Rename a branch or change its PIN. Branch staff use this PIN to log in.</p><div class="tbl-wrap"><table><thead><tr><th>Branch</th><th>PIN</th><th class="num">Teams</th><th class="num">Players</th></tr></thead><tbody>`;
     state.branches.forEach(b=>{ h+=`<tr><td><input type="text" value="${esc(b.name)}" onchange="app.updateBranchName('${b.id}',this.value)"></td><td><input type="text" inputmode="numeric" maxlength="8" value="${esc(state.auth.branchPins[b.id]||"")}" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,8)" onchange="app.updateBranchPin('${b.id}',this.value)"></td><td class="num">${state.teams.filter(t=>t.branchId===b.id).length}</td><td class="num">${state.players.filter(p=>p.branchId===b.id).length}</td></tr>`; });
     h+=`</tbody></table></div></div>`;
     h+=`<div class="card"><h2>Change admin PIN</h2><div class="row"><div class="field"><label>New admin PIN</label><input type="text" id="adm-p1" inputmode="numeric" maxlength="8" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,8)"></div><div class="field"><label>Confirm</label><input type="text" id="adm-p2" inputmode="numeric" maxlength="8" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,8)"></div><div class="field"><button class="btn btn-primary" onclick="app.saveAdminPin()">Save</button></div></div><div class="muted" id="adm-msg" style="min-height:18px;margin-top:6px;"></div></div>`;
     el.innerHTML=h; }
+  function openStartSeasonModal(){ const suggested=`Season ${state.seasons.length+1}`; const cur=currentSeason();
+    const html=`<div class="card"><h2>Start a new season</h2>
+      <p class="muted">This archives "<b>${esc(cur?cur.name:"the current season")}</b>" (ends today) and starts a new one. Teams, players, and all attendance/payment history are kept and stay fully searchable — nothing is deleted.</p>
+      <div class="field"><label>New season name</label><input type="text" id="ns-name" value="${esc(suggested)}"></div>
+      <div class="field"><label style="text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:500;font-size:.9rem;display:flex;align-items:center;gap:7px;"><input type="checkbox" id="ns-clear-sched" checked style="width:auto;"> Clear the current weekly schedule (recommended — set fresh session times for the new season)</label></div>
+      <div class="row" style="margin-top:14px;"><button class="btn btn-primary" onclick="app.confirmStartSeason()">Start new season</button></div>
+    </div>`;
+    openModal(html); }
+  function confirmStartSeason(){ const nameInp=document.getElementById("ns-name"); const name=(nameInp?nameInp.value.trim():"")||"New season";
+    const clearSched=document.getElementById("ns-clear-sched").checked; const today=todayStr(); const cur=currentSeason(); const u={};
+    if(cur){ cur.endDate=today; cur.status="archived"; u["seasons/"+cur.id+"/endDate"]=today; u["seasons/"+cur.id+"/status"]="archived"; }
+    const ns={id:uid(),name,startDate:today,endDate:"",status:"active"};
+    state.seasons.push(ns); state.currentSeasonId=ns.id; u["seasons/"+ns.id]=ns; u["currentSeasonId"]=ns.id;
+    if(clearSched){ state.schedule.forEach(s=>{u["schedule/"+s.id]=null;}); state.schedule=[]; }
+    wMulti(u); closeModal(); renderAdmin(); updateSeasonChip(); toast("New season started ✓"); }
+  function downloadBackup(){ const payload={exportedAt:new Date().toISOString(),app:"BFA Teams & Attendance",data:state};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`bfa-backup-${todayStr()}.json`; a.click(); URL.revokeObjectURL(a.href);
+    toast("Backup downloaded ✓"); }
   function updateBranchName(id,v){ const b=state.branches.find(b=>b.id===id); const n=v.trim(); if(!b||!n){renderAdmin();return;} b.name=n; wSet("branches",state.branches); renderAll(); }
   function updateBranchPin(id,v){ if(!/^\d{4,8}$/.test(v)){renderAdmin();return;} state.auth.branchPins[id]=v; wSet("auth/branchPins/"+id, v); }
   function saveAdminPin(){ const msg=document.getElementById("adm-msg"); const p1=document.getElementById("adm-p1").value.trim(),p2=document.getElementById("adm-p2").value.trim();
@@ -807,6 +864,7 @@
     setPlayerSearch,openProfile,closeModal, goto:goTab,
     setHistoryTeam,openDate,exportStats,printAttendance,
     billPrev,billNext,billThis,setBillFee,toggleBillPaid,toggleBillInv,exportBilling,printBilling,
+    openStartSeasonModal,confirmStartSeason,downloadBackup,
     updateBranchName,updateBranchPin,saveAdminPin };
 </script>
 </body>
