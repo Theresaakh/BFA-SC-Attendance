@@ -1,1 +1,3 @@
 .mcp.json
+functions/node_modules/
+.firebase/
