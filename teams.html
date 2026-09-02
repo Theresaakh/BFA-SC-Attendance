@@ -913,8 +913,11 @@
       <p class="muted" style="margin-top:-8px;">Build a survey, share its link with parents or players, and read the answers here. This tab opens with the admin PIN only — branch logins never see it, and nobody filling the survey in can see anyone's answers.</p>
       <div class="row"><div class="field grow"><label>New survey title</label>
         <input type="text" id="new-survey-title" placeholder="e.g. Parent feedback — Spring term" onkeydown="if(event.key==='Enter')app.createSurvey()"></div>
-        <div class="field"><button class="btn btn-primary" onclick="app.createSurvey()">+ Create survey</button></div></div></div>`;
-    if(!state.surveys.length) return h+`<div class="card"><div class="empty">No surveys yet — type a title above and create your first one.</div></div>`;
+        <div class="field"><button class="btn btn-primary" onclick="app.createSurvey()">+ Create survey</button></div></div>
+      <div class="row" style="align-items:center;gap:9px;">
+        <span class="muted">Or start from a ready-made one:</span>
+        <button class="btn btn-sm btn-navy" onclick="app.createCoachSurvey()">👔 Coach details — name · branch · Whish ID</button></div></div>`;
+    if(!state.surveys.length) return h+`<div class="card"><div class="empty">No surveys yet — type a title above, or use the ready-made coach survey.</div></div>`;
     const list=state.surveys.slice().sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
     h+=`<div class="card"><h2>All surveys <span class="sub">${list.length}</span></h2><div class="tbl-wrap"><table>
       <thead><tr><th>Survey</th><th>Status</th><th class="num">Questions</th><th class="num">Answers</th><th></th></tr></thead><tbody>`;
@@ -961,6 +964,8 @@
             <select onchange="app.setQuestion('${sv.id}','${q.id}','type',this.value)">${Q_TYPES.map(t=>`<option value="${t[0]}" ${(q.type||"short")===t[0]?"selected":""}>${t[1]}</option>`).join("")}</select></div></div>`;
       if(needsOptions(q.type)) h+=`<div class="field"><label>Choices — one per line</label>
           <textarea rows="3" onchange="app.setQuestion('${sv.id}','${q.id}','options',this.value)">${esc(toArray(q.options).join("\n"))}</textarea></div>`;
+      h+=`<div class="field"><label>Hint shown under the question (optional)</label>
+          <input type="text" value="${esc(q.help||"")}" placeholder="e.g. Double-check this — it's where your payment is sent" onchange="app.setQuestion('${sv.id}','${q.id}','help',this.value)"></div>`;
       h+=`<div class="row" style="justify-content:space-between;align-items:center;">
           <label class="inline-check"><input type="checkbox" ${q.required?"checked":""} onchange="app.setQuestion('${sv.id}','${q.id}','required',this.checked)"> Must be answered</label>
           <span><button class="btn btn-sm btn-ghost" onclick="app.moveQuestion('${sv.id}','${q.id}',-1)" ${i===0?"disabled":""}>↑</button>
@@ -1055,6 +1060,28 @@
     const sv={id:uid(),title,intro:"",open:true,createdAt:new Date().toISOString()};
     state.surveys.push({...sv,questions:[]}); wSet("surveys/"+sv.id, sv);
     activeSurveyId=sv.id; surveyMode="edit"; renderSurveys(); toast("Survey created — add your questions ✓"); }
+  // Ready-made survey for collecting how each coach gets paid. The branch question is
+  // built from the academy's own branch list so coaches pick, rather than type, a branch.
+  function createCoachSurvey(){
+    const existing=state.surveys.find(sv=>sv.template==="coach");
+    if(existing){ editSurvey(existing.id); toast("You already have this one — opening it"); return; }
+    const branchNames=state.branches.map(b=>b.name).filter(Boolean);
+    const qs=[
+      {id:uid(),order:0,type:"short",label:"Your full name",required:true,
+       help:"As it should appear on the academy's payment records."},
+      branchNames.length
+        ? {id:uid(),order:1,type:"single",label:"Which branch do you train at?",required:true,options:branchNames}
+        : {id:uid(),order:1,type:"short",label:"Which branch do you train at?",required:true},
+      {id:uid(),order:2,type:"short",label:"Your Whish Money ID number",required:true,
+       help:"This is where your payment will be sent — please check it carefully before sending."}
+    ];
+    const sv={id:uid(),template:"coach",title:"Coach details — Whish Money",open:true,createdAt:new Date().toISOString(),
+      intro:"Please fill this in so we can send your payments. It takes less than a minute. Only the academy sees your answers — no other coach can see them."};
+    const qMap={}; qs.forEach(q=>{ qMap[q.id]=q; });
+    state.surveys.push({...sv,questions:qs});
+    wSet("surveys/"+sv.id, {...sv,questions:qMap});
+    activeSurveyId=sv.id; surveyMode="edit"; renderSurveys();
+    toast("Coach survey ready — copy the link and send it ✓"); }
   function editSurvey(id){ activeSurveyId=id; surveyMode="edit"; renderSurveys(); window.scrollTo({top:0,behavior:"smooth"}); }
   function openSurveyAnswers(id){ activeSurveyId=id; surveyMode="responses"; renderSurveys(); window.scrollTo({top:0,behavior:"smooth"}); }
   function surveysBack(){ surveyMode="list"; activeSurveyId=null; renderSurveys(); }
@@ -1076,9 +1103,10 @@
     const q=surveyQuestions(sv).find(x=>x.id===qid); if(!q)return;
     let val=v;
     if(field==="options") val=String(v).split("\n").map(x=>x.trim()).filter(Boolean);
+    if(field==="help") val=String(v).trim();
     if(field==="label"){ val=String(v).trim(); if(!val){ renderSurveys(); return; } }
     q[field]=val;
-    wSet("surveys/"+sid+"/questions/"+qid+"/"+field, (field==="options"&&!val.length)?null:val);
+    wSet("surveys/"+sid+"/questions/"+qid+"/"+field, ((field==="options"||field==="help")&&!val.length)?null:val);
     if(field==="type"){
       if(needsOptions(val)&&!toArray(q.options).length){ q.options=["Option 1","Option 2"]; wSet("surveys/"+sid+"/questions/"+qid+"/options", q.options); }
       renderSurveys(); } }
@@ -1167,7 +1195,7 @@
     setHistoryTeam,openDate,exportStats,printAttendance,
     billPrev,billNext,billThis,setBillFee,toggleBillPaid,toggleBillInv,exportBilling,printBilling,
     openStartSeasonModal,confirmStartSeason,downloadBackup,
-    createSurvey,editSurvey,openSurveyAnswers,surveysBack,setSurveyField,toggleSurveyOpen,
+    createSurvey,createCoachSurvey,editSurvey,openSurveyAnswers,surveysBack,setSurveyField,toggleSurveyOpen,
     addQuestion,setQuestion,moveQuestion,removeQuestion,deleteSurvey,clearSurveyAnswers,
     copySurveyLink,openResponse,exportSurveyCsv,printSurvey,
     updateBranchName,updateBranchPin,saveAdminPin };

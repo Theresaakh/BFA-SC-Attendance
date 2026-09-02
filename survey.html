@@ -223,7 +223,7 @@
     document.getElementById("head-club").textContent = "Survey";
     let h = `<h1 class="s-title">${esc(survey.title || "Survey")}</h1>`;
     if (survey.intro) h += `<p class="s-intro">${esc(survey.intro)}</p>`;
-    h += `<div class="privacy"><span>🔒</span><span>Your answers go straight to the academy and are only visible to the academy director. Nobody else filling in this survey can see them.${survey.anonymous === false ? "" : " You are not asked for your name unless a question below asks for it."}</span></div>`;
+    h += `<div class="privacy"><span>🔒</span><span>Your answers go straight to the academy and are only visible to the academy director. Nobody else filling in this survey can see them.</span></div>`;
 
     if (!qs.length) {
       h += `<div class="state"><div class="big">📝</div><h2>Not ready yet</h2><p>This survey doesn't have any questions yet. Please check back later.</p></div>`;
@@ -245,7 +245,20 @@
       <div class="form-error" id="form-error"></div>
     </div></form>`;
     content.innerHTML = h;
-    document.getElementById("survey-form").addEventListener("submit", e => { e.preventDefault(); submit(survey, qs); });
+    const form = document.getElementById("survey-form");
+    form.addEventListener("submit", e => { e.preventDefault(); submit(survey, qs); });
+    // Drop the "needs an answer" warning the moment the question is answered — leaving it
+    // up while the field is filled in reads as though the answer didn't take.
+    const clearError = e => {
+      const wrap = e.target.closest(".q");
+      if (!wrap || !wrap.classList.contains("invalid")) return;
+      wrap.classList.remove("invalid");
+      const err = wrap.querySelector(".q-error");
+      if (err) err.textContent = "";
+      if (!form.querySelector(".q.invalid")) document.getElementById("form-error").textContent = "";
+    };
+    form.addEventListener("input", clearError);
+    form.addEventListener("change", clearError);
   }
 
   function readAnswer(q) {
