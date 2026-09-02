@@ -232,6 +232,26 @@
   .print-doc table{width:100%;border-collapse:collapse;margin-bottom:12px;}
   .print-doc th,.print-doc td{border:1px solid #999;padding:5px 7px;font-size:11px;text-align:left;}
   .print-doc th{background:#eee;}
+
+  /* ---------- Surveys ---------- */
+  textarea{width:100%;padding:11px 12px;border-radius:11px;border:1.5px solid var(--border);background:var(--input);
+    color:var(--ink);font-size:.95rem;font-family:inherit;line-height:1.5;resize:vertical;}
+  textarea:focus{outline:2px solid var(--brand-navy);outline-offset:1px;}
+  a.btn{display:inline-block;text-decoration:none;}
+  .btn:disabled{opacity:.4;cursor:default;}
+  .q-edit{border:1px solid var(--border);border-radius:13px;padding:14px 15px 8px;margin-bottom:12px;background:var(--surface-2);}
+  .q-idx{font-family:var(--f-display);font-size:1.35rem;color:var(--brand-red);line-height:1;min-width:20px;padding-bottom:8px;}
+  .inline-check{display:flex;align-items:center;gap:7px;font-family:var(--f-body);text-transform:none;letter-spacing:0;
+    font-size:.85rem;font-weight:500;color:var(--ink);margin:0;cursor:pointer;}
+  .inline-check input{width:auto;}
+  .link-box{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;}
+  .ans-list{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;}
+  .ans-item{background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:10px 13px;
+    font-size:.9rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+  .resp-q{margin-bottom:15px;}
+  .resp-q .rq-label{font-family:var(--f-head);font-weight:600;font-size:.78rem;color:var(--brand-navy);
+    text-transform:uppercase;letter-spacing:.03em;margin-bottom:5px;}
+  .cell-clip{max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -306,6 +326,7 @@
       <button data-view="players"><span class="tico">🔎</span>Players</button>
       <button data-view="reports"><span class="tico">📈</span>Reports</button>
       <button data-view="billing" id="nav-billing"><span class="tico">💵</span>Billing</button>
+      <button data-view="surveys" id="nav-surveys"><span class="tico">📝</span>Surveys</button>
       <button data-view="admin" id="nav-admin"><span class="tico">⚙️</span>Admin</button>
     </nav>
   </header>
@@ -317,6 +338,7 @@
     <div class="view" id="view-players"></div>
     <div class="view" id="view-reports"></div>
     <div class="view" id="view-billing"></div>
+    <div class="view" id="view-surveys"></div>
     <div class="view" id="view-admin"></div>
   </main>
 </div>
@@ -342,17 +364,35 @@
   function wSet(path,val){ set(ref(db, ROOT+"/"+path), val).catch(e=>console.error("write",path,e)); }
   function wRemove(path){ remove(ref(db, ROOT+"/"+path)).catch(e=>console.error("remove",path,e)); }
   function wMulti(updates){ update(stateRef, updates).catch(e=>console.error("multi-write",e)); }
+  // ----- Survey answers live OUTSIDE ROOT, at RESP_ROOT. survey.html only ever WRITES
+  //       there; only an admin session below ever attaches a read listener. A branch
+  //       login therefore never downloads a single answer. -----
+  const RESP_ROOT="bfaSurveyResponses";
+  let responses={}, respUnsub=null;
+  function attachResponses(){ if(respUnsub)return;
+    respUnsub=onValue(ref(db,RESP_ROOT), snap=>{ responses=snap.val()||{};
+      const a=document.querySelector(".view.active"); if(session&&isAdmin()&&a&&a.id==="view-surveys") renderSurveys(); },
+      e=>console.error("survey answers",e)); }
+  function detachResponses(){ if(respUnsub){ respUnsub(); respUnsub=null; } responses={}; }
+
   const SESSION_KEY="bfaTeamsSession_v1", THEME_KEY="bfaTeamsTheme";
   const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
   const DEFAULT_BRANCHES=["Furn El Chebbek","Hazmieh","Sen El Fil","Hadath","Beit Meri","Mansourieh","Sour"];
 
   // ===== State =====
-  function defaultState(){ return { branches:[],teams:[],players:[],schedule:[],attendance:{},staffAttendance:{},seasons:[],currentSeasonId:null,auth:{setupDone:false,adminPin:"",branchPins:{}} }; }
+  function defaultState(){ return { branches:[],teams:[],players:[],schedule:[],attendance:{},staffAttendance:{},seasons:[],currentSeasonId:null,surveys:[],auth:{setupDone:false,adminPin:"",branchPins:{}} }; }
   function toArray(x){ if(Array.isArray(x))return x; if(x&&typeof x==="object")return Object.values(x); return []; }
   function normalize(s){
     if(!s||typeof s!=="object") s=defaultState();
     s.branches=toArray(s.branches); s.teams=toArray(s.teams); s.players=toArray(s.players); s.schedule=toArray(s.schedule); s.seasons=toArray(s.seasons);
     if(typeof s.currentSeasonId!=="string") s.currentSeasonId=null;
+    s.surveys=toArray(s.surveys);
+    s.surveys.forEach(sv=>{
+      sv.questions=toArray(sv.questions);
+      sv.questions.forEach((q,i)=>{ if(typeof q.order!=="number")q.order=i; q.options=toArray(q.options); if(typeof q.required!=="boolean")q.required=false; });
+      sv.questions.sort((a,b)=>a.order-b.order);
+      if(typeof sv.open!=="boolean") sv.open=true;
+    });
     s.schedule.forEach(x=>{ if(!Array.isArray(x.days)) x.days=(typeof x.day==="number")?[x.day]:[]; if(typeof x.startDate!=="string")x.startDate=""; if(typeof x.endDate!=="string")x.endDate=""; });
     if(!s.attendance)s.attendance={}; if(!s.staffAttendance)s.staffAttendance={};
     if(!s.auth)s.auth={setupDone:false,adminPin:"",branchPins:{}}; if(!s.auth.branchPins)s.auth.branchPins={};
@@ -463,6 +503,9 @@
   function showApp(){ hideGates(); document.getElementById("app-root").style.display="block";
     document.getElementById("nav-admin").style.display=isAdmin()?"":"none";
     document.getElementById("nav-billing").style.display=isAdmin()?"":"none";
+    document.getElementById("nav-surveys").style.display=isAdmin()?"":"none";
+    if(isAdmin())attachResponses(); else detachResponses();
+    surveyMode="list"; activeSurveyId=null;
     document.getElementById("session-label").textContent=isAdmin()?"Admin · all branches":branchName(scopeBranchId());
     if(!isAdmin())checkinTeamId="";
     document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.remove("active"));
@@ -495,11 +538,11 @@
   document.getElementById("login-back").addEventListener("click",()=>{ pendingRole=null; document.getElementById("login-pin-panel").style.display="none"; document.getElementById("login-roles").style.display="block"; });
   document.getElementById("login-unlock").addEventListener("click",submitLogin);
   document.getElementById("login-pin").addEventListener("keydown",e=>{ if(e.key==="Enter")submitLogin(); });
-  document.getElementById("logout-btn").addEventListener("click",()=>{ sessionStorage.removeItem(SESSION_KEY); session=null; showLogin(); });
+  document.getElementById("logout-btn").addEventListener("click",()=>{ sessionStorage.removeItem(SESSION_KEY); session=null; detachResponses(); showLogin(); });
 
   // tabs
   const tabButtons=document.querySelectorAll("nav.tabs button");
-  tabButtons.forEach(btn=>btn.addEventListener("click",()=>{ if((btn.dataset.view==="admin"||btn.dataset.view==="billing")&&!isAdmin())return;
+  tabButtons.forEach(btn=>btn.addEventListener("click",()=>{ if(["admin","billing","surveys"].includes(btn.dataset.view)&&!isAdmin())return;
     tabButtons.forEach(b=>b.classList.remove("active")); btn.classList.add("active");
     document.querySelectorAll(".view").forEach(v=>v.classList.remove("active")); document.getElementById("view-"+btn.dataset.view).classList.add("active"); renderAll(); }));
   function goTab(v){ const b=document.querySelector(`nav.tabs button[data-view="${v}"]`); if(b)b.click(); }
@@ -521,7 +564,7 @@
 
   // ================= RENDER =================
   function renderAll(){ updateSeasonChip(); const a=document.querySelector(".view.active"); if(!a)return; const v=a.id.replace("view-","");
-    ({dashboard:renderDashboard,attendance:renderAttendance,schedule:renderSchedule,teams:renderTeams,players:renderPlayers,reports:renderReports,billing:renderBilling,admin:renderAdmin}[v]||(()=>{}))(); }
+    ({dashboard:renderDashboard,attendance:renderAttendance,schedule:renderSchedule,teams:renderTeams,players:renderPlayers,reports:renderReports,billing:renderBilling,surveys:renderSurveys,admin:renderAdmin}[v]||(()=>{}))(); }
   function updateSeasonChip(){ const el=document.getElementById("season-chip"); if(!el)return; const cur=currentSeason(); if(cur){ el.textContent="🏆 "+cur.name; el.style.display=""; } else { el.style.display="none"; } }
 
   // ---- Dashboard ----
@@ -823,7 +866,7 @@
     state.seasons.push(ns); state.currentSeasonId=ns.id; u["seasons/"+ns.id]=ns; u["currentSeasonId"]=ns.id;
     if(clearSched){ state.schedule.forEach(s=>{u["schedule/"+s.id]=null;}); state.schedule=[]; }
     wMulti(u); closeModal(); renderAdmin(); updateSeasonChip(); toast("New season started ✓"); }
-  function downloadBackup(){ const payload={exportedAt:new Date().toISOString(),app:"BFA Teams & Attendance",data:state};
+  function downloadBackup(){ const payload={exportedAt:new Date().toISOString(),app:"BFA Teams & Attendance",data:state,surveyAnswers:responses};
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
     const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`bfa-backup-${todayStr()}.json`; a.click(); URL.revokeObjectURL(a.href);
     toast("Backup downloaded ✓"); }
@@ -832,6 +875,265 @@
   function saveAdminPin(){ const msg=document.getElementById("adm-msg"); const p1=document.getElementById("adm-p1").value.trim(),p2=document.getElementById("adm-p2").value.trim();
     if(!/^\d{4,8}$/.test(p1)){msg.style.color="var(--absent)";msg.textContent="PIN must be 4–8 digits.";return;} if(p1!==p2){msg.style.color="var(--absent)";msg.textContent="PINs don't match.";return;}
     state.auth.adminPin=p1; wSet("auth/adminPin",p1); document.getElementById("adm-p1").value="";document.getElementById("adm-p2").value=""; msg.style.color="var(--present)"; msg.textContent="Admin PIN updated."; }
+
+  // ================= Surveys (admin only) =================
+  // Survey definitions live in state.surveys, so they sync and back up like everything
+  // else. Answers live at RESP_ROOT (see the listener near the top) — outside the app
+  // state, loaded only by an admin session. survey.html writes answers but never reads
+  // them, so neither a respondent nor a branch login can see what anyone answered.
+  let surveyMode="list", activeSurveyId=null;
+  const Q_TYPES=[["short","Short text"],["long","Paragraph"],["single","Choose one"],["multi","Choose many"],
+                 ["rating","Rating 1–5"],["yesno","Yes / No"],["number","Number"],["date","Date"]];
+  function typeLabel(t){ const f=Q_TYPES.find(x=>x[0]===t); return f?f[1]:"Short text"; }
+  function needsOptions(t){ return t==="single"||t==="multi"; }
+  function surveyById(id){ return state.surveys.find(s=>s.id===id)||null; }
+  function surveyLink(id){ return new URL("survey.html?s="+encodeURIComponent(id), location.href).href; }
+  function surveyQuestions(sv){ return toArray(sv.questions).slice().sort((a,b)=>(a.order||0)-(b.order||0)); }
+  function respList(sid){ return Object.values((responses&&responses[sid])||{})
+    .filter(r=>r&&typeof r==="object").sort((a,b)=>String(b.at||"").localeCompare(String(a.at||""))); }
+  function answerText(a){ if(!a)return ""; const v=a.v; if(Array.isArray(v))return v.join(", "); return v==null?"":String(v); }
+  function isBlankAns(a){ return !a||a.v===""||a.v==null||(Array.isArray(a.v)&&!a.v.length); }
+  // Columns = the survey's questions today, plus any question that only survives inside
+  // older answers (each answer stores its own question label, so nothing goes unlabelled).
+  function surveyColumns(sv,rows){
+    const cols=surveyQuestions(sv).map(q=>({id:q.id,label:q.label||"(untitled question)",type:q.type||"short"}));
+    const seen=new Set(cols.map(c=>c.id));
+    rows.forEach(r=>Object.keys(r.answers||{}).forEach(qid=>{ if(seen.has(qid))return; seen.add(qid);
+      const a=r.answers[qid]; cols.push({id:qid,label:(a&&a.q)||"(removed question)",type:(a&&a.t)||"short",gone:true}); }));
+    return cols; }
+
+  function renderSurveys(){ if(!isAdmin())return; const el=document.getElementById("view-surveys");
+    const sv=activeSurveyId?surveyById(activeSurveyId):null;
+    if(surveyMode==="edit"&&sv) el.innerHTML=surveyEditorHtml(sv);
+    else if(surveyMode==="responses"&&sv) el.innerHTML=surveyAnswersHtml(sv);
+    else { surveyMode="list"; activeSurveyId=null; el.innerHTML=surveyListHtml(); } }
+
+  function surveyListHtml(){
+    let h=`<div class="card accent"><h2>Surveys</h2>
+      <p class="muted" style="margin-top:-8px;">Build a survey, share its link with parents or players, and read the answers here. This tab opens with the admin PIN only — branch logins never see it, and nobody filling the survey in can see anyone's answers.</p>
+      <div class="row"><div class="field grow"><label>New survey title</label>
+        <input type="text" id="new-survey-title" placeholder="e.g. Parent feedback — Spring term" onkeydown="if(event.key==='Enter')app.createSurvey()"></div>
+        <div class="field"><button class="btn btn-primary" onclick="app.createSurvey()">+ Create survey</button></div></div></div>`;
+    if(!state.surveys.length) return h+`<div class="card"><div class="empty">No surveys yet — type a title above and create your first one.</div></div>`;
+    const list=state.surveys.slice().sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
+    h+=`<div class="card"><h2>All surveys <span class="sub">${list.length}</span></h2><div class="tbl-wrap"><table>
+      <thead><tr><th>Survey</th><th>Status</th><th class="num">Questions</th><th class="num">Answers</th><th></th></tr></thead><tbody>`;
+    list.forEach(sv=>{ const n=respList(sv.id).length, qn=toArray(sv.questions).length;
+      h+=`<tr><td><b>${esc(sv.title||"Untitled survey")}</b>${sv.createdAt?`<div class="muted">created ${esc(fmtMed(String(sv.createdAt).slice(0,10)))}</div>`:""}</td>
+        <td><span class="badge ${sv.open===false?"b-warn":"b-present"}">${sv.open===false?"Closed":"Open"}</span></td>
+        <td class="num">${qn}</td><td class="num">${n}</td>
+        <td style="text-align:right;white-space:nowrap;">
+          <button class="btn btn-sm btn-primary" onclick="app.openSurveyAnswers('${sv.id}')">📥 Answers${n?" ("+n+")":""}</button>
+          <button class="btn btn-sm" onclick="app.editSurvey('${sv.id}')">✎ Edit</button>
+          <button class="btn btn-sm btn-ghost" onclick="app.copySurveyLink('${sv.id}')">🔗 Copy link</button></td></tr>`; });
+    h+=`</tbody></table></div></div>`;
+    return h; }
+
+  function surveyEditorHtml(sv){
+    const link=surveyLink(sv.id), qs=surveyQuestions(sv), n=respList(sv.id).length;
+    let h=`<div class="card accent">
+      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <button class="btn btn-sm btn-ghost" onclick="app.surveysBack()">← All surveys</button>
+        <span><span class="badge ${sv.open===false?"b-warn":"b-present"}">${sv.open===false?"Closed":"Open"}</span>
+        <button class="btn btn-sm btn-primary" onclick="app.openSurveyAnswers('${sv.id}')">📥 ${n} answer${n===1?"":"s"}</button></span></div>
+      <div class="field"><label>Survey title</label>
+        <input type="text" value="${esc(sv.title||"")}" onchange="app.setSurveyField('${sv.id}','title',this.value)"></div>
+      <div class="field" style="margin-bottom:0;"><label>Intro shown above the questions (optional)</label>
+        <textarea rows="3" placeholder="e.g. This takes 2 minutes and helps us plan next term. Thank you!" onchange="app.setSurveyField('${sv.id}','intro',this.value)">${esc(sv.intro||"")}</textarea></div></div>`;
+
+    h+=`<div class="card"><h2>Share this survey</h2>
+      <p class="muted" style="margin-top:-8px;">Send this link by WhatsApp, email or SMS. Anyone with it can answer on their phone — no PIN, no access to the app, and no way to see anyone's answers.</p>
+      <div class="row"><div class="field grow"><label>Public link</label>
+          <input type="text" class="link-box" readonly value="${esc(link)}" onclick="this.select()"></div>
+        <div class="field"><button class="btn btn-primary" onclick="app.copySurveyLink('${sv.id}')">🔗 Copy link</button></div>
+        <div class="field"><a class="btn" href="${esc(link)}" target="_blank" rel="noopener">↗ Preview</a></div>
+        <div class="field"><button class="btn ${sv.open===false?"btn-primary":""}" onclick="app.toggleSurveyOpen('${sv.id}')">${sv.open===false?"Reopen":"Close survey"}</button></div></div>
+      <p class="muted" style="margin-bottom:0;">${sv.open===false?"Closed — the link now shows “this survey is closed” and no new answers can be sent. Answers already received are kept.":"Open — the link is accepting answers. Close it when you've collected enough."}</p></div>`;
+
+    h+=`<div class="card"><h2>Questions <span class="sub">${qs.length}</span></h2>`;
+    if(!qs.length) h+=`<div class="empty">No questions yet — add the first one below.</div>`;
+    qs.forEach((q,i)=>{
+      h+=`<div class="q-edit">
+        <div class="row"><span class="q-idx">${i+1}</span>
+          <div class="field grow"><label>Question</label>
+            <input type="text" value="${esc(q.label||"")}" onchange="app.setQuestion('${sv.id}','${q.id}','label',this.value)"></div>
+          <div class="field"><label>Answer type</label>
+            <select onchange="app.setQuestion('${sv.id}','${q.id}','type',this.value)">${Q_TYPES.map(t=>`<option value="${t[0]}" ${(q.type||"short")===t[0]?"selected":""}>${t[1]}</option>`).join("")}</select></div></div>`;
+      if(needsOptions(q.type)) h+=`<div class="field"><label>Choices — one per line</label>
+          <textarea rows="3" onchange="app.setQuestion('${sv.id}','${q.id}','options',this.value)">${esc(toArray(q.options).join("\n"))}</textarea></div>`;
+      h+=`<div class="row" style="justify-content:space-between;align-items:center;">
+          <label class="inline-check"><input type="checkbox" ${q.required?"checked":""} onchange="app.setQuestion('${sv.id}','${q.id}','required',this.checked)"> Must be answered</label>
+          <span><button class="btn btn-sm btn-ghost" onclick="app.moveQuestion('${sv.id}','${q.id}',-1)" ${i===0?"disabled":""}>↑</button>
+            <button class="btn btn-sm btn-ghost" onclick="app.moveQuestion('${sv.id}','${q.id}',1)" ${i===qs.length-1?"disabled":""}>↓</button>
+            <button class="btn btn-sm btn-ghost" onclick="app.removeQuestion('${sv.id}','${q.id}')">✕ Remove</button></span></div></div>`; });
+    h+=`<div class="row" style="margin-top:14px;">
+      <div class="field grow"><label>Add a question</label>
+        <input type="text" id="nq-label" placeholder="e.g. How happy are you with your child's coach?" onkeydown="if(event.key==='Enter')app.addQuestion('${sv.id}')"></div>
+      <div class="field"><label>Answer type</label><select id="nq-type">${Q_TYPES.map(t=>`<option value="${t[0]}">${t[1]}</option>`).join("")}</select></div>
+      <div class="field"><button class="btn btn-primary" onclick="app.addQuestion('${sv.id}')">+ Add question</button></div></div></div>`;
+
+    h+=`<div class="card"><h2>Delete survey</h2>
+      <p class="muted" style="margin-top:-8px;">Removes the survey and ${n?`all ${n} answer${n===1?"":"s"}`:"any answers"}. The link stops working. This can't be undone.</p>
+      <div class="row"><button class="btn btn-sm" onclick="app.deleteSurvey('${sv.id}')">🗑 Delete this survey</button></div></div>`;
+    return h; }
+
+  function surveyAnswersHtml(sv){
+    const rows=respList(sv.id), cols=surveyColumns(sv,rows), last=rows.length?rows[0].at:null;
+    let h=`<div class="card accent">
+      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <button class="btn btn-sm btn-ghost" onclick="app.surveysBack()">← All surveys</button>
+        <button class="btn btn-sm" onclick="app.editSurvey('${sv.id}')">✎ Edit questions</button></div>
+      <h2 style="margin-bottom:12px;">${esc(sv.title||"Untitled survey")}</h2>
+      <div class="kpis">
+        <div class="kpi red"><div class="kv">${rows.length}</div><div class="kl">Answers received</div></div>
+        <div class="kpi"><div class="kv">${cols.length}</div><div class="kl">Questions</div></div>
+        <div class="kpi"><div class="kv" style="font-size:1.1rem;">${last?esc(fmtMed(String(last).slice(0,10))):"—"}</div><div class="kl">Latest answer</div></div>
+        <div class="kpi"><div class="kv" style="font-size:1.1rem;">${sv.open===false?"Closed":"Open"}</div><div class="kl">Status</div></div></div>
+      <div class="row" style="margin-top:14px;">
+        <button class="btn btn-sm" onclick="app.exportSurveyCsv('${sv.id}')" ${rows.length?"":"disabled"}>⬇ Export CSV</button>
+        <button class="btn btn-sm" onclick="app.printSurvey('${sv.id}')" ${rows.length?"":"disabled"}>🖨 Print</button>
+        <button class="btn btn-sm btn-ghost" onclick="app.copySurveyLink('${sv.id}')">🔗 Copy link</button>
+        <button class="btn btn-sm btn-ghost" onclick="app.clearSurveyAnswers('${sv.id}')" ${rows.length?"":"disabled"}>🗑 Delete all answers</button></div></div>`;
+
+    if(!rows.length) return h+`<div class="card"><div class="empty">No answers yet. Share the link and they'll appear here the moment someone sends one.</div></div>`;
+
+    h+=`<div class="card"><h2>Summary</h2>`;
+    cols.forEach(c=>{ h+=questionSummaryHtml(c,rows); });
+    h+=`</div>`;
+
+    const show=cols.slice(0,3);
+    h+=`<div class="card"><h2>Every answer <span class="sub">newest first</span></h2><div class="tbl-wrap"><table>
+      <thead><tr><th>Received</th>${show.map(c=>`<th>${esc(c.label)}</th>`).join("")}<th></th></tr></thead><tbody>`;
+    rows.forEach(r=>{ h+=`<tr class="click" onclick="app.openResponse('${sv.id}','${r.id}')">
+        <td>${esc(r.at?new Date(r.at).toLocaleString():"—")}</td>
+        ${show.map(c=>{ const a=r.answers&&r.answers[c.id]; return `<td><div class="cell-clip" title="${esc(answerText(a))}">${isBlankAns(a)?'<span class="muted">—</span>':esc(answerText(a))}</div></td>`; }).join("")}
+        <td style="text-align:right;"><button class="btn btn-sm btn-ghost">View</button></td></tr>`; });
+    h+=`</tbody></table></div>${cols.length>show.length?`<p class="muted" style="margin-bottom:0;">Showing the first ${show.length} question${show.length===1?"":"s"} — click any row to read the full answer.</p>`:""}</div>`;
+    return h; }
+
+  function questionSummaryHtml(c,rows){
+    const given=rows.map(r=>r.answers&&r.answers[c.id]).filter(a=>!isBlankAns(a));
+    const head=`<h3 class="sub-h" style="margin-top:0;">${esc(c.label)}${c.gone?' <span class="badge b-warn">removed</span>':""}</h3>
+      <div class="muted" style="margin:-6px 0 11px;">${esc(typeLabel(c.type))} · ${given.length} of ${rows.length} answered</div>`;
+    let body="";
+    if(!given.length) body=`<div class="empty">Nobody answered this one.</div>`;
+    else if(c.type==="single"||c.type==="multi"||c.type==="yesno"){
+      const counts={};
+      given.forEach(a=>{ (Array.isArray(a.v)?a.v:[a.v]).forEach(v=>{ const k=String(v); counts[k]=(counts[k]||0)+1; }); });
+      const entries=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+      const max=Math.max(1,...entries.map(e=>e[1]));
+      body=entries.map(e=>`<div class="hbar-row"><div class="hbar-label" title="${esc(e[0])}">${esc(e[0])}</div>
+        <div class="hbar-track">${e[1]?`<div class="hbar-fill" style="width:${Math.round(e[1]/max*100)}%"></div>`:""}</div>
+        <div class="hbar-val">${e[1]}</div></div>`).join("");
+    } else if(c.type==="rating"){
+      const nums=given.map(a=>Number(a.v)).filter(n=>!Number.isNaN(n));
+      const avg=nums.length?nums.reduce((x,y)=>x+y,0)/nums.length:0;
+      const counts=[1,2,3,4,5].map(n=>nums.filter(x=>x===n).length);
+      const max=Math.max(1,...counts);
+      body=`<div style="display:flex;align-items:baseline;gap:9px;margin-bottom:11px;">
+          <span style="font-family:var(--f-display);font-size:1.9rem;color:var(--brand-red);line-height:1;">${nums.length?avg.toFixed(1):"—"}</span>
+          <span class="muted">average out of 5</span></div>`
+        +counts.map((n,i)=>`<div class="hbar-row"><div class="hbar-label">${i+1} — ${["not at all","a little","okay","good","very much"][i]}</div>
+          <div class="hbar-track">${n?`<div class="hbar-fill" style="width:${Math.round(n/max*100)}%"></div>`:""}</div>
+          <div class="hbar-val">${n}</div></div>`).join("");
+    } else if(c.type==="number"){
+      const nums=given.map(a=>Number(a.v)).filter(n=>!Number.isNaN(n));
+      const avg=nums.length?nums.reduce((x,y)=>x+y,0)/nums.length:0;
+      body=`<div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px;">
+          <div class="kpi"><div class="kv" style="font-size:1.4rem;">${nums.length?(Math.round(avg*10)/10):"—"}</div><div class="kl">Average</div></div>
+          <div class="kpi"><div class="kv" style="font-size:1.4rem;">${nums.length?Math.min(...nums):"—"}</div><div class="kl">Lowest</div></div>
+          <div class="kpi"><div class="kv" style="font-size:1.4rem;">${nums.length?Math.max(...nums):"—"}</div><div class="kl">Highest</div></div></div>
+        <div class="ans-list">${given.map(a=>`<div class="ans-item">${esc(answerText(a))}</div>`).join("")}</div>`;
+    } else {
+      body=`<div class="ans-list">${given.map(a=>`<div class="ans-item">${esc(answerText(a))}</div>`).join("")}</div>`;
+    }
+    return `<div style="padding:14px 0;border-top:1px solid var(--border);">${head}${body}</div>`; }
+
+  // ---- Survey actions ----
+  function createSurvey(){ const inp=document.getElementById("new-survey-title");
+    const title=(inp?inp.value.trim():"")||"Untitled survey";
+    const sv={id:uid(),title,intro:"",open:true,createdAt:new Date().toISOString()};
+    state.surveys.push({...sv,questions:[]}); wSet("surveys/"+sv.id, sv);
+    activeSurveyId=sv.id; surveyMode="edit"; renderSurveys(); toast("Survey created — add your questions ✓"); }
+  function editSurvey(id){ activeSurveyId=id; surveyMode="edit"; renderSurveys(); window.scrollTo({top:0,behavior:"smooth"}); }
+  function openSurveyAnswers(id){ activeSurveyId=id; surveyMode="responses"; renderSurveys(); window.scrollTo({top:0,behavior:"smooth"}); }
+  function surveysBack(){ surveyMode="list"; activeSurveyId=null; renderSurveys(); }
+  function setSurveyField(id,field,v){ const sv=surveyById(id); if(!sv)return;
+    const val=field==="title"?(String(v).trim()||"Untitled survey"):String(v);
+    sv[field]=val; wSet("surveys/"+id+"/"+field, val); if(field==="title")renderSurveys(); }
+  function toggleSurveyOpen(id){ const sv=surveyById(id); if(!sv)return; const nowOpen=(sv.open===false);
+    sv.open=nowOpen; wSet("surveys/"+id+"/open", nowOpen); renderSurveys();
+    toast(nowOpen?"Survey reopened ✓":"Survey closed — the link no longer takes answers"); }
+  function addQuestion(sid){ const sv=surveyById(sid); if(!sv)return;
+    const li=document.getElementById("nq-label"), ti=document.getElementById("nq-type");
+    const label=li?li.value.trim():""; if(!label){ if(li)li.focus(); return; }
+    const type=ti?ti.value:"short";
+    const qs=surveyQuestions(sv), order=qs.length?Math.max(...qs.map(q=>q.order||0))+1:0;
+    const q={id:uid(),label,type,required:false,order,options:needsOptions(type)?["Option 1","Option 2"]:[]};
+    sv.questions=qs.concat([q]); wSet("surveys/"+sid+"/questions/"+q.id, q); renderSurveys();
+    const nl=document.getElementById("nq-label"); if(nl)nl.focus(); }
+  function setQuestion(sid,qid,field,v){ const sv=surveyById(sid); if(!sv)return;
+    const q=surveyQuestions(sv).find(x=>x.id===qid); if(!q)return;
+    let val=v;
+    if(field==="options") val=String(v).split("\n").map(x=>x.trim()).filter(Boolean);
+    if(field==="label"){ val=String(v).trim(); if(!val){ renderSurveys(); return; } }
+    q[field]=val;
+    wSet("surveys/"+sid+"/questions/"+qid+"/"+field, (field==="options"&&!val.length)?null:val);
+    if(field==="type"){
+      if(needsOptions(val)&&!toArray(q.options).length){ q.options=["Option 1","Option 2"]; wSet("surveys/"+sid+"/questions/"+qid+"/options", q.options); }
+      renderSurveys(); } }
+  function moveQuestion(sid,qid,dir){ const sv=surveyById(sid); if(!sv)return;
+    const qs=surveyQuestions(sv), i=qs.findIndex(q=>q.id===qid), j=i+dir;
+    if(i<0||j<0||j>=qs.length)return;
+    qs.splice(j,0,qs.splice(i,1)[0]);
+    const u={}; qs.forEach((q,k)=>{ q.order=k; u["surveys/"+sid+"/questions/"+q.id+"/order"]=k; });
+    sv.questions=qs; wMulti(u); renderSurveys(); }
+  function removeQuestion(sid,qid){ const sv=surveyById(sid); if(!sv)return;
+    if(!confirm("Remove this question? Answers already given to it stay in your results."))return;
+    sv.questions=surveyQuestions(sv).filter(q=>q.id!==qid);
+    wRemove("surveys/"+sid+"/questions/"+qid); renderSurveys(); }
+  function deleteSurvey(sid){ const sv=surveyById(sid); if(!sv)return; const n=respList(sid).length;
+    if(!confirm(`Delete "${sv.title||"this survey"}"${n?` and all ${n} answer${n===1?"":"s"}`:""}? This cannot be undone.`))return;
+    state.surveys=state.surveys.filter(x=>x.id!==sid);
+    wRemove("surveys/"+sid);
+    remove(ref(db,RESP_ROOT+"/"+sid)).catch(e=>console.error("delete answers",e));
+    surveysBack(); toast("Survey deleted"); }
+  function clearSurveyAnswers(sid){ const n=respList(sid).length; if(!n)return;
+    if(!confirm(`Delete all ${n} answer${n===1?"":"s"} for this survey? The survey and its link stay. This cannot be undone.`))return;
+    remove(ref(db,RESP_ROOT+"/"+sid)).catch(e=>console.error("delete answers",e)); toast("Answers deleted"); }
+  function copySurveyLink(sid){ const link=surveyLink(sid);
+    const done=()=>toast("Link copied — paste it into WhatsApp or email ✓");
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done).catch(()=>copyFallback(link,done));
+    else copyFallback(link,done); }
+  function copyFallback(text,done){ const t=document.createElement("textarea");
+    t.value=text; t.style.position="fixed"; t.style.opacity="0"; document.body.appendChild(t); t.select();
+    let ok=false; try{ ok=document.execCommand("copy"); }catch(e){ ok=false; }
+    document.body.removeChild(t); if(ok)done(); else prompt("Copy this link:", text); }
+  function openResponse(sid,rid){ const sv=surveyById(sid); if(!sv)return;
+    const r=(responses[sid]||{})[rid]; if(!r)return;
+    const cols=surveyColumns(sv,respList(sid));
+    let h=`<div class="card"><h2>One answer</h2>
+      <div class="muted" style="margin-top:-8px;margin-bottom:14px;">Received ${esc(r.at?new Date(r.at).toLocaleString():"—")}</div>`;
+    cols.forEach(c=>{ const a=r.answers&&r.answers[c.id];
+      h+=`<div class="resp-q"><div class="rq-label">${esc(c.label)}</div>
+        <div class="ans-item">${isBlankAns(a)?'<span class="muted">— not answered —</span>':esc(answerText(a))}</div></div>`; });
+    openModal(h+`</div>`); }
+  function exportSurveyCsv(sid){ const sv=surveyById(sid); if(!sv)return;
+    const rows=respList(sid); if(!rows.length)return;
+    const cols=surveyColumns(sv,rows);
+    const q=v=>`"${String(v==null?"":v).replace(/"/g,'""')}"`;
+    const lines=[["Received"].concat(cols.map(c=>c.label)).map(q).join(",")];
+    rows.forEach(r=>lines.push([r.at?new Date(r.at).toLocaleString():""]
+      .concat(cols.map(c=>answerText(r.answers&&r.answers[c.id]))).map(q).join(",")));
+    const slug=(sv.title||"survey").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"survey";
+    downloadCsv(lines.join("\n"), `bfa-survey-${slug}.csv`); toast("Answers exported ✓"); }
+  function printSurvey(sid){ const sv=surveyById(sid); if(!sv)return;
+    const rows=respList(sid), cols=surveyColumns(sv,rows);
+    let inner=`<table><thead><tr><th>Received</th>${cols.map(c=>`<th>${esc(c.label)}</th>`).join("")}</tr></thead><tbody>`;
+    rows.forEach(r=>{ inner+=`<tr><td>${esc(r.at?new Date(r.at).toLocaleDateString():"")}</td>`
+      +cols.map(c=>`<td>${esc(answerText(r.answers&&r.answers[c.id]))}</td>`).join("")+`</tr>`; });
+    inner+=`</tbody></table>`;
+    printReport(`${sv.title||"Survey"} — ${rows.length} answer${rows.length===1?"":"s"}`, rows.length?inner:"<p>No answers yet.</p>"); }
 
   // ---- Print ----
   function printReport(title, inner){ const area=document.getElementById("print-area"); const now=new Date().toLocaleString();
@@ -865,6 +1167,9 @@
     setHistoryTeam,openDate,exportStats,printAttendance,
     billPrev,billNext,billThis,setBillFee,toggleBillPaid,toggleBillInv,exportBilling,printBilling,
     openStartSeasonModal,confirmStartSeason,downloadBackup,
+    createSurvey,editSurvey,openSurveyAnswers,surveysBack,setSurveyField,toggleSurveyOpen,
+    addQuestion,setQuestion,moveQuestion,removeQuestion,deleteSurvey,clearSurveyAnswers,
+    copySurveyLink,openResponse,exportSurveyCsv,printSurvey,
     updateBranchName,updateBranchPin,saveAdminPin };
 </script>
 </body>
