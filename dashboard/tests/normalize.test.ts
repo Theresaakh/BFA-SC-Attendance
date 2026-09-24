@@ -24,3 +24,10 @@ describe("normalisation", () => {
     expect(nameSimilarity("Smith", "John Smith")).toBeLessThan(0.85);
   });
 });
+
+describe("name similarity strictness", () => {
+  it("does not treat a shared first name as a match", () => {
+    expect(nameSimilarity("John Smith", "John Saad")).toBeLessThan(0.6);
+    expect(nameSimilarity("Elie Nassar", "Ellie Nassar")).toBeGreaterThan(0.85);
+  });
+});

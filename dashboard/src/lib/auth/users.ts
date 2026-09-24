@@ -48,3 +48,5 @@ export async function bootstrapInitialAdmin(cfg: { email?: string; password?: st
   await createUser({ email: cfg.email, password: cfg.password, name: cfg.name ?? "Administrator", role: "admin" });
   return true;
 }
+
+export { deleteUserSessions as deleteUserSessionsFor } from "./session";

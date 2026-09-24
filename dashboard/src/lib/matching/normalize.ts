@@ -93,6 +93,7 @@ export function nameSimilarity(a: string, b: string): number {
   const [short, long] = ta.length <= tb.length ? [ta, tb] : [tb, ta];
   const used = new Set<number>();
   let total = 0;
+  let weakest = 1;
   for (const s of short) {
     let best = 0;
     let bestIdx = -1;
@@ -106,10 +107,13 @@ export function nameSimilarity(a: string, b: string): number {
     });
     if (bestIdx >= 0) used.add(bestIdx);
     total += best;
+    weakest = Math.min(weakest, best);
   }
   const coverage = total / short.length;
   const extraPenalty = 0.04 * (long.length - short.length);
   // A single shared token (e.g. just a family name) is weak evidence.
   const singleTokenPenalty = short.length === 1 ? 0.2 : 0;
-  return Math.max(0, Math.min(1, coverage - extraPenalty - singleTokenPenalty));
+  // Every part of the name must match closely: "John Smith" is not "John Saad".
+  const mismatchFactor = weakest < 0.85 ? 0.6 : 1;
+  return Math.max(0, Math.min(1, (coverage - extraPenalty - singleTokenPenalty) * mismatchFactor));
 }

@@ -20,6 +20,8 @@ const csp = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Lets the end-to-end tests run their own dev server next to a normal one.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   output: "standalone",
   serverExternalPackages: ["pg", "exceljs", "bcryptjs"],
   async headers() {
