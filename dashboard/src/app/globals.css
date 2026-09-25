@@ -1,0 +1,142 @@
+@import "tailwindcss" source(none);
+/* Only scan application source for class names (never build output or test artefacts). */
+@source "../";
+
+/* BFA brand: navy #1b2452 and red #c8202e (from the attendance app). */
+:root {
+  color-scheme: light;
+  --page: #f3f4f9;
+  --surface: #ffffff;
+  --surface-2: #f6f7fb;
+  --surface-3: #eceef8;
+  --ink: #161c3f;
+  --ink-2: #4b5170;
+  --muted: #7a809c;
+  --line: #e3e5f0;
+  --line-strong: #cfd3e4;
+  --navy: #1b2452;
+  --navy-2: #2a3670;
+  --navy-deep: #0d1330;
+  --red: #c8202e;
+  --red-soft: #fbe9ea;
+  --accent: #1b2452;
+  --good: #1f8a4c;
+  --good-soft: #e5f4ec;
+  --warn: #a86a00;
+  --warn-soft: #fdf3dc;
+  --bad: #c8202e;
+  --bad-soft: #fbe9ea;
+  --info: #2a62c9;
+  --info-soft: #e7eefb;
+  --orange: #c2551f;
+  --orange-soft: #fcebe1;
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-grid: #e1e0d9;
+  --chart-axis: #898781;
+  --focus: #2a62c9;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: #0a0f22;
+    --surface: #121834;
+    --surface-2: #171e3e;
+    --surface-3: #1f2750;
+    --ink: #eef0fa;
+    --ink-2: #c1c6e0;
+    --muted: #8e95b8;
+    --line: #262e59;
+    --line-strong: #323b6d;
+    --navy: #8092ec;
+    --navy-2: #9aa8f2;
+    --accent: #8092ec;
+    --red: #ff5663;
+    --red-soft: #3a1520;
+    --good: #3fbf7a;
+    --good-soft: #10301f;
+    --warn: #e6b23a;
+    --warn-soft: #33280d;
+    --bad: #ff5663;
+    --bad-soft: #3a1520;
+    --info: #6e9df0;
+    --info-soft: #152547;
+    --orange: #f08a55;
+    --orange-soft: #3a2014;
+    --chart-1: #3987e5;
+    --chart-2: #d95926;
+    --chart-grid: #2c2c2a;
+    --chart-axis: #898781;
+  }
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-navy: var(--navy);
+  --color-navy-2: var(--navy-2);
+  --color-navy-deep: #0d1330;
+  --color-brand-navy: #1b2452;
+  --color-brand-red: #c8202e;
+  --color-red: var(--red);
+  --color-red-soft: var(--red-soft);
+  --color-accent: var(--accent);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-orange: var(--orange);
+  --color-orange-soft: var(--orange-soft);
+  --font-sans: "Public Sans Variable", "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Oswald", "Public Sans Variable", system-ui, sans-serif;
+}
+
+html,
+body {
+  background: var(--page);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Native form controls pick up the theme. */
+input,
+select,
+textarea {
+  color: var(--ink);
+}
+
+@media print {
+  aside,
+  header,
+  .no-print {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+}
