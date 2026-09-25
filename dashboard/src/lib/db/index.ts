@@ -16,7 +16,8 @@ export function pool(): Pool {
     const e = env();
     h.pool = new Pool({
       connectionString: e.DATABASE_URL,
-      max: 10,
+      // Serverless hosts run many small instances; keep each one's share of connections low.
+      max: process.env.VERCEL ? 3 : 10,
       idleTimeoutMillis: 30_000,
       ssl: e.DATABASE_SSL === "disable" ? undefined : { rejectUnauthorized: e.DATABASE_SSL === "require" },
     });

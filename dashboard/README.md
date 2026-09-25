@@ -110,6 +110,26 @@ The server must be allowed to reach `*.odoo.com`, `*.firebasedatabase.app` and `
 
 A PostgreSQL advisory lock ensures only one sync runs at a time, whichever way it was started.
 
+## Free hosting (Vercel + Supabase)
+
+- **Database:** Supabase project `bfa-admin` (free plan, Frankfurt). Tables are created, row-level security is on, Supabase's public REST API has no access, and the app connects as its own role `bfa_app` through the session pooler.
+- **App:** Vercel Hobby (free). Import this repository at vercel.com/new, set **Root Directory** to `dashboard`, and add the environment variables below. Vercel runs `npm run vercel-build`, which applies any new database migrations and builds the app. Pushes to `main` redeploy automatically.
+- **Automatic sync:** `.github/workflows/dashboard-sync.yml` calls `/api/cron/sync` every hour (free GitHub Actions). Add the repository secrets `DASHBOARD_URL` and `CRON_SECRET`.
+
+Vercel environment variables:
+
+| Name | Value |
+|---|---|
+| `DATABASE_URL` | `postgresql://bfa_app.<project-ref>:<password>@aws-1-eu-central-1.pooler.supabase.com:5432/postgres` (session pooler; if the logs say the tenant is not found, use `aws-0-…` instead) |
+| `DATABASE_SSL` | `no-verify` |
+| `SYNC_SCHEDULER_ENABLED` | `false` |
+| `CRON_SECRET` | a long random value (same as the GitHub secret) |
+| `COOKIE_SECURE` | `true` |
+| `INITIAL_ADMIN_EMAIL` / `INITIAL_ADMIN_PASSWORD` / `INITIAL_ADMIN_NAME` | your first administrator account (created on first start) |
+| `ODOO_*`, `BFA_FIREBASE_*` | as in `.env.example` |
+
+Check `https://<your-app>/api/health`: it returns `{"status":"ok"}` when the app can reach the database.
+
 ## Security
 
 - Passwords hashed with bcrypt (cost 12); password policy; account lock after 5 failed sign-ins; per-IP rate limit.
