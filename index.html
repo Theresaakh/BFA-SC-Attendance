@@ -569,6 +569,41 @@
   }
   .admin-branch-row:last-child { border-bottom: none; }
 
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .stepper { display: inline-flex; align-items: center; gap: 8px; }
+  .stepper button {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: 1.5px solid var(--brand-navy); background: transparent; color: var(--brand-navy);
+    font-size: 1.1rem; font-weight: 700; cursor: pointer; line-height: 1;
+  }
+  .stepper button:hover { background: var(--surface-hover); }
+  .stepper button:focus-visible { outline: 2px solid var(--brand-red); outline-offset: 2px; }
+  .stepper .count { min-width: 22px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .quick-chip {
+    border: 1.5px solid var(--border); background: var(--surface-alt); color: var(--ink);
+    border-radius: 999px; padding: 6px 12px; font-size: 0.82rem; cursor: pointer; font-family: var(--font-body);
+  }
+  .quick-chip:hover { border-color: var(--brand-navy); background: var(--surface-hover); }
+  .quick-chip:focus-visible { outline: 2px solid var(--brand-red); outline-offset: 2px; }
+  .month-grid { font-size: 0.8rem; }
+  .month-grid th, .month-grid td { text-align: center; padding: 6px 4px; min-width: 26px; }
+  .month-grid th:first-child, .month-grid td:first-child { text-align: left; min-width: 130px; position: sticky; left: 0; background: var(--surface); }
+  .month-grid td.on { background: var(--badge-navy-bg); color: var(--badge-navy-fg); font-weight: 700; }
+  .month-grid td.total { font-weight: 700; }
+  .card h2.report-title { display: none; }
+  .coach-day-actions { display: flex; align-items: center; gap: 14px; }
+
+  @media print {
+    header, footer, .no-print { display: none !important; }
+    body { background: white !important; }
+    main { padding: 0 !important; max-width: none !important; }
+    .card { box-shadow: none !important; border: none !important; }
+    .card h2.report-title { display: block; font-family: var(--font-heading); font-size: 1.2rem; margin: 0 0 10px; }
+    .table-scroll { overflow: visible; }
+    .month-grid { font-size: 0.62rem; }
+    .month-grid th, .month-grid td { min-width: 0; padding: 3px 2px; }
+  }
+
   ::selection { background: var(--brand-red); color: white; }
 </style>
 </head>
@@ -681,6 +716,7 @@
     <button data-view="checkin" class="active">✅ Daily Check-In</button>
     <button data-view="players">🧑‍🤝‍🧑 Players</button>
     <button data-view="camp">🏕️ Summer Camp</button>
+    <button data-view="coaches">🧢 Coaches</button>
     <button data-view="admin" id="nav-admin">🔑 Admin</button>
     <button data-view="history">📅 History</button>
     <button data-view="stats">📊 Stats</button>
@@ -864,6 +900,80 @@
     </div>
   </section>
 
+  <!-- COACHES VIEW -->
+  <section id="view-coaches" class="view">
+    <div class="card no-print">
+      <h2>Daily Coach Log</h2>
+      <div class="row">
+        <div>
+          <label for="coach-date">Date</label>
+          <input type="date" id="coach-date">
+        </div>
+        <div>
+          <label for="coach-name">Coach name</label>
+          <input type="text" id="coach-name" list="coach-names" placeholder="Type a name, press Enter" autocomplete="off">
+          <datalist id="coach-names"></datalist>
+        </div>
+        <div id="coach-branch-wrap">
+          <label for="coach-branch">Branch (for new coaches)</label>
+          <select id="coach-branch"></select>
+        </div>
+        <div style="flex:0 0 auto; align-self:flex-end;">
+          <button class="btn btn-primary" id="add-coach-log-btn">+ Add to Day</button>
+        </div>
+      </div>
+      <div id="coach-quick-wrap" style="margin-top:14px;">
+        <label>Tap to add a regular coach</label>
+        <div id="coach-quick" class="pill-list"></div>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <div class="toolbar">
+        <h2 style="margin:0;">Coaches on <span id="coach-day-label"></span> <span id="coach-day-count" class="badge badge-red"></span></h2>
+      </div>
+      <div id="coach-day-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="toolbar no-print">
+        <h2 style="margin:0;">Monthly Report</h2>
+        <div class="row" style="flex:0 1 auto; gap:8px;">
+          <input type="month" id="coach-report-month" style="flex:1 1 150px;">
+          <select id="coach-report-branch" style="flex:1 1 150px;"><option value="">All branches</option></select>
+          <button class="btn btn-outline btn-sm" id="export-coach-csv-btn" style="flex:0 0 auto;">⬇ Export CSV</button>
+          <button class="btn btn-outline btn-sm" id="print-coach-report-btn" style="flex:0 0 auto;">🖨 Print</button>
+        </div>
+      </div>
+      <h2 class="report-title" id="coach-report-title"></h2>
+      <div class="stats-grid" id="coach-report-stats" style="margin-bottom:16px;"></div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Coach</th><th>Branch</th><th>Days attended</th><th>Sessions attended</th></tr></thead>
+          <tbody id="coach-report-table"></tbody>
+        </table>
+      </div>
+      <div id="coach-report-empty" class="empty" style="display:none;">No coach sessions logged this month.</div>
+      <h3 id="coach-grid-heading" style="margin:22px 0 8px; font-family:var(--font-heading);">Day by day (sessions)</h3>
+      <div class="table-scroll">
+        <table class="month-grid" id="coach-report-grid"></table>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <div class="toolbar">
+        <h2 style="margin:0;">Coaches <span id="coach-count" class="badge badge-red"></span></h2>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Name</th><th>Branch</th><th>Total sessions (all time)</th><th></th></tr></thead>
+          <tbody id="coaches-table"></tbody>
+        </table>
+      </div>
+      <div id="coaches-empty" class="empty" style="display:none;">No coaches yet. Add a name in the daily log above.</div>
+    </div>
+  </section>
+
   <!-- ADMIN VIEW (admin role only) -->
   <section id="view-admin" class="view">
     <div class="card">
@@ -971,9 +1081,10 @@
   const SESSION_KEY = "bfaSession_v1";
 
   function defaultState() {
-    return { players: [], branches: [], attendance: {}, camp: { weeks: [], campers: [], attendance: {} }, auth: { setupDone: false, adminPin: "", branchPins: {} } };
+    return { players: [], branches: [], attendance: {}, camp: { weeks: [], campers: [], attendance: {} }, coaches: { list: [], log: {} }, auth: { setupDone: false, adminPin: "", branchPins: {} } };
     // attendance: { "YYYY-MM-DD": { playerId: "present"|"absent" } }
     // camp.attendance: { "YYYY-MM-DD": { camperId: "present"|"absent" } }
+    // coaches.log: { "YYYY-MM-DD": { coachId: sessionsCount } }
   }
 
   function toArray(x) {
@@ -991,6 +1102,9 @@
     s.camp.weeks = toArray(s.camp.weeks);
     s.camp.campers = toArray(s.camp.campers);
     if (!s.camp.attendance) s.camp.attendance = {};
+    if (!s.coaches) s.coaches = { list: [], log: {} };
+    s.coaches.list = toArray(s.coaches.list);
+    if (!s.coaches.log) s.coaches.log = {};
     s.players.forEach(p => {
       if (typeof p.paid !== "boolean") p.paid = false;
       if (typeof p.invoiced !== "boolean") p.invoiced = false;
@@ -2082,6 +2196,246 @@
     }).join("");
   }
 
+  // ---------- Coaches: daily log & monthly report ----------
+  const coachDateInput = document.getElementById("coach-date");
+  coachDateInput.value = todayStr();
+  coachDateInput.addEventListener("change", renderCoachDay);
+  const coachMonthInput = document.getElementById("coach-report-month");
+  coachMonthInput.value = todayStr().slice(0, 7);
+  coachMonthInput.addEventListener("change", renderCoachReport);
+  document.getElementById("coach-report-branch").addEventListener("change", renderCoachReport);
+
+  document.getElementById("add-coach-log-btn").addEventListener("click", addCoachByName);
+  document.getElementById("coach-name").addEventListener("keydown", e => { if (e.key === "Enter") addCoachByName(); });
+
+  function scopedCoaches() {
+    const b = scopeBranchId();
+    return b ? state.coaches.list.filter(c => c.branchId === b) : state.coaches.list;
+  }
+
+  function coachDay(date) {
+    return state.coaches.log[date] || {};
+  }
+
+  function addCoachByName() {
+    const input = document.getElementById("coach-name");
+    const name = input.value.trim().replace(/\s+/g, " ");
+    if (!name) return;
+    let coach = scopedCoaches().find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (!coach) {
+      const branchId = isAdmin() ? (document.getElementById("coach-branch").value || (state.branches[0] && state.branches[0].id) || "") : scopeBranchId();
+      coach = { id: uid(), name, branchId };
+      state.coaches.list.push(coach);
+    }
+    input.value = "";
+    logCoach(coach.id);
+    input.focus();
+  }
+
+  function logCoach(coachId) {
+    const date = coachDateInput.value || todayStr();
+    if (!state.coaches.log[date]) state.coaches.log[date] = {};
+    if (!state.coaches.log[date][coachId]) state.coaches.log[date][coachId] = 1;
+    save();
+    renderCoaches();
+  }
+
+  function changeCoachSessions(coachId, delta) {
+    const date = coachDateInput.value || todayStr();
+    const day = state.coaches.log[date];
+    if (!day || !day[coachId]) return;
+    day[coachId] += delta;
+    if (day[coachId] <= 0) delete day[coachId];
+    if (!Object.keys(day).length) delete state.coaches.log[date];
+    save();
+    renderCoaches();
+  }
+
+  function unlogCoach(coachId) {
+    const date = coachDateInput.value || todayStr();
+    const day = state.coaches.log[date];
+    if (!day) return;
+    delete day[coachId];
+    if (!Object.keys(day).length) delete state.coaches.log[date];
+    save();
+    renderCoaches();
+  }
+
+  function removeCoach(id) {
+    if (!confirm("Remove this coach and all of their logged sessions?")) return;
+    state.coaches.list = state.coaches.list.filter(c => c.id !== id);
+    Object.keys(state.coaches.log).forEach(d => {
+      delete state.coaches.log[d][id];
+      if (!Object.keys(state.coaches.log[d]).length) delete state.coaches.log[d];
+    });
+    save();
+    renderCoaches();
+  }
+
+  function renderCoachInputs() {
+    const sel = document.getElementById("coach-branch");
+    const prev = sel.value;
+    sel.innerHTML = state.branches.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join("");
+    if (prev) sel.value = prev;
+    document.getElementById("coach-branch-wrap").style.display = isAdmin() ? "" : "none";
+
+    const repSel = document.getElementById("coach-report-branch");
+    const prevRep = repSel.value;
+    repSel.innerHTML = '<option value="">All branches</option>' +
+      state.branches.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join("");
+    repSel.value = prevRep;
+    repSel.style.display = isAdmin() ? "" : "none";
+
+    document.getElementById("coach-names").innerHTML = scopedCoaches()
+      .map(c => `<option value="${escapeHtml(c.name)}"></option>`).join("");
+  }
+
+  function renderCoachDay() {
+    const date = coachDateInput.value || todayStr();
+    const day = coachDay(date);
+    const coaches = scopedCoaches();
+    const logged = coaches.filter(c => day[c.id]).sort((a, b) => a.name.localeCompare(b.name));
+    const notLogged = coaches.filter(c => !day[c.id]).sort((a, b) => a.name.localeCompare(b.name));
+
+    document.getElementById("coach-day-label").textContent = fmtDate(date);
+    document.getElementById("coach-day-count").textContent = logged.length;
+
+    document.getElementById("coach-quick-wrap").style.display = notLogged.length ? "" : "none";
+    document.getElementById("coach-quick").innerHTML = notLogged.map(c =>
+      `<button class="quick-chip" onclick="bfaApp.logCoach('${c.id}')">+ ${escapeHtml(c.name)}</button>`
+    ).join("");
+
+    const list = document.getElementById("coach-day-list");
+    if (!logged.length) {
+      list.innerHTML = `<div class="empty">No coaches logged for this day yet. Type a name above to add one.</div>`;
+      return;
+    }
+    list.innerHTML = logged.map(c => `<div class="attend-row">
+        <div>
+          <div class="attend-name">${escapeHtml(c.name)}</div>
+          <div class="attend-branch">${escapeHtml(branchName(c.branchId))}</div>
+        </div>
+        <div class="coach-day-actions">
+          <div class="stepper" title="Sessions this day">
+            <button aria-label="One fewer session" onclick="bfaApp.changeCoachSessions('${c.id}',-1)">−</button>
+            <span class="count">${day[c.id]}</span>
+            <button aria-label="One more session" onclick="bfaApp.changeCoachSessions('${c.id}',1)">+</button>
+            <span class="attend-branch">session${day[c.id] === 1 ? "" : "s"}</span>
+          </div>
+          <button class="icon-btn" onclick="bfaApp.unlogCoach('${c.id}')">✕</button>
+        </div>
+      </div>`).join("");
+  }
+
+  function coachReportData() {
+    const month = coachMonthInput.value || todayStr().slice(0, 7);
+    const [y, m] = month.split("-").map(Number);
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const branchFilter = isAdmin() ? document.getElementById("coach-report-branch").value : "";
+    const coaches = scopedCoaches().filter(c => !branchFilter || c.branchId === branchFilter);
+    const rows = coaches.map(c => {
+      const perDay = [];
+      let days = 0, sessions = 0;
+      for (let d = 1; d <= daysInMonth; d++) {
+        const iso = `${month}-${String(d).padStart(2, "0")}`;
+        const n = (state.coaches.log[iso] && state.coaches.log[iso][c.id]) || 0;
+        perDay.push(n);
+        if (n) { days++; sessions += n; }
+      }
+      return { coach: c, perDay, days, sessions };
+    }).filter(r => r.sessions > 0)
+      .sort((a, b) => b.sessions - a.sessions || a.coach.name.localeCompare(b.coach.name));
+    const label = new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    const branchLabel = branchFilter ? branchName(branchFilter) : (isAdmin() ? "All branches" : branchName(scopeBranchId()));
+    return { month, label, branchLabel, daysInMonth, rows };
+  }
+
+  function renderCoachReport() {
+    const { label, branchLabel, daysInMonth, rows } = coachReportData();
+    const totalSessions = rows.reduce((a, r) => a + r.sessions, 0);
+    const activeDays = Array.from({ length: daysInMonth }, (_, i) => rows.some(r => r.perDay[i])).filter(Boolean).length;
+
+    document.getElementById("coach-report-title").textContent = `BFA Coach Attendance — ${label} — ${branchLabel}`;
+    document.getElementById("coach-report-stats").innerHTML = `
+      <div class="stat"><div class="num" style="font-size:1.1rem;">${escapeHtml(label)}</div><div class="lbl">Month</div></div>
+      <div class="stat"><div class="num">${rows.length}</div><div class="lbl">Coaches active</div></div>
+      <div class="stat stat-red"><div class="num">${totalSessions}</div><div class="lbl">Total sessions</div></div>
+      <div class="stat"><div class="num">${activeDays}</div><div class="lbl">Days with sessions</div></div>`;
+
+    const tbody = document.getElementById("coach-report-table");
+    const empty = document.getElementById("coach-report-empty");
+    const grid = document.getElementById("coach-report-grid");
+    const gridHeading = document.getElementById("coach-grid-heading");
+    if (!rows.length) {
+      tbody.innerHTML = "";
+      grid.innerHTML = "";
+      empty.style.display = "block";
+      gridHeading.style.display = "none";
+      return;
+    }
+    empty.style.display = "none";
+    gridHeading.style.display = "";
+    tbody.innerHTML = rows.map(r => `<tr>
+        <td>${escapeHtml(r.coach.name)}</td>
+        <td><span class="badge badge-navy">${escapeHtml(branchName(r.coach.branchId))}</span></td>
+        <td>${r.days}</td>
+        <td><strong>${r.sessions}</strong></td>
+      </tr>`).join("") +
+      `<tr><td><strong>Total</strong></td><td></td><td></td><td><strong>${totalSessions}</strong></td></tr>`;
+
+    const dayNums = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    grid.innerHTML = `<thead><tr><th>Coach</th>${dayNums.map(d => `<th>${d}</th>`).join("")}<th>Total</th></tr></thead>
+      <tbody>${rows.map(r => `<tr><td>${escapeHtml(r.coach.name)}</td>${
+        r.perDay.map(n => n ? `<td class="on">${n}</td>` : `<td></td>`).join("")
+      }<td class="total">${r.sessions}</td></tr>`).join("")}</tbody>`;
+  }
+
+  function renderCoachesTable() {
+    const coaches = scopedCoaches().slice().sort((a, b) => a.name.localeCompare(b.name));
+    document.getElementById("coach-count").textContent = coaches.length;
+    const tbody = document.getElementById("coaches-table");
+    const empty = document.getElementById("coaches-empty");
+    if (!coaches.length) {
+      tbody.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    const totals = {};
+    Object.values(state.coaches.log).forEach(day => {
+      Object.entries(day).forEach(([id, n]) => { totals[id] = (totals[id] || 0) + n; });
+    });
+    tbody.innerHTML = coaches.map(c => `<tr>
+        <td>${escapeHtml(c.name)}</td>
+        <td><span class="badge badge-navy">${escapeHtml(branchName(c.branchId))}</span></td>
+        <td>${totals[c.id] || 0}</td>
+        <td><button class="icon-btn" onclick="bfaApp.removeCoach('${c.id}')">✕ remove</button></td>
+      </tr>`).join("");
+  }
+
+  function renderCoaches() {
+    renderCoachInputs();
+    renderCoachDay();
+    renderCoachReport();
+    renderCoachesTable();
+  }
+
+  document.getElementById("export-coach-csv-btn").addEventListener("click", () => {
+    const { month, branchLabel, daysInMonth, rows } = coachReportData();
+    if (!rows.length) {
+      alert("No coach sessions logged for this month.");
+      return;
+    }
+    const dayNums = Array.from({ length: daysInMonth }, (_, i) => String(i + 1));
+    const out = [["Coach", "Branch", "Days attended", "Sessions attended", ...dayNums]];
+    rows.forEach(r => out.push([r.coach.name, branchName(r.coach.branchId), r.days, r.sessions, ...r.perDay.map(n => n || "")]));
+    out.push(["Total", "", "", rows.reduce((a, r) => a + r.sessions, 0)]);
+    const suffix = branchLabel === "All branches" ? "" : "_" + branchLabel.replace(/[^\w-]+/g, "_");
+    downloadCsv(out, `bfa_coaches_${month}${suffix}.csv`);
+  });
+
+  document.getElementById("print-coach-report-btn").addEventListener("click", () => window.print());
+
   function renderAll() {
     renderPlayerBranchSelect();
     renderCheckinBranchFilter();
@@ -2100,13 +2454,15 @@
     renderCampHistoryTable();
     renderCampStats();
     renderDashboard();
+    renderCoaches();
   }
 
   window.bfaApp = {
     removePlayer, setAttendance, goToDate, togglePaid, toggleInvoiced, setAmount,
     selectRole, updateBranchName, updateBranchPin,
     removeCampWeek, removeCamper, setCampAttendance, goToCampDate,
-    toggleCamperPaid, toggleCamperInvoiced, setCamperAmount
+    toggleCamperPaid, toggleCamperInvoiced, setCamperAmount,
+    logCoach, changeCoachSessions, unlogCoach, removeCoach
   };
 </script>
 
