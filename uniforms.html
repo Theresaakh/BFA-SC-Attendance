@@ -8,240 +8,146 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  /* Layout: slim top bar, then a two-pane counter (roster | kid's order) that stacks on phones. */
+  /* Layout: one narrow centered column; every screen asks one thing with big buttons. */
   :root{
     --paper:#f3f4f7; --card:#ffffff; --sunk:#eceef3; --ink:#11131b; --muted:#5f6577; --line:#dfe2e9;
-    --accent:#d0202f; --accent-ink:#ffffff; --navy:#1b2452; --ok:#14804a; --ok-bg:#e3f4ea; --warn:#9a6400; --warn-bg:#fbf0d9;
-    --kit-red:#d0202f; --kit-black:#15161a; --kit-white:#ffffff; --kit-white-ink:#1b2452;
+    --accent:#d0202f; --ok:#14804a; --ok-bg:#e3f4ea; --warn:#9a6400; --warn-bg:#fbf0d9;
+    --kit-red:#d0202f; --kit-black:#15161a; --kit-white:#ffffff;
     --f-display:'Barlow Condensed','Arial Narrow',Impact,sans-serif;
     --f-body:'Barlow',-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-    --r:14px; --shadow:0 1px 2px rgba(17,19,27,.06),0 6px 20px rgba(17,19,27,.06);
+    --shadow:0 1px 2px rgba(17,19,27,.06),0 6px 20px rgba(17,19,27,.06);
   }
   @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
     --paper:#0e1015; --card:#171a22; --sunk:#1f232d; --ink:#eef0f5; --muted:#9aa0b2; --line:#2a2f3b;
-    --accent:#ff4655; --navy:#9fb0ff; --ok:#45c983; --ok-bg:#15301f; --warn:#e8b54a; --warn-bg:#33270e;
-    --kit-white-ink:#1b2452; --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark; } }
+    --accent:#ff4655; --ok:#45c983; --ok-bg:#15301f; --warn:#e8b54a; --warn-bg:#33270e;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark; } }
   :root[data-theme="dark"]{
     --paper:#0e1015; --card:#171a22; --sunk:#1f232d; --ink:#eef0f5; --muted:#9aa0b2; --line:#2a2f3b;
-    --accent:#ff4655; --navy:#9fb0ff; --ok:#45c983; --ok-bg:#15301f; --warn:#e8b54a; --warn-bg:#33270e;
-    --kit-white-ink:#1b2452; --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark; }
+    --accent:#ff4655; --ok:#45c983; --ok-bg:#15301f; --warn:#e8b54a; --warn-bg:#33270e;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark; }
 
   *{box-sizing:border-box;}
   html,body{margin:0;}
-  body{font-family:var(--f-body);background:var(--paper);color:var(--ink);font-size:15px;-webkit-font-smoothing:antialiased;}
-  button,input,select{font:inherit;color:inherit;}
+  body{font-family:var(--f-body);background:var(--paper);color:var(--ink);font-size:16px;-webkit-font-smoothing:antialiased;}
+  button,input{font:inherit;color:inherit;}
   button{cursor:pointer;}
-  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:2px;}
+  .hidden{display:none!important;}
   .tnum{font-variant-numeric:tabular-nums;}
   .muted{color:var(--muted);}
-  .hidden{display:none!important;}
 
-  /* ---------- buttons & inputs ---------- */
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 14px;font-weight:600;font-size:.92rem;transition:background .12s,border-color .12s;}
-  .btn:hover{background:var(--sunk);}
-  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
-  .btn.primary:hover{filter:brightness(1.07);}
-  .btn.big{padding:14px 20px;font-size:1rem;border-radius:12px;}
-  .btn.ghost{background:transparent;border-color:transparent;}
-  .btn.danger{color:var(--accent);}
-  .btn[disabled]{opacity:.45;cursor:not-allowed;filter:none;}
-  .icon-btn{width:38px;height:38px;padding:0;border-radius:10px;}
-  label.lbl{display:block;font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-  .input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:1rem;}
-  .input:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent;}
+  .wrap{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;
+    padding-block:16px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));}
+  .top{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+  .top img{width:40px;height:40px;object-fit:contain;}
+  .top .t b{display:block;font-family:var(--f-display);font-weight:800;font-size:1.3rem;text-transform:uppercase;line-height:1;}
+  .top .t span{font-size:.8rem;color:var(--muted);font-weight:600;}
+  .top .sp{flex:1;}
+  .small-btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;font-size:.85rem;font-weight:600;}
 
-  /* ---------- gates ---------- */
-  .gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px max(16px,env(safe-area-inset-left,0px));}
-  .gate-card{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:30px 26px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px;}
-  .gate-card .logo{width:58px;height:58px;object-fit:contain;}
-  .gate-card h1{font-family:var(--f-display);font-weight:800;font-size:2rem;line-height:1;margin:0;text-transform:uppercase;letter-spacing:.01em;}
-  .gate-card p{margin:0;color:var(--muted);}
-  .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .role-grid .btn{padding:13px 10px;}
-  .role-grid .btn.wide{grid-column:1/-1;background:var(--ink);color:var(--paper);border-color:var(--ink);}
-  .pin{text-align:center;font-family:var(--f-display);font-size:1.8rem;letter-spacing:.5em;}
-  .gate-err{color:var(--accent);min-height:1.2em;font-size:.9rem;}
+  .step{font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px;}
+  h1{font-family:var(--f-display);font-weight:800;font-size:2.4rem;line-height:1;text-transform:uppercase;margin:0 0 20px;text-wrap:balance;}
+  .stack{display:flex;flex-direction:column;gap:12px;}
 
-  /* ---------- top bar ---------- */
-  .topbar{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid var(--line);}
-  .topbar-in{max-width:1240px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));flex-wrap:wrap;}
-  .brand{display:flex;align-items:center;gap:10px;margin-right:6px;}
-  .brand img{width:36px;height:36px;object-fit:contain;}
-  .brand b{font-family:var(--f-display);font-weight:800;font-size:1.35rem;text-transform:uppercase;letter-spacing:.02em;line-height:1;}
-  .brand span{display:block;font-size:.72rem;color:var(--muted);font-weight:600;}
-  .seg{display:flex;background:var(--sunk);border-radius:12px;padding:4px;gap:4px;}
-  .seg button{border:0;background:transparent;padding:8px 16px;border-radius:9px;font-weight:700;font-size:.92rem;color:var(--muted);}
-  .seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow);}
-  .spacer{flex:1;}
-  .who{font-size:.85rem;font-weight:600;color:var(--muted);}
+  .big{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:68px;padding:14px 18px;border-radius:16px;
+    border:2px solid var(--line);background:var(--card);font-family:var(--f-display);font-weight:800;font-size:1.6rem;text-transform:uppercase;letter-spacing:.02em;}
+  .big:hover{border-color:var(--ink);}
+  .big:active{transform:scale(.985);}
+  .big.main{background:var(--accent);border-color:var(--accent);color:#fff;min-height:96px;font-size:2rem;}
+  .big.dark{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+  .big[disabled]{opacity:.4;cursor:not-allowed;}
+  .big .sub{display:block;font-family:var(--f-body);font-size:.9rem;font-weight:600;text-transform:none;letter-spacing:0;opacity:.85;}
+  .big.col{flex-direction:column;gap:2px;}
+  .k-red{background:var(--kit-red);border-color:var(--kit-red);color:#fff;}
+  .k-black{background:var(--kit-black);border-color:var(--kit-black);color:#fff;}
+  .k-white{background:var(--kit-white);border-color:#c9ccd5;color:#11131b;}
+  .big.k-red:hover,.big.k-black:hover{border-color:var(--ink);box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--ink);}
+  .sizes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
+  .sizes .big{min-height:72px;padding:8px 4px;font-size:1.7rem;}
+  .label{font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:6px 0 2px;}
 
-  main{max-width:1240px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px));}
-  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);}
-  .note{padding:10px 14px;border-radius:10px;background:var(--warn-bg);color:var(--warn);font-weight:600;font-size:.9rem;}
+  .back{align-self:flex-start;margin-top:22px;border:0;background:transparent;font-weight:700;font-size:1rem;color:var(--muted);padding:10px 4px;}
+  .back:hover{color:var(--ink);}
 
-  /* ---------- sell ---------- */
-  .counter{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:18px;align-items:start;}
-  @media(max-width:860px){.counter{grid-template-columns:minmax(0,1fr);}}
-  .roster{padding:14px;display:flex;flex-direction:column;gap:10px;position:sticky;top:74px;max-height:calc(100vh - 94px);}
-  @media(max-width:860px){.roster{position:static;max-height:none;}}
-  .filters{display:flex;gap:8px;}
-  .filters select{flex:1;min-width:0;padding:8px 10px;font-size:.9rem;}
-  .plist{overflow-y:auto;display:flex;flex-direction:column;gap:2px;margin:0 -6px;padding:0 6px;}
-  @media(max-width:860px){.plist{max-height:300px;}}
-  .prow{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;border:0;background:transparent;text-align:left;width:100%;}
-  .prow:hover{background:var(--sunk);}
-  .prow.on{background:var(--ink);color:var(--paper);}
-  .prow.on .pm{color:inherit;opacity:.7;}
-  .prow .pn{font-weight:600;}
-  .prow .pm{font-size:.8rem;color:var(--muted);}
-  .prow .pinfo{flex:1;min-width:0;}
-  .prow .got{font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--ok-bg);color:var(--ok);}
-  .count{font-size:.8rem;color:var(--muted);padding:2px 4px;}
+  .search{width:100%;padding:16px 16px;border:2px solid var(--line);border-radius:14px;background:var(--card);font-size:1.15rem;}
+  .search:focus{outline:none;border-color:var(--ink);}
+  .players{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+  .prow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 16px;border-radius:14px;border:2px solid var(--line);background:var(--card);}
+  .prow:hover{border-color:var(--ink);}
+  .prow .n{font-weight:700;font-size:1.1rem;}
+  .prow .m{font-size:.85rem;color:var(--muted);}
+  .prow .i{flex:1;min-width:0;}
+  .tag{font-size:.75rem;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--ok-bg);color:var(--ok);white-space:nowrap;}
 
-  .builder{padding:22px;display:flex;flex-direction:column;gap:22px;min-width:0;}
-  .empty-state{padding:60px 24px;text-align:center;color:var(--muted);}
-  .empty-state b{display:block;font-family:var(--f-display);font-size:1.6rem;text-transform:uppercase;color:var(--ink);margin-bottom:6px;}
-  .kid{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;}
-  .kid h2{font-family:var(--f-display);font-weight:800;font-size:2.1rem;line-height:.95;margin:0;text-transform:uppercase;}
-  .kid .meta{color:var(--muted);font-weight:600;margin-top:4px;}
-  .step{display:flex;flex-direction:column;gap:10px;}
-  .step-h{display:flex;align-items:baseline;gap:10px;font-family:var(--f-display);font-weight:700;font-size:1.05rem;text-transform:uppercase;letter-spacing:.03em;}
-  .step-h i{font-style:normal;color:var(--accent);}
-  .step-h small{font-family:var(--f-body);font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);font-size:.85rem;}
-  .print-row{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:14px;align-items:end;}
-  @media(max-width:560px){.print-row{grid-template-columns:96px minmax(0,1fr);} .print-row .shirts{grid-column:1/-1;justify-self:center;}}
-  .num-in{font-family:var(--f-display);font-size:1.8rem;font-weight:800;text-align:center;padding:6px;}
-  .nick-in{font-family:var(--f-display);font-size:1.5rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:9px 12px;}
-  .shirts{display:flex;gap:6px;}
-  .shirt{width:66px;height:72px;position:relative;display:flex;flex-direction:column;align-items:center;padding-top:15px;
-    clip-path:polygon(28% 0,72% 0,100% 17%,90% 37%,81% 32%,81% 100%,19% 100%,19% 32%,10% 37%,0 17%);}
-  .shirt .sn{font-family:var(--f-display);font-weight:700;font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;max-width:40px;overflow:hidden;white-space:nowrap;}
-  .shirt .sd{font-family:var(--f-display);font-weight:800;font-size:1.7rem;line-height:1;}
-  .k-red{background:var(--kit-red);color:#fff;} .k-black{background:var(--kit-black);color:#fff;} .k-white{background:var(--kit-white);color:var(--kit-white-ink);}
-  .shirt.k-white{background:#e9ebf0;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field input{width:100%;padding:14px 16px;border:2px solid var(--line);border-radius:14px;background:var(--card);font-family:var(--f-display);font-weight:800;font-size:2rem;text-transform:uppercase;letter-spacing:.04em;}
+  .field input:focus{outline:none;border-color:var(--ink);}
+  .field input#f-num{text-align:center;}
+  .err{color:var(--accent);font-weight:700;min-height:1.3em;}
+  .warn{color:var(--warn);background:var(--warn-bg);border-radius:12px;padding:10px 14px;font-weight:600;}
 
-  .colors{display:flex;gap:8px;flex-wrap:wrap;}
-  .cbtn{display:flex;align-items:center;gap:9px;padding:9px 16px 9px 10px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-weight:700;}
-  .cbtn .sw{width:22px;height:22px;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(128,128,128,.45);}
-  .cbtn.on{border-color:var(--ink);}
-  .sizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;}
-  .sbtn{position:relative;padding:14px 4px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-family:var(--f-display);font-weight:700;font-size:1.25rem;}
-  .sbtn:hover{background:var(--sunk);}
-  .sbtn:active{transform:scale(.97);}
-  .sbtn .q{position:absolute;top:-7px;right:-7px;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:var(--accent);color:#fff;font-family:var(--f-body);font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;}
-  .sizes-gap{grid-column:1/-1;font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-top:2px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;}
+  .who{display:flex;align-items:center;gap:12px;}
+  .who .nm{font-family:var(--f-display);font-weight:800;font-size:1.5rem;text-transform:uppercase;line-height:1;}
+  .who .bp{font-family:var(--f-display);font-weight:800;font-size:1.5rem;margin-left:auto;white-space:nowrap;}
+  .line{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line);}
+  .line .sw{width:26px;height:26px;border-radius:8px;border:1px solid #c9ccd5;flex-shrink:0;}
+  .line .w{flex:1;font-weight:700;font-size:1.1rem;}
+  .qty{display:flex;align-items:center;gap:4px;}
+  .qty button{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--sunk);font-size:1.4rem;font-weight:700;}
+  .qty span{min-width:30px;text-align:center;font-weight:800;font-size:1.2rem;}
+  .total{display:flex;align-items:baseline;justify-content:space-between;padding-top:12px;border-top:2px solid var(--ink);margin-top:4px;}
+  .total b{font-family:var(--f-display);font-weight:800;font-size:2.2rem;}
+  .paid-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .paid-row .big{min-height:58px;font-size:1.25rem;}
+  .paid-row .on-paid{background:var(--ok);border-color:var(--ok);color:#fff;}
+  .paid-row .on-unpaid{background:var(--ink);border-color:var(--ink);color:var(--paper);}
 
-  .cart{border-top:1px solid var(--line);padding-top:18px;display:flex;flex-direction:column;gap:8px;}
-  .line{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:var(--sunk);}
-  .line .sw{width:16px;height:16px;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(128,128,128,.45);flex-shrink:0;}
-  .line .what{flex:1;font-weight:600;min-width:0;}
-  .stepper{display:flex;align-items:center;gap:2px;background:var(--card);border:1px solid var(--line);border-radius:9px;}
-  .stepper button{border:0;background:transparent;width:32px;height:30px;font-size:1.1rem;font-weight:700;}
-  .stepper span{min-width:22px;text-align:center;font-weight:700;}
-  .totals{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:6px;}
-  .totals .sum{font-family:var(--f-display);font-weight:800;font-size:1.9rem;line-height:1;}
-  .totals .sum small{font-family:var(--f-body);font-size:.85rem;font-weight:600;color:var(--muted);margin-left:6px;}
-  .paid{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-weight:700;font-size:.9rem;}
-  .paid .dot{width:10px;height:10px;border-radius:50%;background:var(--line);}
-  .paid.on{background:var(--ok-bg);color:var(--ok);border-color:transparent;}
-  .paid.on .dot{background:var(--ok);}
-  .err{color:var(--accent);font-weight:600;min-height:1.2em;font-size:.9rem;}
-  .warn{font-size:.88rem;color:var(--warn);background:var(--warn-bg);border-radius:9px;padding:7px 11px;}
+  .done{text-align:center;padding:30px 0 10px;}
+  .done .tick{width:84px;height:84px;border-radius:50%;background:var(--ok);color:#fff;font-size:2.8rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
 
-  .history{display:flex;flex-direction:column;gap:6px;}
-  .hrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.9rem;padding:8px 10px;border:1px dashed var(--line);border-radius:10px;}
-  .hrow .what{flex:1;min-width:0;}
+  .figs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px;}
+  .fig{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;}
+  .fig b{display:block;font-family:var(--f-display);font-weight:800;font-size:1.9rem;line-height:1;}
+  .fig span{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  .sale{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-top:1px solid var(--line);}
+  .sale:first-child{border-top:0;}
+  .sale .i{flex:1;min-width:0;}
+  .sale .n{font-weight:700;}
+  .sale .d{font-size:.88rem;color:var(--muted);}
+  .pill{border:0;border-radius:99px;padding:5px 11px;font-size:.8rem;font-weight:700;white-space:nowrap;}
+  .pill.y{background:var(--ok-bg);color:var(--ok);} .pill.n{background:var(--warn-bg);color:var(--warn);}
+  .x{border:0;background:transparent;color:var(--muted);font-size:1.1rem;padding:4px 6px;}
+  .closed{background:var(--ok-bg);color:var(--ok);border-radius:14px;padding:14px 16px;font-weight:700;text-align:center;}
+  .date{border:2px solid var(--line);border-radius:12px;background:var(--card);padding:10px 12px;font-weight:600;}
 
-  .chips{display:inline-flex;flex-wrap:wrap;gap:4px;}
-  .chip{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;background:var(--sunk);font-size:.8rem;font-weight:600;white-space:nowrap;}
-  .chip .sw{width:10px;height:10px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(128,128,128,.5);}
+  .gate-msg{margin:auto 0;display:flex;flex-direction:column;gap:14px;}
+  .pin{width:100%;text-align:center;padding:16px;border:2px solid var(--line);border-radius:14px;background:var(--card);font-family:var(--f-display);font-size:2.2rem;letter-spacing:.5em;}
+  .pin:focus{outline:none;border-color:var(--ink);}
+  .roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .roles .big{font-size:1.15rem;min-height:60px;}
+  .roles .wide{grid-column:1/-1;}
 
-  /* ---------- end of day ---------- */
-  .eod{display:flex;flex-direction:column;gap:18px;}
-  .eod-head{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;}
-  .eod-head h2{font-family:var(--f-display);font-weight:800;font-size:2rem;text-transform:uppercase;margin:0;line-height:1;flex:1;min-width:200px;}
-  .eod-head .input{width:auto;padding:8px 10px;font-size:.92rem;}
-  .closebar{padding:20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
-  .closebar .figs{display:flex;gap:28px;flex-wrap:wrap;flex:1;}
-  .fig b{display:block;font-family:var(--f-display);font-weight:800;font-size:2.2rem;line-height:1;}
-  .fig span{font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
-  .closebar .act{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
-  @media(max-width:560px){.closebar .act{align-items:stretch;width:100%;}}
-  .status{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:.85rem;padding:5px 11px;border-radius:99px;}
-  .status.closed{background:var(--ok-bg);color:var(--ok);}
-  .status.open{background:var(--warn-bg);color:var(--warn);}
-  .branch-strip{display:flex;gap:6px;flex-wrap:wrap;padding:0 20px 18px;margin-top:-6px;}
-  .tbl-wrap{overflow-x:auto;}
-  table{width:100%;border-collapse:collapse;}
-  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle;}
-  th{font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
-  tbody tr:last-child td{border-bottom:0;}
-  td.r,th.r{text-align:right;}
-  .back{font-family:var(--f-display);font-weight:700;font-size:1.05rem;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;}
-  .pill-paid{font-size:.75rem;font-weight:700;padding:3px 9px;border-radius:99px;border:0;}
-  .pill-paid.y{background:var(--ok-bg);color:var(--ok);} .pill-paid.n{background:var(--warn-bg);color:var(--warn);}
-  .pivot th,.pivot td{text-align:center;padding:8px 6px;} .pivot th:first-child,.pivot td:first-child{text-align:left;padding-left:14px;}
-  .sec-h{font-family:var(--f-display);font-weight:700;font-size:1.05rem;text-transform:uppercase;letter-spacing:.03em;padding:16px 14px 4px;}
-
-  /* ---------- modal + toast ---------- */
   .modal{position:fixed;inset:0;background:rgba(10,12,18,.55);display:none;align-items:center;justify-content:center;padding:20px max(16px,env(safe-area-inset-left,0px));z-index:50;}
   .modal.show{display:flex;}
-  .modal .panel{width:100%;max-width:440px;padding:22px;display:flex;flex-direction:column;gap:14px;}
-  .modal h3{margin:0;font-family:var(--f-display);font-weight:800;font-size:1.5rem;text-transform:uppercase;}
-  #toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);background:var(--ink);color:var(--paper);padding:11px 20px;border-radius:99px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:60;}
+  .modal .card{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px;}
+  #toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);background:var(--ink);color:var(--paper);padding:12px 20px;border-radius:99px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:60;}
   #toast.show{opacity:1;transform:translate(-50%,0);}
   @media (prefers-reduced-motion: reduce){ *{transition:none!important;} }
 </style>
 </head>
 <body>
-
-<div class="gate" id="gate-loading"><div class="gate-card">
-  <img class="logo" src="logo.png" alt="BFA">
-  <h1>Kit shop</h1><p id="loading-text">Loading the player roster…</p>
-</div></div>
-
-<div class="gate hidden" id="gate-nosetup"><div class="gate-card">
-  <img class="logo" src="logo.png" alt="BFA">
-  <h1>Roster not set up</h1>
-  <p>The kit shop uses the branches, PINs and players from the academy app. Finish setup there first.</p>
-  <a class="btn primary big" href="teams.html" style="text-decoration:none;">Open the academy app</a>
-</div></div>
-
-<div class="gate hidden" id="gate-login"><div class="gate-card">
-  <img class="logo" src="logo.png" alt="BFA">
-  <h1>Kit shop</h1>
-  <div id="login-roles" style="display:flex;flex-direction:column;gap:12px;">
-    <p>Sign in with your academy app PIN.</p>
-    <div class="role-grid" id="login-role-grid"></div>
+<div class="wrap">
+  <div class="top">
+    <img src="logo.png" alt="BFA">
+    <div class="t"><b>Kit shop</b><span id="top-sub">Beirut Football Academy</span></div>
+    <span class="sp"></span>
+    <button class="small-btn" id="theme-btn" title="Light / dark">◐</button>
+    <button class="small-btn hidden" id="logout-btn">Log out</button>
   </div>
-  <div id="login-pin-panel" class="hidden" style="display:flex;flex-direction:column;gap:12px;">
-    <p id="login-pin-title">Enter PIN</p>
-    <input type="password" id="login-pin" class="input pin" inputmode="numeric" maxlength="8" placeholder="••••" autocomplete="off">
-    <div class="gate-err" id="login-error"></div>
-    <div style="display:flex;gap:8px;"><button class="btn" id="login-back" style="flex:1;">Back</button><button class="btn primary" id="login-unlock" style="flex:2;">Sign in</button></div>
-  </div>
-</div></div>
-
-<div id="app-root" class="hidden">
-  <header class="topbar"><div class="topbar-in">
-    <div class="brand"><img src="logo.png" alt="BFA"><div><b>Kit shop</b><span id="kit-name">—</span></div></div>
-    <div class="seg" role="tablist">
-      <button id="tab-sell" class="on" onclick="app.go('sell')">Sell</button>
-      <button id="tab-eod" onclick="app.go('eod')">End of day</button>
-    </div>
-    <span class="spacer"></span>
-    <span class="who" id="who"></span>
-    <button class="btn icon-btn" id="settings-btn" title="Kit settings" onclick="app.openSettings()">⚙</button>
-    <button class="btn icon-btn" id="theme-btn" title="Light / dark">◐</button>
-    <button class="btn" id="logout-btn">Log out</button>
-  </div></header>
-  <main>
-    <section id="view-sell"></section>
-    <section id="view-eod" class="hidden"></section>
-  </main>
+  <div id="screen" class="stack"><p class="muted" id="loading-text">Loading players…</p></div>
 </div>
-
-<div class="modal" id="modal"><div class="panel" id="modal-body"></div></div>
+<div class="modal" id="modal"><div class="card" id="modal-body"></div></div>
 <div id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -272,27 +178,25 @@
   // ===== State =====
   let roster={branches:[],teams:[],players:[],auth:{setupDone:false,adminPin:"",branchPins:{}}};
   let uni={settings:{collection:"",price:0},orders:[],closings:{}};
-  let rosterLoaded=false, uniLoaded=false, booted=false, session=null, view="sell";
-  let search="", branchFilter="all", teamFilter="all";
-  let cart=null;          // the kid's order being built: {editingId, playerId, number, nickname, items:[{color,size,qty}], paid, price}
-  let pickColor="red";
-  let eodDate=todayStr(), closeArmed=false, deleteArmed=null;
+  let rosterLoaded=false, uniLoaded=false, booted=false, session=null;
+  let screen="login";     // login | pin | home | player | print | color | size | basket | done | day
+  let pendingRole=null, search="", sale=null, pickColor=null, lastSaved=null, dayDate=todayStr(), confirmClose=false, confirmDel=null;
 
   function toArray(x){ if(Array.isArray(x))return x; if(x&&typeof x==="object")return Object.values(x); return []; }
   function normOrder(o){ if(!Array.isArray(o.items)) o.items=o.color?[{color:o.color,size:o.size,qty:Number(o.qty)||1}]:toArray(o.items); return o; }
   onValue(ref(db, ROSTER_ROOT), snap=>{ const r=snap.val()||{};
-    roster={ branches:toArray(r.branches), teams:toArray(r.teams), players:toArray(r.players).filter(p=>p&&p.id&&p.name),
-      auth:r.auth||{setupDone:false,adminPin:"",branchPins:{}} };
+    roster={ branches:toArray(r.branches), teams:toArray(r.teams), players:toArray(r.players).filter(p=>p&&p.id&&p.name), auth:r.auth||{setupDone:false} };
     if(!roster.auth.branchPins)roster.auth.branchPins={};
     rosterLoaded=true; onData(); }, onFail);
   onValue(uniRef, snap=>{ const u=snap.val()||{};
     uni={ settings:{collection:"",price:0,...(u.settings||{})}, orders:toArray(u.orders).filter(o=>o&&o.id).map(normOrder), closings:u.closings||{} };
     uniLoaded=true; onData(); }, onFail);
-  function onFail(err){ console.error(err); document.getElementById("loading-text").textContent="Could not connect. Check your internet and reload."; }
+  function onFail(err){ console.error(err); const el=document.getElementById("loading-text"); if(el)el.textContent="Could not connect. Check your internet and reload."; }
   function onData(){ if(!rosterLoaded||!uniLoaded)return;
-    if(!booted){ booted=true; boot(); return; }
-    if(session){ if(!isValidSession(session)){ logout(); return; } render(); }
-    else if(!document.getElementById("gate-login").classList.contains("hidden")) showLogin(); }
+    if(!booted){ booted=true; const s=getSession(); if(isValidSession(s)){ session=s; screen="home"; } render(); return; }
+    if(session&&!isValidSession(session)){ logout(); return; }
+    // Live updates only refresh screens that show shared data, so typing is never interrupted.
+    if(["home","day","login","player"].includes(screen)) render(); }
 
   // ===== Helpers =====
   function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
@@ -304,282 +208,222 @@
   function isAdmin(){ return !!session&&session.role==="admin"; }
   function myBranch(){ return session&&session.role==="branch"?session.branchId:null; }
   function branchName(id){ const b=roster.branches.find(b=>b.id===id); return b?b.name:"—"; }
-  function teamName(id){ const t=roster.teams.find(t=>t.id===id); return t?t.name:"No team"; }
+  function teamName(id){ const t=roster.teams.find(t=>t.id===id); return t?t.name:""; }
   function player(id){ return roster.players.find(p=>p.id===id)||null; }
   function colorLabel(id){ const c=COLORS.find(c=>c.id===id); return c?c.label:id; }
-  function scopeIds(){ if(isAdmin())return branchFilter==="all"?roster.branches.map(b=>b.id):[branchFilter]; return [myBranch()]; }
-  function inScope(bid){ return scopeIds().includes(bid); }
+  function inScope(bid){ return isAdmin()||bid===myBranch(); }
+  function scopeIds(){ return isAdmin()?roster.branches.map(b=>b.id):[myBranch()]; }
   function pieces(o){ return o.items.reduce((s,i)=>s+i.qty,0); }
   function orderTotal(o){ return pieces(o)*(Number(o.price)||0); }
   function closing(date,bid){ return (uni.closings[date]&&uni.closings[date][bid])||null; }
-  function isLocked(o){ return !!closing(o.date,o.branchId); }
-  function itemChips(items){ return `<span class="chips">${items.map(i=>`<span class="chip"><span class="sw k-${esc(i.color)}"></span>${i.qty>1?i.qty+"× ":""}${esc(colorLabel(i.color))} ${esc(i.size)}</span>`).join("")}</span>`; }
+  function itemsText(items){ return items.map(i=>`${i.qty>1?i.qty+"× ":""}${colorLabel(i.color)} ${i.size}`).join(", "); }
   function sortItems(items){ return items.slice().sort((a,b)=>COLORS.findIndex(c=>c.id===a.color)-COLORS.findIndex(c=>c.id===b.color)||SIZES.indexOf(a.size)-SIZES.indexOf(b.size)); }
+  function back(to){ return `<button class="back" onclick="app.to('${to}')">← Back</button>`; }
 
-  // ===== Auth (same PINs and login session as the academy app) =====
+  // ===== Login (same PINs and session as the academy app) =====
   function getSession(){ try{return JSON.parse(sessionStorage.getItem(SESSION_KEY));}catch(e){return null;} }
   function isValidSession(s){ if(!s)return false; if(s.role==="admin")return true; if(s.role==="branch")return roster.branches.some(b=>b.id===s.branchId); return false; }
   function applyTheme(t){ if(t)document.documentElement.setAttribute("data-theme",t); else document.documentElement.removeAttribute("data-theme"); }
   try{ const t=localStorage.getItem(THEME_KEY); if(t)applyTheme(t); }catch(e){}
   document.getElementById("theme-btn").addEventListener("click",()=>{ const cur=document.documentElement.getAttribute("data-theme"); const dark=cur?cur==="dark":matchMedia("(prefers-color-scheme: dark)").matches; const next=dark?"light":"dark"; applyTheme(next); try{localStorage.setItem(THEME_KEY,next);}catch(e){} });
-  function show(id){ ["gate-loading","gate-nosetup","gate-login","app-root"].forEach(x=>document.getElementById(x).classList.toggle("hidden",x!==id)); }
-  function showLogin(){ show("gate-login");
-    document.getElementById("login-roles").classList.remove("hidden"); document.getElementById("login-pin-panel").classList.add("hidden");
-    document.getElementById("login-role-grid").innerHTML=roster.branches.map(b=>`<button class="btn" onclick="app.selectRole('branch','${b.id}')">${esc(b.name)}</button>`).join("")
-      +`<button class="btn wide" onclick="app.selectRole('admin')">Admin · all branches</button>`; }
-  function showApp(){ show("app-root");
-    document.getElementById("who").textContent=isAdmin()?"Admin":branchName(myBranch());
-    document.getElementById("settings-btn").classList.toggle("hidden",!isAdmin());
-    branchFilter=isAdmin()?"all":myBranch(); teamFilter="all"; cart=null; go("sell");
-    if(isAdmin()&&!uni.settings.collection) openSettings(); }
-  function boot(){ if(!roster.auth||!roster.auth.setupDone){ show("gate-nosetup"); return; }
-    const s=getSession(); if(isValidSession(s)){session=s;showApp();} else showLogin(); }
-  let pendingRole=null;
-  function selectRole(role,bid){ pendingRole=role==="branch"?{role:"branch",branchId:bid}:{role:"admin"};
-    document.getElementById("login-pin-title").textContent="PIN for "+(role==="branch"?branchName(bid):"Admin");
-    document.getElementById("login-roles").classList.add("hidden"); document.getElementById("login-pin-panel").classList.remove("hidden");
-    const pin=document.getElementById("login-pin"); pin.value=""; document.getElementById("login-error").textContent=""; pin.focus(); }
-  function submitLogin(){ if(!pendingRole)return; const pin=document.getElementById("login-pin").value.trim();
+  document.getElementById("logout-btn").addEventListener("click",()=>logout());
+  function logout(){ try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){} session=null; sale=null; screen="login"; closeModal(); render(); }
+  function chooseRole(role,bid){ pendingRole=role==="branch"?{role:"branch",branchId:bid}:{role:"admin"}; screen="pin"; render(); }
+  function submitPin(){ const pin=document.getElementById("f-pin").value.trim();
     const ok=pendingRole.role==="admin"?(pin&&pin===roster.auth.adminPin):(pin&&pin===roster.auth.branchPins[pendingRole.branchId]);
-    if(!ok){ document.getElementById("login-error").textContent="Wrong PIN. Try again."; return; }
+    if(!ok){ document.getElementById("f-err").textContent="Wrong PIN. Try again."; return; }
     try{ sessionStorage.setItem(SESSION_KEY,JSON.stringify(pendingRole)); }catch(e){}
-    session=pendingRole; showApp(); }
-  function logout(){ try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){} session=null; closeModal(); showLogin(); }
-  document.getElementById("login-pin").addEventListener("input",e=>{ e.target.value=e.target.value.replace(/\D/g,"").slice(0,8); });
-  document.getElementById("login-pin").addEventListener("keydown",e=>{ if(e.key==="Enter")submitLogin(); });
-  document.getElementById("login-back").addEventListener("click",showLogin);
-  document.getElementById("login-unlock").addEventListener("click",submitLogin);
-  document.getElementById("logout-btn").addEventListener("click",logout);
+    session=pendingRole; screen="home"; render();
+    if(isAdmin()&&!uni.settings.collection) openSettings(); }
 
-  // ===== Views =====
-  function go(v){ view=v; closeArmed=false; deleteArmed=null;
-    document.getElementById("tab-sell").classList.toggle("on",v==="sell"); document.getElementById("tab-eod").classList.toggle("on",v==="eod");
-    document.getElementById("view-sell").classList.toggle("hidden",v!=="sell"); document.getElementById("view-eod").classList.toggle("hidden",v!=="eod");
-    render(); }
-  function render(){ document.getElementById("kit-name").textContent=uni.settings.collection||"No kit set";
-    if(view==="sell")renderSell(); else renderEod(); }
-  // Rebuilding HTML drops focus; restore it (and the caret) for whatever input the user was typing in.
-  function keepFocus(fn){ const a=document.activeElement, id=a&&a.id, pos=a&&a.selectionStart; fn();
-    if(id){ const el=document.getElementById(id); if(el&&el!==document.activeElement){ el.focus(); try{ if(pos!=null)el.setSelectionRange(pos,pos); }catch(e){} } } }
+  // ===== Screens =====
+  function to(s){ screen=s; confirmClose=false; confirmDel=null; render(); }
+  function render(){
+    const el=document.getElementById("screen");
+    document.getElementById("logout-btn").classList.toggle("hidden",!session);
+    document.getElementById("top-sub").textContent=session?(isAdmin()?"Admin":branchName(myBranch()))+(uni.settings.collection?" · "+uni.settings.collection:""):"Beirut Football Academy";
+    if(!roster.auth||!roster.auth.setupDone){ el.innerHTML=`<div class="gate-msg"><h1>Not set up yet</h1><p class="muted">Finish setup in the academy app first.</p><a class="big main" href="teams.html" style="text-decoration:none;">Open academy app</a></div>`; return; }
+    if(!session&&screen!=="pin") screen="login";
+    const html={ login:loginHtml, pin:pinHtml, home:homeHtml, player:playerHtml, print:printHtml, color:colorHtml, size:sizeHtml, basket:basketHtml, done:doneHtml, day:dayHtml }[screen];
+    el.innerHTML=html();
+    const f=el.querySelector("[autofocus]"); if(f){ f.focus(); if(f.setSelectionRange&&f.type!=="number"){ const n=f.value.length; try{f.setSelectionRange(n,n);}catch(e){} } }
+    if(screen!==render.last){ window.scrollTo(0,0); render.last=screen; } }
 
-  // ---------- Sell ----------
-  function kitOrdersOf(pid){ return uni.orders.filter(o=>o.playerId===pid&&o.collection===uni.settings.collection).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); }
-  function renderSell(){ keepFocus(()=>{ document.getElementById("view-sell").innerHTML=`
-      ${!uni.settings.collection?`<div class="note" style="margin-bottom:16px;">No kit is set yet. ${isAdmin()?`<a href="#" onclick="app.openSettings();return false;" style="color:inherit;">Set the kit name and price</a>`:"Ask the admin to set the kit name and price"} before selling.</div>`:""}
-      <div class="counter"><div class="panel roster">${rosterHtml()}</div><div class="panel builder" id="builder">${builderHtml()}</div></div>`; }); }
-  function rosterHtml(){
-    const teams=roster.teams.filter(t=>inScope(t.branchId)).sort((a,b)=>a.name.localeCompare(b.name));
+  function loginHtml(){ return `<h1>Who's selling?</h1>
+    <div class="roles">${roster.branches.map(b=>`<button class="big" onclick="app.chooseRole('branch','${b.id}')">${esc(b.name)}</button>`).join("")}
+    <button class="big dark wide" onclick="app.chooseRole('admin')">Admin</button></div>`; }
+  function pinHtml(){ return `<div class="step">${pendingRole.role==="admin"?"Admin":esc(branchName(pendingRole.branchId))}</div><h1>Enter your PIN</h1>
+    <input class="pin" id="f-pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" autofocus oninput="this.value=this.value.replace(/\\D/g,'')" onkeydown="if(event.key==='Enter')app.submitPin()">
+    <div class="err" id="f-err"></div>
+    <button class="big main" onclick="app.submitPin()">Sign in</button>${back("login")}`; }
+
+  function homeHtml(){
+    const today=uni.orders.filter(o=>o.date===todayStr()&&inScope(o.branchId));
+    const shirts=today.reduce((s,o)=>s+pieces(o),0);
+    return `<h1>Hi! What do you want to do?</h1>
+      ${!uni.settings.collection?`<div class="warn">${isAdmin()?"Set the kit name and price first (Kit settings below).":"The admin hasn't set the kit name and price yet."}</div>`:""}
+      <button class="big main col" onclick="app.newSale()" ${uni.settings.collection?"":"disabled"}>New sale<span class="sub">Kit ${money(uni.settings.price)} each</span></button>
+      <button class="big col" onclick="app.openDay()">End of day<span class="sub">Today: ${today.length} kid${today.length===1?"":"s"} · ${shirts} shirt${shirts===1?"":"s"}</span></button>
+      ${isAdmin()?`<button class="big" style="font-size:1.2rem;min-height:56px;" onclick="app.openSettings()">Kit settings</button>`:""}`; }
+
+  // Step 1: player
+  function newSale(){ sale={ playerId:null, number:"", nickname:"", items:[], paid:null }; search=""; to("player"); }
+  function playerHtml(){
     const q=search.trim().toLowerCase();
-    const list=roster.players.filter(p=>inScope(p.branchId)&&(teamFilter==="all"||p.teamId===teamFilter)&&(!q||p.name.toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name));
-    const shown=list.slice(0,150);
+    const list=q?roster.players.filter(p=>inScope(p.branchId)&&p.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name)).slice(0,30):[];
     const bought=new Set(uni.orders.filter(o=>o.collection===uni.settings.collection).map(o=>o.playerId));
-    return `<input class="input" id="s-search" type="search" placeholder="Search player name…" value="${esc(search)}" oninput="app.setSearch(this.value)" autocomplete="off">
-      <div class="filters">
-        ${isAdmin()?`<select class="input" id="s-branch" onchange="app.setBranch(this.value)"><option value="all">All branches</option>${roster.branches.map(b=>`<option value="${b.id}" ${branchFilter===b.id?"selected":""}>${esc(b.name)}</option>`).join("")}</select>`:""}
-        <select class="input" id="s-team" onchange="app.setTeam(this.value)"><option value="all">All teams</option>${teams.map(t=>`<option value="${t.id}" ${teamFilter===t.id?"selected":""}>${esc(t.name)}${isAdmin()&&branchFilter==="all"?" · "+esc(branchName(t.branchId)):""}</option>`).join("")}</select>
-      </div>
-      <div class="count">${list.length} player${list.length===1?"":"s"}</div>
-      <div class="plist">${shown.map(p=>`<button class="prow ${cart&&cart.playerId===p.id?"on":""}" onclick="app.pick('${p.id}')">
-          <span class="pinfo"><span class="pn">${esc(p.name)}</span><br><span class="pm">${esc(teamName(p.teamId))}${isAdmin()&&branchFilter==="all"?" · "+esc(branchName(p.branchId)):""}</span></span>
-          ${bought.has(p.id)?`<span class="got">Has kit</span>`:""}</button>`).join("")
-        ||`<div class="muted" style="padding:12px;">${roster.players.length?"No player matches.":"No players yet. Add them in the academy app."}</div>`}
-        ${list.length>shown.length?`<div class="count">Showing ${shown.length}. Type to narrow down.</div>`:""}</div>`; }
-  function setSearch(v){ search=v; renderSell(); }
-  function setBranch(v){ branchFilter=v; teamFilter="all"; render(); }
-  function setTeam(v){ teamFilter=v; renderSell(); }
+    return `<div class="step">Step 1 of 4</div><h1>Which player?</h1>
+      <input class="search" id="f-search" type="search" placeholder="Type the player's name" value="${esc(search)}" autocomplete="off" autofocus oninput="app.setSearch(this.value)">
+      <div class="players" id="f-players">${playerRows(list,bought,q)}</div>${back("home")}`; }
+  function playerRows(list,bought,q){
+    if(!q)return `<p class="muted">Start typing a name.</p>`;
+    if(!list.length)return `<p class="muted">No player found. Players are added in the academy app.</p>`;
+    return list.map(p=>`<button class="prow" onclick="app.pickPlayer('${p.id}')"><span class="i"><span class="n">${esc(p.name)}</span><br><span class="m">${esc([teamName(p.teamId),isAdmin()?branchName(p.branchId):""].filter(Boolean).join(" · "))}</span></span>${bought.has(p.id)?`<span class="tag">Has kit</span>`:""}</button>`).join(""); }
+  function setSearch(v){ search=v; const q=v.trim().toLowerCase();
+    const list=q?roster.players.filter(p=>inScope(p.branchId)&&p.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name)).slice(0,30):[];
+    const bought=new Set(uni.orders.filter(o=>o.collection===uni.settings.collection).map(o=>o.playerId));
+    document.getElementById("f-players").innerHTML=playerRows(list,bought,q); }
+  function pickPlayer(pid){ sale.playerId=pid;
+    const prev=uni.orders.filter(o=>o.playerId===pid&&o.collection===uni.settings.collection).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))[0];
+    if(prev&&!sale.number){ sale.number=String(prev.number); sale.nickname=prev.nickname; }
+    to("print"); }
 
-  function pick(pid){ const p=player(pid); if(!p)return;
-    const prev=kitOrdersOf(pid).slice(-1)[0];   // reuse the number + name from their last kit order
-    cart={ editingId:null, playerId:pid, number:prev?String(prev.number):"", nickname:prev?prev.nickname:"", items:[], paid:false, price:Number(uni.settings.price)||0 };
-    renderSell(); if(innerWidth<=860)document.getElementById("builder").scrollIntoView({behavior:"smooth",block:"start"}); }
-  function editOrder(id){ const o=uni.orders.find(o=>o.id===id); if(!o)return; if(isLocked(o)){ toast("That day is closed"); return; }
-    cart={ editingId:o.id, playerId:o.playerId, number:String(o.number), nickname:o.nickname, items:o.items.map(i=>({...i})), paid:!!o.paid, price:Number(o.price)||0, createdAt:o.createdAt, date:o.date, by:o.by, collection:o.collection };
-    go("sell"); }
-  function cancelCart(){ cart=null; renderSell(); }
-
-  function builderHtml(){
-    if(!cart)return `<div class="empty-state"><b>Pick a player</b>Search on the left, then add as many shirts as they want: any colors, any sizes.</div>`;
-    const p=player(cart.playerId)||{name:"(removed player)",teamId:null,branchId:cart.branchId};
-    const qtyOf=(c,s)=>{ const it=cart.items.find(i=>i.color===c&&i.size===s); return it?it.qty:0; };
-    const sizeBtn=s=>{ const q=qtyOf(pickColor,s); return `<button class="sbtn" onclick="app.add('${s}')">${esc(s)}${q?`<span class="q">${q}</span>`:""}</button>`; };
-    const n=cart.items.reduce((s,i)=>s+i.qty,0);
-    const past=kitOrdersOf(cart.playerId).filter(o=>o.id!==cart.editingId);
-    const shownColors=[...new Set([pickColor,...cart.items.map(i=>i.color)])];
-    return `
-      <div class="kid">
-        <div style="flex:1;min-width:0;"><h2>${esc(p.name)}</h2><div class="meta">${esc(teamName(p.teamId))} · ${esc(branchName(p.branchId))}${cart.editingId?" · editing order":""}</div></div>
-        <button class="btn ghost" onclick="app.cancelCart()">✕ Close</button>
-      </div>
-      ${past.length?`<div class="history"><div class="step-h"><small>Already bought this kit</small></div>${past.map(o=>`<div class="hrow"><span class="muted tnum">${esc(o.date)}</span><span class="back">#${esc(o.number)} ${esc(o.nickname)}</span><span class="what">${itemChips(sortItems(o.items))}</span>${isLocked(o)?`<span class="muted">Closed</span>`:`<button class="btn" onclick="app.editOrder('${o.id}')">Edit</button>`}</div>`).join("")}</div>`:""}
-
-      <div class="step">
-        <div class="step-h"><i>1</i>Back print <small>same on all their shirts</small></div>
-        <div class="print-row">
-          <div><label class="lbl" for="c-num">Number</label><input class="input num-in tnum" id="c-num" inputmode="numeric" maxlength="2" value="${esc(cart.number)}" oninput="app.setPrint('number',this.value)" placeholder="00"></div>
-          <div><label class="lbl" for="c-nick">Name on back</label><input class="input nick-in" id="c-nick" maxlength="${NICK_MAX}" value="${esc(cart.nickname)}" oninput="app.setPrint('nickname',this.value)" placeholder="NAME"></div>
-          <div class="shirts" id="c-shirts">${shirtsHtml(shownColors)}</div>
-        </div>
-        <div id="c-warn">${clashHtml()}</div>
-      </div>
-
-      <div class="step">
-        <div class="step-h"><i>2</i>Add shirts <small>pick a color, then tap a size. Tap again for another.</small></div>
-        <div class="colors">${COLORS.map(c=>`<button class="cbtn ${pickColor===c.id?"on":""}" onclick="app.setColor('${c.id}')"><span class="sw k-${c.id}"></span>${c.label}</button>`).join("")}</div>
-        <div class="sizes"><div class="sizes-gap">Kids</div>${KID_SIZES.map(sizeBtn).join("")}<div class="sizes-gap">Adults</div>${ADULT_SIZES.map(sizeBtn).join("")}</div>
-      </div>
-
-      <div class="cart">
-        <div class="step-h"><i>3</i>Order <small>${n} shirt${n===1?"":"s"}</small></div>
-        ${cart.items.length?sortItems(cart.items).map(i=>`<div class="line"><span class="sw k-${i.color}"></span><span class="what">${esc(colorLabel(i.color))} · size ${esc(i.size)}</span>
-            <span class="stepper"><button onclick="app.bump('${i.color}','${i.size}',-1)" aria-label="One less">−</button><span class="tnum">${i.qty}</span><button onclick="app.bump('${i.color}','${i.size}',1)" aria-label="One more">+</button></span></div>`).join("")
-          :`<div class="muted">No shirts yet.</div>`}
-        <div class="totals">
-          <div class="sum tnum">${money(n*cart.price)}<small>${n} × ${money(cart.price)}</small></div>
-          <span class="spacer"></span>
-          <button class="paid ${cart.paid?"on":""}" onclick="app.togglePaid()"><span class="dot"></span>${cart.paid?"Paid":"Not paid yet"}</button>
-          <button class="btn primary big" onclick="app.saveCart()" ${n?"":"disabled"}>${cart.editingId?"Save changes":"Confirm order"}</button>
-        </div>
-        <div class="err" id="c-err"></div>
-      </div>`; }
-  function shirtsHtml(colors){ const nick=(cart.nickname||"NAME").toUpperCase(), num=cart.number===""?"00":cart.number;
-    return colors.map(c=>`<div class="shirt k-${c}"><span class="sn">${esc(nick)}</span><span class="sd tnum">${esc(num)}</span></div>`).join(""); }
+  // Step 2: number + name
+  function printHtml(){ const p=player(sale.playerId);
+    return `<div class="step">Step 2 of 4 · ${esc(p?p.name:"")}</div><h1>Number and name on the back</h1>
+      <div class="field"><label class="label" for="f-num">Number</label><input id="f-num" inputmode="numeric" maxlength="2" value="${esc(sale.number)}" placeholder="10" autofocus oninput="this.value=this.value.replace(/\\D/g,'');app.checkNum(this.value)"></div>
+      <div id="f-clash">${clashHtml(sale.number)}</div>
+      <div class="field"><label class="label" for="f-nick">Name on the back</label><input id="f-nick" maxlength="${NICK_MAX}" value="${esc(sale.nickname)}" placeholder="NAME" onkeydown="if(event.key==='Enter')app.savePrint()"></div>
+      <div class="err" id="f-err"></div>
+      <button class="big main" onclick="app.savePrint()">Next</button>${back("player")}`; }
   // Another kid on the same team already has this number for the current kit.
-  function clashHtml(){ if(!cart||cart.number==="")return ""; const p=player(cart.playerId); if(!p||!p.teamId)return "";
-    const names=[...new Set(uni.orders.filter(o=>o.collection===uni.settings.collection&&o.playerId!==cart.playerId&&o.teamId===p.teamId&&String(o.number)===String(Number(cart.number))).map(o=>o.playerName))];
-    return names.length?`<div class="warn">Number ${esc(Number(cart.number))} is already taken on ${esc(teamName(p.teamId))} by ${names.map(esc).join(", ")}.</div>`:""; }
-  function setPrint(k,v){ if(!cart)return; if(k==="number")v=v.replace(/\D/g,"").slice(0,2); cart[k]=v;
-    const el=document.getElementById(k==="number"?"c-num":"c-nick"); if(k==="number"&&el.value!==v)el.value=v;
-    const shownColors=[...new Set([pickColor,...cart.items.map(i=>i.color)])];
-    document.getElementById("c-shirts").innerHTML=shirtsHtml(shownColors); document.getElementById("c-warn").innerHTML=clashHtml(); document.getElementById("c-err").textContent=""; }
-  function setColor(c){ pickColor=c; renderBuilder(); }
-  function add(size){ if(!cart)return; const it=cart.items.find(i=>i.color===pickColor&&i.size===size); if(it)it.qty++; else cart.items.push({color:pickColor,size,qty:1}); renderBuilder(); }
-  function bump(color,size,d){ const it=cart.items.find(i=>i.color===color&&i.size===size); if(!it)return; it.qty+=d; if(it.qty<=0)cart.items=cart.items.filter(i=>i!==it); renderBuilder(); }
-  function togglePaid(){ cart.paid=!cart.paid; renderBuilder(); }
-  function renderBuilder(){ keepFocus(()=>{ document.getElementById("builder").innerHTML=builderHtml(); }); }
+  function clashHtml(num){ const p=player(sale&&sale.playerId); if(!p||!p.teamId||num==="")return "";
+    const names=[...new Set(uni.orders.filter(o=>o.collection===uni.settings.collection&&o.playerId!==p.id&&o.teamId===p.teamId&&Number(o.number)===Number(num)).map(o=>o.playerName))];
+    return names.length?`<div class="warn">Number ${esc(Number(num))} is already taken on ${esc(teamName(p.teamId))} by ${names.map(esc).join(", ")}.</div>`:""; }
+  function checkNum(v){ document.getElementById("f-clash").innerHTML=clashHtml(v); }
+  function savePrint(){ const num=document.getElementById("f-num").value.trim(), nick=document.getElementById("f-nick").value.trim().toUpperCase(), err=document.getElementById("f-err");
+    if(!/^\d{1,2}$/.test(num)){ err.textContent="Type the shirt number (0–99)."; return; }
+    if(!nick){ err.textContent="Type the name for the back."; return; }
+    if(!/^[\p{L}\p{N} .'\-]+$/u.test(nick)){ err.textContent="Use only letters, numbers, spaces, dots, dashes or apostrophes."; return; }
+    sale.number=num; sale.nickname=nick; to(sale.items.length?"basket":"color"); }
 
-  function saveCart(){ if(!cart)return; const err=document.getElementById("c-err");
-    const num=String(cart.number).trim(), nick=String(cart.nickname||"").trim().toUpperCase();
-    if(!uni.settings.collection){ err.textContent="Set the kit name first (⚙ settings, admin only)."; return; }
-    if(!/^\d{1,2}$/.test(num)){ err.textContent="Enter the shirt number (0–99)."; document.getElementById("c-num").focus(); return; }
-    if(!nick){ err.textContent="Enter the name to print on the back."; document.getElementById("c-nick").focus(); return; }
-    if(!/^[\p{L}\p{N} .'\-]+$/u.test(nick)){ err.textContent="The back name can only use letters, numbers, spaces, dots, dashes and apostrophes."; return; }
-    if(!cart.items.length){ err.textContent="Add at least one shirt."; return; }
-    const p=player(cart.playerId); if(!p){ err.textContent="This player is no longer in the roster."; return; }
-    const date=cart.date||todayStr();
-    if(closing(date,p.branchId)){ err.textContent=`${branchName(p.branchId)} already closed ${date===todayStr()?"today":date}. Ask the admin to reopen the day.`; return; }
-    const o={ id:cart.editingId||uid(), date, createdAt:cart.createdAt||Date.now(), updatedAt:Date.now(),
-      playerId:p.id, playerName:p.name, branchId:p.branchId, teamId:p.teamId||null, teamName:teamName(p.teamId),
-      number:Number(num), nickname:nick, items:sortItems(cart.items).map(i=>({color:i.color,size:i.size,qty:i.qty})),
-      price:Number(cart.price)||0, paid:!!cart.paid, collection:cart.collection||uni.settings.collection, by:cart.by||(isAdmin()?"Admin":branchName(myBranch())) };
-    const i=uni.orders.findIndex(x=>x.id===o.id); if(i>=0)uni.orders[i]=o; else uni.orders.push(o);
-    wSet("orders/"+o.id,o);
-    toast(`${cart.editingId?"Updated":"Sold"}: ${p.name} · ${pieces(o)} shirt${pieces(o)===1?"":"s"} ✓`);
-    cart=null; search=""; renderSell(); const s=document.getElementById("s-search"); if(s&&innerWidth>860)s.focus(); }
+  // Step 3: color
+  function colorHtml(){ return `<div class="step">Step 3 of 4</div><h1>Which color?</h1>
+    ${COLORS.map(c=>`<button class="big k-${c.id}" onclick="app.pickColor('${c.id}')">${c.label}</button>`).join("")}
+    ${back(sale.items.length?"basket":"print")}`; }
+  function choose(c){ pickColor=c; to("size"); }
 
-  // ---------- End of day ----------
-  function dayOrders(){ return uni.orders.filter(o=>o.date===eodDate&&inScope(o.branchId)).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); }
-  function renderEod(){
-    const list=dayOrders(), ids=scopeIds();
-    const shirts=list.reduce((s,o)=>s+pieces(o),0), sales=list.reduce((s,o)=>s+orderTotal(o),0), paid=list.filter(o=>o.paid).reduce((s,o)=>s+orderTotal(o),0);
-    const open=ids.filter(b=>!closing(eodDate,b)), unpaid=list.filter(o=>!o.paid).length;
-    const allClosed=!open.length;
-    const lastClose=ids.map(b=>closing(eodDate,b)).filter(Boolean).sort((a,b)=>b.closedAt-a.closedAt)[0];
+  // Step 4: size
+  function sizeHtml(){ const b=s=>`<button class="big" onclick="app.pickSize('${s}')">${esc(s)}</button>`;
+    return `<div class="step">Step 4 of 4 · ${esc(colorLabel(pickColor))}</div><h1>Which size?</h1>
+      <div class="label">Kids</div><div class="sizes">${KID_SIZES.map(b).join("")}</div>
+      <div class="label">Adults</div><div class="sizes">${ADULT_SIZES.map(b).join("")}</div>${back("color")}`; }
+  function pickSize(s){ const it=sale.items.find(i=>i.color===pickColor&&i.size===s); if(it)it.qty++; else sale.items.push({color:pickColor,size:s,qty:1}); to("basket"); }
+
+  // Check the order
+  function basketHtml(){ const p=player(sale.playerId); const n=sale.items.reduce((s,i)=>s+i.qty,0); const price=Number(uni.settings.price)||0;
+    return `<h1>Check the order</h1>
+      <div class="card">
+        <div class="who"><span class="nm">${esc(p?p.name:"")}</span><span class="bp">#${esc(sale.number)} ${esc(sale.nickname)}</span></div>
+        <div style="margin-top:12px;">${sortItems(sale.items).map(i=>`<div class="line"><span class="sw k-${i.color}"></span><span class="w">${esc(colorLabel(i.color))} · ${esc(i.size)}</span>
+          <span class="qty"><button onclick="app.bump('${i.color}','${i.size}',-1)" aria-label="One less">−</button><span class="tnum">${i.qty}</span><button onclick="app.bump('${i.color}','${i.size}',1)" aria-label="One more">+</button></span></div>`).join("")}</div>
+        <div class="total"><span class="muted">${n} shirt${n===1?"":"s"} × ${money(price)}</span><b class="tnum">${money(n*price)}</b></div>
+      </div>
+      <button class="big" onclick="app.to('color')">+ Add another shirt</button>
+      <div class="label">Has the parent paid?</div>
+      <div class="paid-row"><button class="big ${sale.paid===true?"on-paid":""}" onclick="app.setPaid(true)">Paid</button><button class="big ${sale.paid===false?"on-unpaid":""}" onclick="app.setPaid(false)">Not yet</button></div>
+      <div class="err" id="f-err"></div>
+      <button class="big main" onclick="app.saveSale()" ${n?"":"disabled"}>Save sale</button>
+      <div style="display:flex;justify-content:space-between;">${back("print").replace("← Back","← Change number / name")}<button class="back" onclick="app.cancelSale()">Cancel sale</button></div>`; }
+  function bump(c,s,d){ const it=sale.items.find(i=>i.color===c&&i.size===s); if(!it)return; it.qty+=d; if(it.qty<=0)sale.items=sale.items.filter(i=>i!==it); if(!sale.items.length){ to("color"); return; } render(); }
+  function setPaid(v){ sale.paid=v; render(); }
+  function cancelSale(){ sale=null; to("home"); }
+  function saveSale(){ const err=document.getElementById("f-err"); const p=player(sale.playerId);
+    if(sale.paid===null){ err.textContent="Tap Paid or Not yet."; return; }
+    if(!p){ err.textContent="This player is no longer in the roster."; return; }
+    const date=todayStr();
+    if(closing(date,p.branchId)){ err.textContent=`${branchName(p.branchId)} already closed today. Ask the admin to reopen the day.`; return; }
+    const o={ id:uid(), date, createdAt:Date.now(), playerId:p.id, playerName:p.name, branchId:p.branchId, teamId:p.teamId||null, teamName:teamName(p.teamId),
+      number:Number(sale.number), nickname:sale.nickname, items:sortItems(sale.items), price:Number(uni.settings.price)||0, paid:sale.paid,
+      collection:uni.settings.collection, by:isAdmin()?"Admin":branchName(myBranch()) };
+    uni.orders.push(o); wSet("orders/"+o.id,o); lastSaved=o; sale=null; to("done"); }
+  function doneHtml(){ const o=lastSaved;
+    return `<div class="done"><div class="tick">✓</div><h1>Saved!</h1>
+      <p class="muted" style="font-size:1.05rem;">${esc(o.playerName)} · #${esc(o.number)} ${esc(o.nickname)}<br>${esc(itemsText(o.items))}<br><b>${money(orderTotal(o))}</b> · ${o.paid?"paid":"not paid yet"}</p></div>
+      <button class="big main" onclick="app.newSale()">Next sale</button>
+      <button class="big" onclick="app.to('home')">Done for now</button>`; }
+
+  // ===== End of day =====
+  function openDay(){ dayDate=todayStr(); to("day"); }
+  function dayHtml(){
+    const list=uni.orders.filter(o=>o.date===dayDate&&inScope(o.branchId)).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+    const shirts=list.reduce((s,o)=>s+pieces(o),0), sales=list.reduce((s,o)=>s+orderTotal(o),0), cash=list.filter(o=>o.paid).reduce((s,o)=>s+orderTotal(o),0);
+    const open=scopeIds().filter(b=>!closing(dayDate,b)), isClosed=!open.length, unpaid=list.filter(o=>!o.paid).length;
     let action;
-    if(allClosed) action=`<span class="status closed">✓ Day closed${lastClose?" at "+esc(fmtTime(lastClose.closedAt)):""}</span>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;"><button class="btn" onclick="app.download()" ${list.length?"":"disabled"}>⬇ Download Excel again</button>${isAdmin()?`<button class="btn" onclick="app.reopen()">Reopen day</button>`:""}</div>`;
-    else if(closeArmed) action=`<div style="font-weight:600;text-align:right;">Lock ${list.filter(o=>!isLocked(o)).length} order(s) and download the Excel file?${unpaid?`<br><span style="color:var(--warn);">${unpaid} order(s) not marked paid.</span>`:""}</div>
-        <div style="display:flex;gap:8px;"><button class="btn" onclick="app.armClose(false)">Cancel</button><button class="btn primary big" onclick="app.closeDay()">Yes, close the day</button></div>`;
-    else action=`<span class="status open">Day open</span><button class="btn primary big" onclick="app.armClose(true)">Close day &amp; download Excel</button>`;
-    document.getElementById("view-eod").innerHTML=`<div class="eod">
-      <div class="eod-head">
-        <h2>${eodDate===todayStr()?"Today":esc(fmtDate(eodDate))}</h2>
-        ${isAdmin()?`<select class="input" id="e-branch" onchange="app.setBranch(this.value)"><option value="all">All branches</option>${roster.branches.map(b=>`<option value="${b.id}" ${branchFilter===b.id?"selected":""}>${esc(b.name)}</option>`).join("")}</select>`:""}
-        <input class="input" type="date" id="e-date" value="${esc(eodDate)}" max="${todayStr()}" onchange="app.setDate(this.value)">
+    if(isClosed) action=`<div class="closed">✓ This day is closed</div>
+      ${list.length?`<button class="big" onclick="app.download()">Download Excel again</button>`:""}
+      ${isAdmin()?`<button class="big" style="font-size:1.1rem;min-height:52px;" onclick="app.reopen()">Reopen the day</button>`:""}`;
+    else if(confirmClose) action=`<div class="warn">Close the day? Sales can't be changed after this.${unpaid?` ${unpaid} sale${unpaid===1?" is":"s are"} not paid yet.`:""}</div>
+      <div class="paid-row"><button class="big" onclick="app.armClose(false)">No</button><button class="big main" style="min-height:58px;font-size:1.25rem;" onclick="app.closeDay()">Yes, close</button></div>`;
+    else action=`<button class="big main col" onclick="app.armClose(true)">Close the day<span class="sub">and download the Excel for the printer</span></button>`;
+    return `<div class="step">${dayDate===todayStr()?"Today":"Day"}</div><h1>${esc(fmtDate(dayDate))}</h1>
+      <div class="figs"><div class="fig"><b class="tnum">${shirts}</b><span>Shirts</span></div><div class="fig"><b class="tnum">${money(sales)}</b><span>Sales</span></div><div class="fig"><b class="tnum">${money(cash)}</b><span>Paid</span></div></div>
+      ${action}
+      <div class="card" style="margin-top:4px;">
+        ${list.length?list.map(o=>{ const locked=!!closing(o.date,o.branchId); return `<div class="sale">
+          <span class="i"><span class="n">${esc(o.playerName)}</span> <span class="muted">#${esc(o.number)} ${esc(o.nickname)}</span><br><span class="d">${esc(itemsText(o.items))}${isAdmin()?" · "+esc(branchName(o.branchId)):""} · ${esc(fmtTime(o.createdAt))}</span></span>
+          ${locked?`<span class="pill ${o.paid?"y":"n"}">${o.paid?"Paid":"Not paid"}</span>`:`<button class="pill ${o.paid?"y":"n"}" onclick="app.flipPaid('${o.id}')">${o.paid?"Paid":"Not paid"}</button>`}
+          ${locked?"":confirmDel===o.id?`<button class="pill n" onclick="app.del('${o.id}')">Delete?</button>`:`<button class="x" onclick="app.armDel('${o.id}')" aria-label="Delete sale">✕</button>`}
+        </div>`; }).join(""):`<p class="muted" style="margin:0;">No sales on this day.</p>`}
       </div>
-      <div class="panel">
-        <div class="closebar">
-          <div class="figs">
-            <div class="fig"><b class="tnum">${list.length}</b><span>Kids</span></div>
-            <div class="fig"><b class="tnum">${shirts}</b><span>Shirts</span></div>
-            <div class="fig"><b class="tnum">${money(sales)}</b><span>Sales</span></div>
-            <div class="fig"><b class="tnum">${money(paid)}</b><span>Collected</span></div>
-          </div>
-          <div class="act">${action}</div>
-        </div>
-        ${ids.length>1?`<div class="branch-strip">${ids.map(b=>{ const c=closing(eodDate,b), n=list.filter(o=>o.branchId===b).length;
-            return `<span class="chip" style="background:${c?"var(--ok-bg)":"var(--sunk)"};color:${c?"var(--ok)":"var(--muted)"};">${c?"✓ ":""}${esc(branchName(b))} · ${n}</span>`; }).join("")}</div>`:""}
-      </div>
-      <div class="panel">
-        <div class="sec-h">Orders</div>
-        ${list.length?`<div class="tbl-wrap"><table><thead><tr><th>Time</th><th>Player</th><th>Back</th><th>Shirts</th><th class="r">Total</th><th>Paid</th><th></th></tr></thead><tbody>
-          ${list.map(o=>{ const locked=isLocked(o); return `<tr>
-            <td class="muted tnum">${esc(fmtTime(o.createdAt))}</td>
-            <td><b>${esc(o.playerName)}</b><div class="muted" style="font-size:.82rem;">${esc(o.teamName)}${ids.length>1?" · "+esc(branchName(o.branchId)):""}</div></td>
-            <td class="back">#${esc(o.number)} ${esc(o.nickname)}</td>
-            <td>${itemChips(o.items)}</td>
-            <td class="r tnum"><b>${money(orderTotal(o))}</b></td>
-            <td>${locked?`<span class="pill-paid ${o.paid?"y":"n"}">${o.paid?"Paid":"Unpaid"}</span>`:`<button class="pill-paid ${o.paid?"y":"n"}" onclick="app.flipPaid('${o.id}')" title="Change">${o.paid?"Paid":"Unpaid"}</button>`}</td>
-            <td style="white-space:nowrap;text-align:right;">${locked?`<span class="muted">🔒</span>`:deleteArmed===o.id
-              ?`<button class="btn danger" onclick="app.del('${o.id}')">Delete?</button> <button class="btn ghost" onclick="app.armDelete(null)">No</button>`
-              :`<button class="btn" onclick="app.editOrder('${o.id}')">Edit</button> <button class="btn ghost" onclick="app.armDelete('${o.id}')" aria-label="Delete">✕</button>`}</td></tr>`; }).join("")}
-          </tbody></table></div>`:`<div class="muted" style="padding:6px 14px 18px;">No sales ${eodDate===todayStr()?"yet today":"on this day"}.</div>`}
-      </div>
-      ${list.length?`<div class="panel"><div class="sec-h">For the printer · shirts by color and size</div>${pivotHtml(list)}</div>`:""}
-    </div>`; }
-  function setDate(v){ if(/^\d{4}-\d{2}-\d{2}$/.test(v)){ eodDate=v; closeArmed=false; renderEod(); } }
-  function armClose(on){ closeArmed=on; renderEod(); }
-  function armDelete(id){ deleteArmed=id; renderEod(); }
-  function del(id){ const o=uni.orders.find(o=>o.id===id); if(!o||isLocked(o))return; uni.orders=uni.orders.filter(x=>x.id!==id); wRemove("orders/"+id); deleteArmed=null; toast("Order deleted"); render(); }
-  function flipPaid(id){ const o=uni.orders.find(o=>o.id===id); if(!o||isLocked(o))return; o.paid=!o.paid; wSet("orders/"+id+"/paid",o.paid); renderEod(); }
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">${back("home")}<input class="date" type="date" id="f-date" value="${esc(dayDate)}" max="${todayStr()}" onchange="app.setDay(this.value)" aria-label="Pick another day"></div>`; }
+  function setDay(v){ if(/^\d{4}-\d{2}-\d{2}$/.test(v)){ dayDate=v; to("day"); } }
+  function armClose(v){ confirmClose=v; render(); }
+  function armDel(id){ confirmDel=id; render(); }
+  function del(id){ const o=uni.orders.find(o=>o.id===id); if(!o||closing(o.date,o.branchId))return; uni.orders=uni.orders.filter(x=>x.id!==id); wRemove("orders/"+id); confirmDel=null; toast("Sale deleted"); render(); }
+  function flipPaid(id){ const o=uni.orders.find(o=>o.id===id); if(!o||closing(o.date,o.branchId))return; o.paid=!o.paid; wSet("orders/"+id+"/paid",o.paid); render(); }
   function closeDay(){ const u={}, now=Date.now();
-    scopeIds().filter(b=>!closing(eodDate,b)).forEach(b=>{ const os=uni.orders.filter(o=>o.date===eodDate&&o.branchId===b);
-      const c={ closedAt:now, by:isAdmin()?"Admin":branchName(b), orders:os.length, shirts:os.reduce((s,o)=>s+pieces(o),0),
-        sales:os.reduce((s,o)=>s+orderTotal(o),0), collected:os.filter(o=>o.paid).reduce((s,o)=>s+orderTotal(o),0) };
-      if(!uni.closings[eodDate])uni.closings[eodDate]={}; uni.closings[eodDate][b]=c; u[`closings/${eodDate}/${b}`]=c; });
+    scopeIds().filter(b=>!closing(dayDate,b)).forEach(b=>{ const os=uni.orders.filter(o=>o.date===dayDate&&o.branchId===b);
+      const c={ closedAt:now, by:isAdmin()?"Admin":branchName(b), orders:os.length, shirts:os.reduce((s,o)=>s+pieces(o),0), sales:os.reduce((s,o)=>s+orderTotal(o),0), paid:os.filter(o=>o.paid).reduce((s,o)=>s+orderTotal(o),0) };
+      if(!uni.closings[dayDate])uni.closings[dayDate]={}; uni.closings[dayDate][b]=c; u[`closings/${dayDate}/${b}`]=c; });
     if(Object.keys(u).length)wMulti(u);
-    closeArmed=false; toast("Day closed ✓"); download(); renderEod(); }
+    confirmClose=false; toast("Day closed ✓"); download(); render(); }
   function reopen(){ if(!isAdmin())return; const u={};
-    scopeIds().forEach(b=>{ if(closing(eodDate,b)){ delete uni.closings[eodDate][b]; u[`closings/${eodDate}/${b}`]=null; } });
-    if(Object.keys(u).length)wMulti(u); toast("Day reopened — orders can be edited"); renderEod(); }
+    scopeIds().forEach(b=>{ if(closing(dayDate,b)){ delete uni.closings[dayDate][b]; u[`closings/${dayDate}/${b}`]=null; } });
+    if(Object.keys(u).length)wMulti(u); toast("Day reopened"); render(); }
 
-  // ---------- Excel for the printing company ----------
-  function pivot(list){ const m={}; list.forEach(o=>o.items.forEach(i=>{ m[i.color]=m[i.color]||{}; m[i.color][i.size]=(m[i.color][i.size]||0)+i.qty; })); return m; }
-  function pivotHtml(list){ const m=pivot(list); const cols=SIZES.filter(s=>COLORS.some(c=>m[c.id]&&m[c.id][s]));
-    const colTot=cols.map(s=>COLORS.reduce((t,c)=>t+((m[c.id]||{})[s]||0),0));
-    return `<div class="tbl-wrap"><table class="pivot"><thead><tr><th>Color</th>${cols.map(s=>`<th>${esc(s)}</th>`).join("")}<th>Total</th></tr></thead><tbody>
-      ${COLORS.filter(c=>m[c.id]).map(c=>{ const r=m[c.id]; return `<tr><td><span class="chip"><span class="sw k-${c.id}"></span>${c.label}</span></td>${cols.map(s=>`<td class="tnum">${r[s]||"·"}</td>`).join("")}<td class="tnum"><b>${cols.reduce((t,s)=>t+(r[s]||0),0)}</b></td></tr>`; }).join("")}
-      <tr><td><b>Total</b></td>${colTot.map(n=>`<td class="tnum"><b>${n}</b></td>`).join("")}<td class="tnum"><b>${colTot.reduce((a,b)=>a+b,0)}</b></td></tr></tbody></table></div>`; }
+  // ===== Excel for the printing company =====
   function download(){
-    const list=dayOrders();
-    if(!list.length){ return; }
+    const list=uni.orders.filter(o=>o.date===dayDate&&inScope(o.branchId)); if(!list.length)return;
     if(typeof XLSX==="undefined"){ toast("Excel tool didn't load — check your internet and reload"); return; }
-    // One row per shirt line, grouped so the printer can work through it color by color.
+    // One row per shirt line, sorted color → size so the printer can work straight down the list.
     const rows=[]; list.forEach(o=>o.items.forEach(i=>rows.push({o,i})));
     rows.sort((a,b)=>COLORS.findIndex(c=>c.id===a.i.color)-COLORS.findIndex(c=>c.id===b.i.color)||SIZES.indexOf(a.i.size)-SIZES.indexOf(b.i.size)||branchName(a.o.branchId).localeCompare(branchName(b.o.branchId))||a.o.playerName.localeCompare(b.o.playerName));
-    const sheet1=rows.map(({o,i})=>({ "Color":colorLabel(i.color), "Size":i.size, "Qty":i.qty, "Number":o.number, "Name on back":o.nickname, "Player":o.playerName, "Team":o.teamName, "Branch":branchName(o.branchId) }));
     const wb=XLSX.utils.book_new();
-    const ws=XLSX.utils.json_to_sheet(sheet1); ws["!cols"]=[{wch:8},{wch:6},{wch:5},{wch:8},{wch:16},{wch:26},{wch:14},{wch:18}]; ws["!autofilter"]={ref:ws["!ref"]};
+    const ws=XLSX.utils.json_to_sheet(rows.map(({o,i})=>({ "Color":colorLabel(i.color), "Size":i.size, "Qty":i.qty, "Number":o.number, "Name on back":o.nickname, "Player":o.playerName, "Team":o.teamName, "Branch":branchName(o.branchId) })));
+    ws["!cols"]=[{wch:8},{wch:6},{wch:5},{wch:8},{wch:16},{wch:26},{wch:14},{wch:18}]; ws["!autofilter"]={ref:ws["!ref"]};
     XLSX.utils.book_append_sheet(wb,ws,"Shirts to print");
-    const m=pivot(list), aoa=[[`BFA kit order — ${uni.settings.collection||""} — ${eodDate}`],[],["Color",...SIZES,"Total"]];
+    const m={}; list.forEach(o=>o.items.forEach(i=>{ m[i.color]=m[i.color]||{}; m[i.color][i.size]=(m[i.color][i.size]||0)+i.qty; }));
+    const aoa=[[`BFA kit order — ${uni.settings.collection||""} — ${dayDate}`],[],["Color",...SIZES,"Total"]];
     COLORS.forEach(c=>{ const r=m[c.id]||{}; aoa.push([c.label,...SIZES.map(s=>r[s]||0),SIZES.reduce((t,s)=>t+(r[s]||0),0)]); });
     const colTot=SIZES.map(s=>COLORS.reduce((t,c)=>t+((m[c.id]||{})[s]||0),0)); aoa.push(["Total",...colTot,colTot.reduce((a,b)=>a+b,0)]);
     const ws2=XLSX.utils.aoa_to_sheet(aoa); ws2["!cols"]=[{wch:9},...SIZES.map(()=>({wch:6})),{wch:7}];
     XLSX.utils.book_append_sheet(wb,ws2,"Totals");
-    const scope=isAdmin()?(branchFilter==="all"?"All-branches":branchName(branchFilter)):branchName(myBranch());
-    XLSX.writeFile(wb,`BFA-kit_${eodDate}_${scope.replace(/[^\p{L}\p{N}]+/gu,"-")}.xlsx`); }
+    const scope=isAdmin()?"All-branches":branchName(myBranch());
+    XLSX.writeFile(wb,`BFA-kit_${dayDate}_${scope.replace(/[^\p{L}\p{N}]+/gu,"-")}.xlsx`); }
 
-  // ---------- Settings (admin) ----------
+  // ===== Kit settings (admin) =====
   function openSettings(){ if(!isAdmin())return; const s=uni.settings;
-    openModal(`<h3>Kit settings</h3>
-      <p class="muted" style="margin:0;">The kit changes every 2 seasons. When the new kit arrives, change the name here. Older orders stay under their old kit.</p>
-      <div><label class="lbl" for="k-name">Current kit</label><input class="input" id="k-name" value="${esc(s.collection)}" placeholder="e.g. Kit 2026–2028"></div>
-      <div><label class="lbl" for="k-price">Price per shirt ($)</label><input class="input tnum" id="k-price" type="number" min="0" step="0.5" value="${esc(s.price||"")}" placeholder="35"></div>
+    openModal(`<h1 style="font-size:1.8rem;margin:0;">Kit settings</h1>
+      <p class="muted" style="margin:0;">When the new kit arrives (every 2 seasons), change the name. Old sales keep the old name.</p>
+      <div class="field"><label class="label" for="k-name">Kit name</label><input id="k-name" style="font-size:1.3rem;" value="${esc(s.collection)}" placeholder="KIT 2026–2028"></div>
+      <div class="field"><label class="label" for="k-price">Price per shirt ($)</label><input id="k-price" type="number" min="0" step="0.5" style="font-size:1.3rem;" value="${esc(s.price||"")}" placeholder="35"></div>
       <div class="err" id="k-err"></div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn" onclick="app.closeModal()">Cancel</button><button class="btn primary" onclick="app.saveSettings()">Save</button></div>`); }
-  function saveSettings(){ const name=document.getElementById("k-name").value.trim(), price=Number(document.getElementById("k-price").value);
+      <div class="paid-row"><button class="big" onclick="app.closeModal()">Cancel</button><button class="big main" style="min-height:58px;font-size:1.25rem;" onclick="app.saveSettings()">Save</button></div>`); }
+  function saveSettings(){ const name=document.getElementById("k-name").value.trim(), raw=document.getElementById("k-price").value, price=Number(raw);
     if(!name){ document.getElementById("k-err").textContent="Give the kit a name."; return; }
-    if(!(price>=0)||document.getElementById("k-price").value===""){ document.getElementById("k-err").textContent="Enter the price per shirt."; return; }
-    uni.settings={collection:name,price}; wSet("settings",uni.settings); closeModal(); toast("Kit settings saved ✓"); render(); }
+    if(raw===""||!(price>=0)){ document.getElementById("k-err").textContent="Type the price per shirt."; return; }
+    uni.settings={collection:name,price}; wSet("settings",uni.settings); closeModal(); toast("Saved ✓"); render(); }
 
   function openModal(html){ document.getElementById("modal-body").innerHTML=html; document.getElementById("modal").classList.add("show"); }
   function closeModal(){ document.getElementById("modal").classList.remove("show"); }
@@ -587,8 +431,8 @@
   document.addEventListener("keydown",e=>{ if(e.key==="Escape")closeModal(); });
   function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.className="show"; clearTimeout(toast._t); toast._t=setTimeout(()=>t.className="",2400); }
 
-  window.app={ selectRole, go, setSearch, setBranch, setTeam, pick, editOrder, cancelCart, setPrint, setColor, add, bump, togglePaid, saveCart,
-    setDate, armClose, armDelete, del, flipPaid, closeDay, reopen, download, openSettings, saveSettings, closeModal };
+  window.app={ to, chooseRole, submitPin, newSale, setSearch, pickPlayer, checkNum, savePrint, pickColor:choose, pickSize, bump, setPaid, cancelSale, saveSale,
+    openDay, setDay, armClose, armDel, del, flipPaid, closeDay, reopen, download, openSettings, saveSettings, closeModal };
 </script>
 </body>
 </html>
