@@ -62,6 +62,8 @@
   .k-black{background:var(--kit-black);border-color:var(--kit-black);color:#fff;}
   .k-white{background:var(--kit-white);border-color:#c9ccd5;color:#11131b;}
   .big.k-red:hover,.big.k-black:hover{border-color:var(--ink);box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--ink);}
+  .colors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+  .colors .big{min-height:76px;font-size:1.4rem;padding:8px 4px;}
   .sizes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
   .sizes .big{min-height:72px;padding:8px 4px;font-size:1.7rem;}
   .label{font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:6px 0 2px;}
@@ -244,7 +246,7 @@
     document.getElementById("top-sub").textContent=session?(isAdmin()?"Admin":branchName(myBranch()))+(uni.settings.collection?" · "+uni.settings.collection:""):"Beirut Football Academy";
     if(!roster.auth||!roster.auth.setupDone){ el.innerHTML=`<div class="gate-msg"><h1>Not set up yet</h1><p class="muted">Finish setup in the academy app first.</p><a class="big main" href="teams.html" style="text-decoration:none;">Open academy app</a></div>`; return; }
     if(!session&&screen!=="pin") screen="login";
-    const html={ login:loginHtml, pin:pinHtml, home:homeHtml, player:playerHtml, print:printHtml, color:colorHtml, size:sizeHtml, basket:basketHtml, done:doneHtml, day:dayHtml }[screen];
+    const html={ login:loginHtml, pin:pinHtml, home:homeHtml, player:playerHtml, print:printHtml, size:sizeHtml, basket:basketHtml, done:doneHtml, day:dayHtml }[screen];
     el.innerHTML=html();
     const f=el.querySelector("[autofocus]"); if(f){ f.focus(); if(f.setSelectionRange&&f.type!=="number"){ const n=f.value.length; try{f.setSelectionRange(n,n);}catch(e){} } }
     if(screen!==render.last){ window.scrollTo(0,0); render.last=screen; } }
@@ -272,7 +274,7 @@
     const q=search.trim().toLowerCase();
     const list=q?roster.players.filter(p=>inScope(p.branchId)&&p.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name)).slice(0,30):[];
     const bought=new Set(uni.orders.filter(o=>o.collection===uni.settings.collection).map(o=>o.playerId));
-    return `<div class="step">Step 1 of 4</div><h1>Which player?</h1>
+    return `<div class="step">Step 1 of 3</div><h1>Which player?</h1>
       <input class="search" id="f-search" type="search" placeholder="Type the player's name" value="${esc(search)}" autocomplete="off" autofocus oninput="app.setSearch(this.value)">
       <div class="players" id="f-players">${playerRows(list,bought,q)}</div>${back("home")}`; }
   function playerRows(list,bought,q){
@@ -290,7 +292,7 @@
 
   // Step 2: number + name
   function printHtml(){ const p=player(sale.playerId);
-    return `<div class="step">Step 2 of 4 · ${esc(p?p.name:"")}</div><h1>Number and name on the back</h1>
+    return `<div class="step">Step 2 of 3 · ${esc(p?p.name:"")}</div><h1>Number and name on the back</h1>
       <div class="field"><label class="label" for="f-num">Number</label><input id="f-num" inputmode="numeric" maxlength="2" value="${esc(sale.number)}" placeholder="10" autofocus oninput="this.value=this.value.replace(/\\D/g,'');app.checkNum(this.value)"></div>
       <div id="f-clash">${clashHtml(sale.number)}</div>
       <div class="field"><label class="label" for="f-nick">Name on the back</label><input id="f-nick" maxlength="${NICK_MAX}" value="${esc(sale.nickname)}" placeholder="NAME" onkeydown="if(event.key==='Enter')app.savePrint()"></div>
@@ -305,37 +307,34 @@
     if(!/^\d{1,2}$/.test(num)){ err.textContent="Type the shirt number (0–99)."; return; }
     if(!nick){ err.textContent="Type the name for the back."; return; }
     if(!/^[\p{L}\p{N} .'\-]+$/u.test(nick)){ err.textContent="Use only letters, numbers, spaces, dots, dashes or apostrophes."; return; }
-    sale.number=num; sale.nickname=nick; to(sale.items.length?"basket":"color"); }
+    sale.number=num; sale.nickname=nick; to("basket"); }
 
-  // Step 3: color
-  function colorHtml(){ return `<div class="step">Step 3 of 4</div><h1>Which color?</h1>
-    ${COLORS.map(c=>`<button class="big k-${c.id}" onclick="app.pickColor('${c.id}')">${c.label}</button>`).join("")}
-    ${back(sale.items.length?"basket":"print")}`; }
   function choose(c){ pickColor=c; to("size"); }
 
-  // Step 4: size
+  // Size (opened from a color button on the order page)
   function sizeHtml(){ const b=s=>`<button class="big" onclick="app.pickSize('${s}')">${esc(s)}</button>`;
-    return `<div class="step">Step 4 of 4 · ${esc(colorLabel(pickColor))}</div><h1>Which size?</h1>
+    return `<div class="step">${esc(colorLabel(pickColor))} shirt</div><h1>Which size?</h1>
       <div class="label">Kids</div><div class="sizes">${KID_SIZES.map(b).join("")}</div>
-      <div class="label">Adults</div><div class="sizes">${ADULT_SIZES.map(b).join("")}</div>${back("color")}`; }
+      <div class="label">Adults</div><div class="sizes">${ADULT_SIZES.map(b).join("")}</div>${back("basket")}`; }
   function pickSize(s){ const it=sale.items.find(i=>i.color===pickColor&&i.size===s); if(it)it.qty++; else sale.items.push({color:pickColor,size:s,qty:1}); to("basket"); }
 
   // Check the order
   function basketHtml(){ const p=player(sale.playerId); const n=sale.items.reduce((s,i)=>s+i.qty,0); const price=Number(uni.settings.price)||0;
-    return `<h1>Check the order</h1>
+    return `<div class="step">Step 3 of 3</div><h1>${n?"The order":"Add shirts"}</h1>
       <div class="card">
         <div class="who"><span class="nm">${esc(p?p.name:"")}</span><span class="bp">#${esc(sale.number)} ${esc(sale.nickname)}</span></div>
-        <div style="margin-top:12px;">${sortItems(sale.items).map(i=>`<div class="line"><span class="sw k-${i.color}"></span><span class="w">${esc(colorLabel(i.color))} · ${esc(i.size)}</span>
+        <div style="margin-top:12px;">${n?"":`<div class="line"><span class="w muted" style="font-weight:600;">No shirts yet. Tap a color below.</span></div>`}${sortItems(sale.items).map(i=>`<div class="line"><span class="sw k-${i.color}"></span><span class="w">${esc(colorLabel(i.color))} · ${esc(i.size)}</span>
           <span class="qty"><button onclick="app.bump('${i.color}','${i.size}',-1)" aria-label="One less">−</button><span class="tnum">${i.qty}</span><button onclick="app.bump('${i.color}','${i.size}',1)" aria-label="One more">+</button></span></div>`).join("")}</div>
         <div class="total"><span class="muted">${n} shirt${n===1?"":"s"} × ${money(price)}</span><b class="tnum">${money(n*price)}</b></div>
       </div>
-      <button class="big" onclick="app.to('color')">+ Add another shirt</button>
+      <div class="label">${n?"Add another shirt":"Pick a color"}</div>
+      <div class="colors">${COLORS.map(c=>`<button class="big k-${c.id}" onclick="app.pickColor('${c.id}')">${c.label}</button>`).join("")}</div>
       <div class="label">Has the parent paid?</div>
       <div class="paid-row"><button class="big ${sale.paid===true?"on-paid":""}" onclick="app.setPaid(true)">Paid</button><button class="big ${sale.paid===false?"on-unpaid":""}" onclick="app.setPaid(false)">Not yet</button></div>
       <div class="err" id="f-err"></div>
       <button class="big main" onclick="app.saveSale()" ${n?"":"disabled"}>Save sale</button>
       <div style="display:flex;justify-content:space-between;">${back("print").replace("← Back","← Change number / name")}<button class="back" onclick="app.cancelSale()">Cancel sale</button></div>`; }
-  function bump(c,s,d){ const it=sale.items.find(i=>i.color===c&&i.size===s); if(!it)return; it.qty+=d; if(it.qty<=0)sale.items=sale.items.filter(i=>i!==it); if(!sale.items.length){ to("color"); return; } render(); }
+  function bump(c,s,d){ const it=sale.items.find(i=>i.color===c&&i.size===s); if(!it)return; it.qty+=d; if(it.qty<=0)sale.items=sale.items.filter(i=>i!==it); render(); }
   function setPaid(v){ sale.paid=v; render(); }
   function cancelSale(){ sale=null; to("home"); }
   function saveSale(){ const err=document.getElementById("f-err"); const p=player(sale.playerId);
