@@ -62,6 +62,14 @@
   .k-black{background:var(--kit-black);border-color:var(--kit-black);color:#fff;}
   .k-white{background:var(--kit-white);border-color:#c9ccd5;color:#11131b;}
   .big.k-red:hover,.big.k-black:hover{border-color:var(--ink);box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--ink);}
+  .crow{display:flex;gap:10px;align-items:stretch;}
+  .crow .big{flex:1;position:relative;}
+  .crow .big.picked{box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--ok);}
+  .cq{position:absolute;right:16px;top:50%;transform:translateY(-50%);min-width:40px;height:40px;padding:0 10px;border-radius:99px;background:var(--ok);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:1.4rem;}
+  .cminus{width:68px;border-radius:16px;border:2px solid var(--line);background:var(--card);font-size:2rem;font-weight:700;}
+  .cminus[disabled]{opacity:.3;cursor:default;}
+  .sq{position:absolute;top:-8px;right:-8px;min-width:26px;height:26px;padding:0 7px;border-radius:99px;background:var(--ok);color:#fff;font-family:var(--f-body);font-size:.85rem;display:flex;align-items:center;justify-content:center;}
   .sizes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
   .sizes .big{min-height:72px;padding:8px 4px;font-size:1.7rem;}
   .label{font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:6px 0 2px;}
@@ -180,7 +188,7 @@
   let uni={settings:{collection:"",price:0},orders:[],closings:{}};
   let rosterLoaded=false, uniLoaded=false, booted=false, session=null;
   let screen="login";     // login | pin | home | player | print | color | size | basket | done | day
-  let pendingRole=null, search="", sale=null, pickSz=null, lastSaved=null, dayDate=todayStr(), confirmClose=false, confirmDel=null;
+  let pendingRole=null, search="", sale=null, pickSz=null, colorQty={}, lastSaved=null, dayDate=todayStr(), confirmClose=false, confirmDel=null;
 
   function toArray(x){ if(Array.isArray(x))return x; if(x&&typeof x==="object")return Object.values(x); return []; }
   function normOrder(o){ if(!Array.isArray(o.items)) o.items=o.color?[{color:o.color,size:o.size,qty:Number(o.qty)||1}]:toArray(o.items); return o; }
@@ -307,15 +315,24 @@
     if(!/^[\p{L}\p{N} .'\-]+$/u.test(nick)){ err.textContent="Use only letters, numbers, spaces, dots, dashes or apostrophes."; return; }
     sale.number=num; sale.nickname=nick; to("basket"); }
 
-  function pickSize(s){ pickSz=s; to("color"); }
+  // Opening a size starts from what's already in the order for that size, so it can be changed too.
+  function pickSize(s){ pickSz=s; colorQty={}; COLORS.forEach(c=>{ const it=sale.items.find(i=>i.color===c.id&&i.size===s); colorQty[c.id]=it?it.qty:0; }); to("color"); }
 
-  // Color (opened from a size button on the order page)
-  function colorHtml(){ return `<div class="step">Size ${esc(pickSz)}</div><h1>Which color?</h1>
-    ${COLORS.map(c=>`<button class="big k-${c.id}" onclick="app.pickColor('${c.id}')">${c.label}</button>`).join("")}${back("basket")}`; }
-  function choose(c){ const it=sale.items.find(i=>i.color===c&&i.size===pickSz); if(it)it.qty++; else sale.items.push({color:c,size:pickSz,qty:1}); to("basket"); }
+  // Colors for one size: pick as many as needed, then Done.
+  function colorHtml(){ const total=COLORS.reduce((t,c)=>t+colorQty[c.id],0);
+    return `<div class="step">Size ${esc(pickSz)}</div><h1>Which colors?</h1>
+      <p class="muted" style="margin:-8px 0 4px;">Tap a color to add it. Tap again for 2 of the same.</p>
+      ${COLORS.map(c=>{ const q=colorQty[c.id]; return `<div class="crow">
+        <button class="big k-${c.id} ${q?"picked":""}" onclick="app.colorAdd('${c.id}',1)">${c.label}${q?`<span class="cq">${q}</span>`:""}</button>
+        <button class="cminus" onclick="app.colorAdd('${c.id}',-1)" ${q?"":"disabled"} aria-label="One less ${c.label}">−</button></div>`; }).join("")}
+      <button class="big main" onclick="app.colorDone()">${total?`Done · ${total} shirt${total===1?"":"s"}`:"Done"}</button>${back("basket")}`; }
+  function colorAdd(c,d){ colorQty[c]=Math.max(0,colorQty[c]+d); render(); }
+  function colorDone(){ sale.items=sale.items.filter(i=>i.size!==pickSz);
+    COLORS.forEach(c=>{ if(colorQty[c.id]>0) sale.items.push({color:c.id,size:pickSz,qty:colorQty[c.id]}); });
+    to("basket"); }
 
   // Check the order
-  function basketHtml(){ const p=player(sale.playerId); const sizeBtn=sz=>`<button class="big" onclick="app.pickSize('${sz}')">${esc(sz)}</button>`; const n=sale.items.reduce((s,i)=>s+i.qty,0); const price=Number(uni.settings.price)||0;
+  function basketHtml(){ const p=player(sale.playerId); const sizeBtn=sz=>{ const q=sale.items.filter(i=>i.size===sz).reduce((t,i)=>t+i.qty,0); return `<button class="big" style="position:relative;" onclick="app.pickSize('${sz}')">${esc(sz)}${q?`<span class="sq">${q}</span>`:""}</button>`; }; const n=sale.items.reduce((s,i)=>s+i.qty,0); const price=Number(uni.settings.price)||0;
     return `<div class="step">Step 3 of 3</div><h1>${n?"The order":"Add shirts"}</h1>
       <div class="card">
         <div class="who"><span class="nm">${esc(p?p.name:"")}</span><span class="bp">#${esc(sale.number)} ${esc(sale.nickname)}</span></div>
@@ -426,7 +443,7 @@
   document.addEventListener("keydown",e=>{ if(e.key==="Escape")closeModal(); });
   function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.className="show"; clearTimeout(toast._t); toast._t=setTimeout(()=>t.className="",2400); }
 
-  window.app={ to, chooseRole, submitPin, newSale, setSearch, pickPlayer, checkNum, savePrint, pickColor:choose, pickSize, bump, setPaid, cancelSale, saveSale,
+  window.app={ to, chooseRole, submitPin, newSale, setSearch, pickPlayer, checkNum, savePrint, colorAdd, colorDone, pickSize, bump, setPaid, cancelSale, saveSale,
     openDay, setDay, armClose, armDel, del, flipPaid, closeDay, reopen, download, openSettings, saveSettings, closeModal };
 </script>
 </body>
