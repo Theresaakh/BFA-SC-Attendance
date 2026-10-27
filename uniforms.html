@@ -143,10 +143,11 @@
   .date{border:2px solid var(--line);border-radius:12px;background:var(--card);padding:10px 12px;font-weight:600;}
 
   .gate-msg{margin:auto 0;display:flex;flex-direction:column;gap:14px;}
-  .bchips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;margin:0 -2px;scrollbar-width:thin;}
-  .bchip{flex-shrink:0;border:2px solid var(--line);background:var(--card);border-radius:99px;padding:9px 16px;font-weight:700;font-size:.95rem;white-space:nowrap;}
-  .bchip:hover{border-color:var(--ink);}
-  .bchip.on{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+  .bsel-wrap{display:flex;flex-direction:column;gap:4px;}
+  .bsel{width:100%;appearance:none;-webkit-appearance:none;padding:14px 44px 14px 16px;border:2px solid var(--line);border-radius:14px;font-size:1.15rem;font-weight:700;cursor:pointer;
+    background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23888' stroke-width='2.2'/%3E%3C/svg%3E") no-repeat right 16px center;}
+  .bsel:focus{outline:none;border-color:var(--ink);}
+  .bsel option{color:#11131b;background:#fff;}
   .roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .roles .big{font-size:1.15rem;min-height:60px;}
   .roles .wide{grid-column:1/-1;}
@@ -196,6 +197,8 @@
   const COLORS=[{id:"red",label:"Red"},{id:"black",label:"Black"},{id:"white",label:"White"}];
   const KID_SIZES=["6","8","10","12"], ADULT_SIZES=["XS","S","M","L","XL","XXL","XXXL"], SIZES=[...KID_SIZES,...ADULT_SIZES];
   const NICK_MAX=12;
+  // The academy's branches, in the order staff expect to see them in the dropdown.
+  const BRANCH_NAMES=["Furn El Chebbek","Hazmieh","Sen El Fil","Hadath","Mansourieh","Beit Meri","Sahel Alma"];
 
   // ===== State =====
   let roster={branches:[],teams:[],players:[]};
@@ -217,7 +220,7 @@
     uniLoaded=true; onData(); }, onFail);
   function onFail(err){ console.error(err); const el=document.getElementById("loading-text"); if(el)el.textContent="Could not connect. Check your internet and reload."; }
   function onData(){ if(!rosterLoaded||!uniLoaded)return;
-    if(branchFilter!=="all"&&!roster.branches.some(b=>b.id===branchFilter)) branchFilter="all";
+    if(branchFilter!=="all"&&!branchOptions().some(b=>b.id===branchFilter)) branchFilter="all";
     if(!booted){ booted=true; render(); if(!uni.settings.collection&&roster.branches.length) openSettings(); return; }
     // Live updates only refresh screens that show shared data, so typing is never interrupted.
     if(["home","day","player"].includes(screen)) render(); }
@@ -236,9 +239,20 @@
   function allBranches(){ return branchFilter==="all"; }
   function inScope(bid){ return allBranches()||bid===branchFilter; }
   function scopeIds(){ return allBranches()?roster.branches.map(b=>b.id):[branchFilter]; }
-  function scopeName(){ return allBranches()?"All branches":branchName(branchFilter); }
-  function branchChips(){ return `<div class="bchips" role="group" aria-label="Branch">${[["all","All branches"],...roster.branches.map(b=>[b.id,b.name])]
-    .map(([id,nm])=>`<button class="bchip ${branchFilter===id?"on":""}" onclick="app.setBranch('${id}')">${esc(nm)}</button>`).join("")}</div>`; }
+  // Each listed name is matched to the academy app's branch of the same name (spacing/case ignored).
+  // A listed name the academy app doesn't have yet gets a placeholder id so it still shows; academy
+  // branches missing from the list are added at the end so none of their players disappear.
+  function normName(n){ return String(n||"").toLowerCase().replace(/[^a-z0-9]/g,""); }
+  function branchOptions(){ const used=new Set();
+    const opts=BRANCH_NAMES.map(nm=>{ const b=roster.branches.find(b=>normName(b.name)===normName(nm)); if(b)used.add(b.id); return {id:b?b.id:"missing-"+normName(nm), name:nm, missing:!b}; });
+    roster.branches.filter(b=>!used.has(b.id)).forEach(b=>opts.push({id:b.id,name:b.name,missing:false}));
+    return opts; }
+  function scopeName(){ if(allBranches())return "All branches"; const o=branchOptions().find(o=>o.id===branchFilter); return o?o.name:"—"; }
+  function branchChips(){ const opts=branchOptions(), cur=opts.find(o=>o.id===branchFilter);
+    return `<div class="bsel-wrap"><label class="label" for="f-branch">Branch</label>
+      <select class="bsel" id="f-branch" onchange="app.setBranch(this.value)"><option value="all" ${allBranches()?"selected":""}>All branches</option>
+      ${opts.map(o=>`<option value="${esc(o.id)}" ${branchFilter===o.id?"selected":""}>${esc(o.name)}</option>`).join("")}</select>
+      ${cur&&cur.missing?`<div class="warn" style="margin-top:8px;">${esc(cur.name)} isn't in the academy app yet, so it has no players. Add it there (or fix its spelling) to sell to its players.</div>`:""}</div>`; }
   function setBranch(id){ branchFilter=id; try{ localStorage.setItem(BRANCH_KEY,id); }catch(e){}
     confirmClose=false; render(); }
   function pieces(o){ return o.items.reduce((s,i)=>s+i.qty,0); }
@@ -271,7 +285,7 @@
   function homeHtml(){
     const today=uni.orders.filter(o=>o.date===todayStr()&&inScope(o.branchId));
     const shirts=today.reduce((s,o)=>s+pieces(o),0);
-    return `<div class="label">Branch</div>${branchChips()}
+    return `${branchChips()}
       <h1 style="margin-top:6px;">Hi! What do you want to do?</h1>
       ${!uni.settings.collection?`<div class="warn">Set the kit name first (Kit settings below).</div>`:!stockTotal()?`<div class="warn">No shirts in stock. Add them in Inventory.</div>`:""}
       <button class="big main" onclick="app.newSale()" ${uni.settings.collection?"":"disabled"}>New sale</button>
