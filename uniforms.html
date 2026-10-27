@@ -130,8 +130,10 @@
   .date{border:2px solid var(--line);border-radius:12px;background:var(--card);padding:10px 12px;font-weight:600;}
 
   .gate-msg{margin:auto 0;display:flex;flex-direction:column;gap:14px;}
-  .pin{width:100%;text-align:center;padding:16px;border:2px solid var(--line);border-radius:14px;background:var(--card);font-family:var(--f-display);font-size:2.2rem;letter-spacing:.5em;}
-  .pin:focus{outline:none;border-color:var(--ink);}
+  .bchips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;margin:0 -2px;scrollbar-width:thin;}
+  .bchip{flex-shrink:0;border:2px solid var(--line);background:var(--card);border-radius:99px;padding:9px 16px;font-weight:700;font-size:.95rem;white-space:nowrap;}
+  .bchip:hover{border-color:var(--ink);}
+  .bchip.on{background:var(--ink);border-color:var(--ink);color:var(--paper);}
   .roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .roles .big{font-size:1.15rem;min-height:60px;}
   .roles .wide{grid-column:1/-1;}
@@ -151,7 +153,6 @@
     <div class="t"><b>Kit shop</b><span id="top-sub">Beirut Football Academy</span></div>
     <span class="sp"></span>
     <button class="small-btn" id="theme-btn" title="Light / dark">◐</button>
-    <button class="small-btn hidden" id="logout-btn">Log out</button>
   </div>
   <div id="screen" class="stack"><p class="muted" id="loading-text">Loading players…</p></div>
 </div>
@@ -177,34 +178,35 @@
   function wSet(path,val){ set(ref(db, ROOT+"/"+path), val).catch(e=>{console.error("write",path,e); toast("Not saved — check your connection");}); }
   function wRemove(path){ remove(ref(db, ROOT+"/"+path)).catch(e=>console.error("remove",path,e)); }
   function wMulti(u){ update(uniRef, u).catch(e=>{console.error("multi-write",e); toast("Not saved — check your connection");}); }
-  const SESSION_KEY="bfaTeamsSession_v1", THEME_KEY="bfaTeamsTheme";
+  const THEME_KEY="bfaTeamsTheme", BRANCH_KEY="bfaKitBranch";
 
   const COLORS=[{id:"red",label:"Red"},{id:"black",label:"Black"},{id:"white",label:"White"}];
   const KID_SIZES=["6","8","10","12"], ADULT_SIZES=["XS","S","M","L","XL","XXL","XXXL"], SIZES=[...KID_SIZES,...ADULT_SIZES];
   const NICK_MAX=12;
 
   // ===== State =====
-  let roster={branches:[],teams:[],players:[],auth:{setupDone:false,adminPin:"",branchPins:{}}};
+  let roster={branches:[],teams:[],players:[]};
   let uni={settings:{collection:"",price:0},orders:[],closings:{}};
-  let rosterLoaded=false, uniLoaded=false, booted=false, session=null;
-  let screen="login";     // login | pin | home | player | print | color | size | basket | done | day
-  let pendingRole=null, search="", sale=null, pickSz=null, colorQty={}, lastSaved=null, dayDate=todayStr(), confirmClose=false, confirmDel=null;
+  let rosterLoaded=false, uniLoaded=false, booted=false;
+  let screen="home";      // home | player | print | color | basket | done | day
+  let branchFilter="all"; // "all" or a branch id; remembered on this device
+  try{ branchFilter=localStorage.getItem(BRANCH_KEY)||"all"; }catch(e){}
+  let search="", sale=null, pickSz=null, colorQty={}, lastSaved=null, dayDate=todayStr(), confirmClose=false, confirmDel=null;
 
   function toArray(x){ if(Array.isArray(x))return x; if(x&&typeof x==="object")return Object.values(x); return []; }
   function normOrder(o){ if(!Array.isArray(o.items)) o.items=o.color?[{color:o.color,size:o.size,qty:Number(o.qty)||1}]:toArray(o.items); return o; }
   onValue(ref(db, ROSTER_ROOT), snap=>{ const r=snap.val()||{};
-    roster={ branches:toArray(r.branches), teams:toArray(r.teams), players:toArray(r.players).filter(p=>p&&p.id&&p.name), auth:r.auth||{setupDone:false} };
-    if(!roster.auth.branchPins)roster.auth.branchPins={};
+    roster={ branches:toArray(r.branches), teams:toArray(r.teams), players:toArray(r.players).filter(p=>p&&p.id&&p.name) };
     rosterLoaded=true; onData(); }, onFail);
   onValue(uniRef, snap=>{ const u=snap.val()||{};
     uni={ settings:{collection:"",price:0,...(u.settings||{})}, orders:toArray(u.orders).filter(o=>o&&o.id).map(normOrder), closings:u.closings||{} };
     uniLoaded=true; onData(); }, onFail);
   function onFail(err){ console.error(err); const el=document.getElementById("loading-text"); if(el)el.textContent="Could not connect. Check your internet and reload."; }
   function onData(){ if(!rosterLoaded||!uniLoaded)return;
-    if(!booted){ booted=true; const s=getSession(); if(isValidSession(s)){ session=s; screen="home"; } render(); return; }
-    if(session&&!isValidSession(session)){ logout(); return; }
+    if(branchFilter!=="all"&&!roster.branches.some(b=>b.id===branchFilter)) branchFilter="all";
+    if(!booted){ booted=true; render(); if(!uni.settings.collection&&roster.branches.length) openSettings(); return; }
     // Live updates only refresh screens that show shared data, so typing is never interrupted.
-    if(["home","day","login","player"].includes(screen)) render(); }
+    if(["home","day","player"].includes(screen)) render(); }
 
   // ===== Helpers =====
   function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
@@ -213,14 +215,18 @@
   function fmtTime(ts){ return ts?new Date(ts).toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"}):""; }
   function money(n){ return "$"+(Math.round((Number(n)||0)*100)/100).toLocaleString(); }
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-  function isAdmin(){ return !!session&&session.role==="admin"; }
-  function myBranch(){ return session&&session.role==="branch"?session.branchId:null; }
   function branchName(id){ const b=roster.branches.find(b=>b.id===id); return b?b.name:"—"; }
   function teamName(id){ const t=roster.teams.find(t=>t.id===id); return t?t.name:""; }
   function player(id){ return roster.players.find(p=>p.id===id)||null; }
   function colorLabel(id){ const c=COLORS.find(c=>c.id===id); return c?c.label:id; }
-  function inScope(bid){ return isAdmin()||bid===myBranch(); }
-  function scopeIds(){ return isAdmin()?roster.branches.map(b=>b.id):[myBranch()]; }
+  function allBranches(){ return branchFilter==="all"; }
+  function inScope(bid){ return allBranches()||bid===branchFilter; }
+  function scopeIds(){ return allBranches()?roster.branches.map(b=>b.id):[branchFilter]; }
+  function scopeName(){ return allBranches()?"All branches":branchName(branchFilter); }
+  function branchChips(){ return `<div class="bchips" role="group" aria-label="Branch">${[["all","All branches"],...roster.branches.map(b=>[b.id,b.name])]
+    .map(([id,nm])=>`<button class="bchip ${branchFilter===id?"on":""}" onclick="app.setBranch('${id}')">${esc(nm)}</button>`).join("")}</div>`; }
+  function setBranch(id){ branchFilter=id; try{ localStorage.setItem(BRANCH_KEY,id); }catch(e){}
+    confirmClose=false; render(); }
   function pieces(o){ return o.items.reduce((s,i)=>s+i.qty,0); }
   function orderTotal(o){ return pieces(o)*(Number(o.price)||0); }
   function closing(date,bid){ return (uni.closings[date]&&uni.closings[date][bid])||null; }
@@ -228,51 +234,31 @@
   function sortItems(items){ return items.slice().sort((a,b)=>COLORS.findIndex(c=>c.id===a.color)-COLORS.findIndex(c=>c.id===b.color)||SIZES.indexOf(a.size)-SIZES.indexOf(b.size)); }
   function back(to){ return `<button class="back" onclick="app.to('${to}')">← Back</button>`; }
 
-  // ===== Login (same PINs and session as the academy app) =====
-  function getSession(){ try{return JSON.parse(sessionStorage.getItem(SESSION_KEY));}catch(e){return null;} }
-  function isValidSession(s){ if(!s)return false; if(s.role==="admin")return true; if(s.role==="branch")return roster.branches.some(b=>b.id===s.branchId); return false; }
+  // ===== Theme =====
   function applyTheme(t){ if(t)document.documentElement.setAttribute("data-theme",t); else document.documentElement.removeAttribute("data-theme"); }
   try{ const t=localStorage.getItem(THEME_KEY); if(t)applyTheme(t); }catch(e){}
   document.getElementById("theme-btn").addEventListener("click",()=>{ const cur=document.documentElement.getAttribute("data-theme"); const dark=cur?cur==="dark":matchMedia("(prefers-color-scheme: dark)").matches; const next=dark?"light":"dark"; applyTheme(next); try{localStorage.setItem(THEME_KEY,next);}catch(e){} });
-  document.getElementById("logout-btn").addEventListener("click",()=>logout());
-  function logout(){ try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){} session=null; sale=null; screen="login"; closeModal(); render(); }
-  function chooseRole(role,bid){ pendingRole=role==="branch"?{role:"branch",branchId:bid}:{role:"admin"}; screen="pin"; render(); }
-  function submitPin(){ const pin=document.getElementById("f-pin").value.trim();
-    const ok=pendingRole.role==="admin"?(pin&&pin===roster.auth.adminPin):(pin&&pin===roster.auth.branchPins[pendingRole.branchId]);
-    if(!ok){ document.getElementById("f-err").textContent="Wrong PIN. Try again."; return; }
-    try{ sessionStorage.setItem(SESSION_KEY,JSON.stringify(pendingRole)); }catch(e){}
-    session=pendingRole; screen="home"; render();
-    if(isAdmin()&&!uni.settings.collection) openSettings(); }
 
   // ===== Screens =====
   function to(s){ screen=s; confirmClose=false; confirmDel=null; render(); }
   function render(){
     const el=document.getElementById("screen");
-    document.getElementById("logout-btn").classList.toggle("hidden",!session);
-    document.getElementById("top-sub").textContent=session?(isAdmin()?"Admin":branchName(myBranch()))+(uni.settings.collection?" · "+uni.settings.collection:""):"Beirut Football Academy";
-    if(!roster.auth||!roster.auth.setupDone){ el.innerHTML=`<div class="gate-msg"><h1>Not set up yet</h1><p class="muted">Finish setup in the academy app first.</p><a class="big main" href="teams.html" style="text-decoration:none;">Open academy app</a></div>`; return; }
-    if(!session&&screen!=="pin") screen="login";
-    const html={ login:loginHtml, pin:pinHtml, home:homeHtml, player:playerHtml, print:printHtml, color:colorHtml, basket:basketHtml, done:doneHtml, day:dayHtml }[screen];
+    document.getElementById("top-sub").textContent=scopeName()+(uni.settings.collection?" · "+uni.settings.collection:"");
+    if(!roster.branches.length){ el.innerHTML=`<div class="gate-msg"><h1>No branches yet</h1><p class="muted">Add your branches and players in the academy app first.</p><a class="big main" href="teams.html" style="text-decoration:none;">Open academy app</a></div>`; return; }
+    const html={ home:homeHtml, player:playerHtml, print:printHtml, color:colorHtml, basket:basketHtml, done:doneHtml, day:dayHtml }[screen];
     el.innerHTML=html();
     const f=el.querySelector("[autofocus]"); if(f){ f.focus(); if(f.setSelectionRange&&f.type!=="number"){ const n=f.value.length; try{f.setSelectionRange(n,n);}catch(e){} } }
     if(screen!==render.last){ window.scrollTo(0,0); render.last=screen; } }
 
-  function loginHtml(){ return `<h1>Who's selling?</h1>
-    <div class="roles">${roster.branches.map(b=>`<button class="big" onclick="app.chooseRole('branch','${b.id}')">${esc(b.name)}</button>`).join("")}
-    <button class="big dark wide" onclick="app.chooseRole('admin')">Admin</button></div>`; }
-  function pinHtml(){ return `<div class="step">${pendingRole.role==="admin"?"Admin":esc(branchName(pendingRole.branchId))}</div><h1>Enter your PIN</h1>
-    <input class="pin" id="f-pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" autofocus oninput="this.value=this.value.replace(/\\D/g,'')" onkeydown="if(event.key==='Enter')app.submitPin()">
-    <div class="err" id="f-err"></div>
-    <button class="big main" onclick="app.submitPin()">Sign in</button>${back("login")}`; }
-
   function homeHtml(){
     const today=uni.orders.filter(o=>o.date===todayStr()&&inScope(o.branchId));
     const shirts=today.reduce((s,o)=>s+pieces(o),0);
-    return `<h1>Hi! What do you want to do?</h1>
-      ${!uni.settings.collection?`<div class="warn">${isAdmin()?"Set the kit name and price first (Kit settings below).":"The admin hasn't set the kit name and price yet."}</div>`:""}
+    return `<div class="label">Branch</div>${branchChips()}
+      <h1 style="margin-top:6px;">Hi! What do you want to do?</h1>
+      ${!uni.settings.collection?`<div class="warn">Set the kit name and price first (Kit settings below).</div>`:""}
       <button class="big main col" onclick="app.newSale()" ${uni.settings.collection?"":"disabled"}>New sale<span class="sub">Kit ${money(uni.settings.price)} each</span></button>
       <button class="big col" onclick="app.openDay()">End of day<span class="sub">Today: ${today.length} kid${today.length===1?"":"s"} · ${shirts} shirt${shirts===1?"":"s"}</span></button>
-      ${isAdmin()?`<button class="big" style="font-size:1.2rem;min-height:56px;" onclick="app.openSettings()">Kit settings</button>`:""}`; }
+      <button class="big" style="font-size:1.2rem;min-height:56px;" onclick="app.openSettings()">Kit settings</button>`; }
 
   // Step 1: player
   function newSale(){ sale={ playerId:null, number:"", nickname:"", items:[], paid:null }; search=""; to("player"); }
@@ -280,13 +266,13 @@
     const q=search.trim().toLowerCase();
     const list=q?roster.players.filter(p=>inScope(p.branchId)&&p.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name)).slice(0,30):[];
     const bought=new Set(uni.orders.filter(o=>o.collection===uni.settings.collection).map(o=>o.playerId));
-    return `<div class="step">Step 1 of 3</div><h1>Which player?</h1>
+    return `<div class="step">Step 1 of 3</div><h1>Which player?</h1>${branchChips()}
       <input class="search" id="f-search" type="search" placeholder="Type the player's name" value="${esc(search)}" autocomplete="off" autofocus oninput="app.setSearch(this.value)">
       <div class="players" id="f-players">${playerRows(list,bought,q)}</div>${back("home")}`; }
   function playerRows(list,bought,q){
     if(!q)return `<p class="muted">Start typing a name.</p>`;
     if(!list.length)return `<p class="muted">No player found. Players are added in the academy app.</p>`;
-    return list.map(p=>`<button class="prow" onclick="app.pickPlayer('${p.id}')"><span class="i"><span class="n">${esc(p.name)}</span><br><span class="m">${esc([teamName(p.teamId),isAdmin()?branchName(p.branchId):""].filter(Boolean).join(" · "))}</span></span>${bought.has(p.id)?`<span class="tag">Has kit</span>`:""}</button>`).join(""); }
+    return list.map(p=>`<button class="prow" onclick="app.pickPlayer('${p.id}')"><span class="i"><span class="n">${esc(p.name)}</span><br><span class="m">${esc([teamName(p.teamId),allBranches()?branchName(p.branchId):""].filter(Boolean).join(" · "))}</span></span>${bought.has(p.id)?`<span class="tag">Has kit</span>`:""}</button>`).join(""); }
   function setSearch(v){ search=v; const q=v.trim().toLowerCase();
     const list=q?roster.players.filter(p=>inScope(p.branchId)&&p.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name)).slice(0,30):[];
     const bought=new Set(uni.orders.filter(o=>o.collection===uni.settings.collection).map(o=>o.playerId));
@@ -354,10 +340,10 @@
     if(sale.paid===null){ err.textContent="Tap Paid or Not yet."; return; }
     if(!p){ err.textContent="This player is no longer in the roster."; return; }
     const date=todayStr();
-    if(closing(date,p.branchId)){ err.textContent=`${branchName(p.branchId)} already closed today. Ask the admin to reopen the day.`; return; }
+    if(closing(date,p.branchId)){ err.textContent=`${branchName(p.branchId)} already closed today. To add this sale, reopen the day in End of day.`; return; }
     const o={ id:uid(), date, createdAt:Date.now(), playerId:p.id, playerName:p.name, branchId:p.branchId, teamId:p.teamId||null, teamName:teamName(p.teamId),
       number:Number(sale.number), nickname:sale.nickname, items:sortItems(sale.items), price:Number(uni.settings.price)||0, paid:sale.paid,
-      collection:uni.settings.collection, by:isAdmin()?"Admin":branchName(myBranch()) };
+      collection:uni.settings.collection, by:scopeName() };
     uni.orders.push(o); wSet("orders/"+o.id,o); lastSaved=o; sale=null; to("done"); }
   function doneHtml(){ const o=lastSaved;
     return `<div class="done"><div class="tick">✓</div><h1>Saved!</h1>
@@ -374,16 +360,16 @@
     let action;
     if(isClosed) action=`<div class="closed">✓ This day is closed</div>
       ${list.length?`<button class="big" onclick="app.download()">Download Excel again</button>`:""}
-      ${isAdmin()?`<button class="big" style="font-size:1.1rem;min-height:52px;" onclick="app.reopen()">Reopen the day</button>`:""}`;
+      <button class="big" style="font-size:1.1rem;min-height:52px;" onclick="app.reopen()">Reopen the day</button>`;
     else if(confirmClose) action=`<div class="warn">Close the day? Sales can't be changed after this.${unpaid?` ${unpaid} sale${unpaid===1?" is":"s are"} not paid yet.`:""}</div>
       <div class="paid-row"><button class="big" onclick="app.armClose(false)">No</button><button class="big main" style="min-height:58px;font-size:1.25rem;" onclick="app.closeDay()">Yes, close</button></div>`;
     else action=`<button class="big main col" onclick="app.armClose(true)">Close the day<span class="sub">and download the Excel for the printer</span></button>`;
-    return `<div class="step">${dayDate===todayStr()?"Today":"Day"}</div><h1>${esc(fmtDate(dayDate))}</h1>
+    return `<div class="step">${dayDate===todayStr()?"Today":"Day"}</div><h1>${esc(fmtDate(dayDate))}</h1>${branchChips()}
       <div class="figs"><div class="fig"><b class="tnum">${shirts}</b><span>Shirts</span></div><div class="fig"><b class="tnum">${money(sales)}</b><span>Sales</span></div><div class="fig"><b class="tnum">${money(cash)}</b><span>Paid</span></div></div>
       ${action}
       <div class="card" style="margin-top:4px;">
         ${list.length?list.map(o=>{ const locked=!!closing(o.date,o.branchId); return `<div class="sale">
-          <span class="i"><span class="n">${esc(o.playerName)}</span> <span class="muted">#${esc(o.number)} ${esc(o.nickname)}</span><br><span class="d">${esc(itemsText(o.items))}${isAdmin()?" · "+esc(branchName(o.branchId)):""} · ${esc(fmtTime(o.createdAt))}</span></span>
+          <span class="i"><span class="n">${esc(o.playerName)}</span> <span class="muted">#${esc(o.number)} ${esc(o.nickname)}</span><br><span class="d">${esc(itemsText(o.items))}${allBranches()?" · "+esc(branchName(o.branchId)):""} · ${esc(fmtTime(o.createdAt))}</span></span>
           ${locked?`<span class="pill ${o.paid?"y":"n"}">${o.paid?"Paid":"Not paid"}</span>`:`<button class="pill ${o.paid?"y":"n"}" onclick="app.flipPaid('${o.id}')">${o.paid?"Paid":"Not paid"}</button>`}
           ${locked?"":confirmDel===o.id?`<button class="pill n" onclick="app.del('${o.id}')">Delete?</button>`:`<button class="x" onclick="app.armDel('${o.id}')" aria-label="Delete sale">✕</button>`}
         </div>`; }).join(""):`<p class="muted" style="margin:0;">No sales on this day.</p>`}
@@ -396,11 +382,11 @@
   function flipPaid(id){ const o=uni.orders.find(o=>o.id===id); if(!o||closing(o.date,o.branchId))return; o.paid=!o.paid; wSet("orders/"+id+"/paid",o.paid); render(); }
   function closeDay(){ const u={}, now=Date.now();
     scopeIds().filter(b=>!closing(dayDate,b)).forEach(b=>{ const os=uni.orders.filter(o=>o.date===dayDate&&o.branchId===b);
-      const c={ closedAt:now, by:isAdmin()?"Admin":branchName(b), orders:os.length, shirts:os.reduce((s,o)=>s+pieces(o),0), sales:os.reduce((s,o)=>s+orderTotal(o),0), paid:os.filter(o=>o.paid).reduce((s,o)=>s+orderTotal(o),0) };
+      const c={ closedAt:now, by:scopeName(), orders:os.length, shirts:os.reduce((s,o)=>s+pieces(o),0), sales:os.reduce((s,o)=>s+orderTotal(o),0), paid:os.filter(o=>o.paid).reduce((s,o)=>s+orderTotal(o),0) };
       if(!uni.closings[dayDate])uni.closings[dayDate]={}; uni.closings[dayDate][b]=c; u[`closings/${dayDate}/${b}`]=c; });
     if(Object.keys(u).length)wMulti(u);
     confirmClose=false; toast("Day closed ✓"); download(); render(); }
-  function reopen(){ if(!isAdmin())return; const u={};
+  function reopen(){ const u={};
     scopeIds().forEach(b=>{ if(closing(dayDate,b)){ delete uni.closings[dayDate][b]; u[`closings/${dayDate}/${b}`]=null; } });
     if(Object.keys(u).length)wMulti(u); toast("Day reopened"); render(); }
 
@@ -421,11 +407,11 @@
     const colTot=SIZES.map(s=>COLORS.reduce((t,c)=>t+((m[c.id]||{})[s]||0),0)); aoa.push(["Total",...colTot,colTot.reduce((a,b)=>a+b,0)]);
     const ws2=XLSX.utils.aoa_to_sheet(aoa); ws2["!cols"]=[{wch:9},...SIZES.map(()=>({wch:6})),{wch:7}];
     XLSX.utils.book_append_sheet(wb,ws2,"Totals");
-    const scope=isAdmin()?"All-branches":branchName(myBranch());
+    const scope=scopeName();
     XLSX.writeFile(wb,`BFA-kit_${dayDate}_${scope.replace(/[^\p{L}\p{N}]+/gu,"-")}.xlsx`); }
 
   // ===== Kit settings (admin) =====
-  function openSettings(){ if(!isAdmin())return; const s=uni.settings;
+  function openSettings(){ const s=uni.settings;
     openModal(`<h1 style="font-size:1.8rem;margin:0;">Kit settings</h1>
       <p class="muted" style="margin:0;">When the new kit arrives (every 2 seasons), change the name. Old sales keep the old name.</p>
       <div class="field"><label class="label" for="k-name">Kit name</label><input id="k-name" style="font-size:1.3rem;" value="${esc(s.collection)}" placeholder="KIT 2026–2028"></div>
@@ -443,7 +429,7 @@
   document.addEventListener("keydown",e=>{ if(e.key==="Escape")closeModal(); });
   function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.className="show"; clearTimeout(toast._t); toast._t=setTimeout(()=>t.className="",2400); }
 
-  window.app={ to, chooseRole, submitPin, newSale, setSearch, pickPlayer, checkNum, savePrint, colorAdd, colorDone, pickSize, bump, setPaid, cancelSale, saveSale,
+  window.app={ to, setBranch, newSale, setSearch, pickPlayer, checkNum, savePrint, colorAdd, colorDone, pickSize, bump, setPaid, cancelSale, saveSale,
     openDay, setDay, armClose, armDel, del, flipPaid, closeDay, reopen, download, openSettings, saveSettings, closeModal };
 </script>
 </body>
